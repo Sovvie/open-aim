@@ -187,6 +187,21 @@
 //             apart (jitterPairs of them); lockBodyTicks / lockHeadTicks = ticks from the engagement start (the enemy coming into view) to the
 //             first run of LOCK_S seconds on the body / head, -1 when it never locked (counted over ALL ticks, moving or not); sumEnemyDegPerSec = the
 //             enemy's angular speed summed over the sampled ticks. rounds()[].engagements[].tracking gives it as an object (see trackingOf()).
+//   sight (19 Nov 2026, round field sl = 1; needs tools/patch-sight-line.cjs): the game now says, per enemy and tick, whether the player can SEE it
+//             (actor.los 1 / 0: a clear line from the player's eye to its head, chest or legs, or to a sphere target's centre; walls, smokes and
+//             flash volumes block it) and whether the player is blinded (player.blindUntil, seconds of round time). An enemy is SEEN when it is in
+//             VIEW_CONE_DEG of the aim, has a line of sight and the player is not blinded. Before this the recorder had no wall data, so an enemy
+//             behind a wall already counted as "in view" and the clocks below ran from there. Now:
+//               - an engagement still STARTS when the enemy is seen OR fires at the player (the enemy often sees the player first: off screen, behind,
+//                 through a smoke, while the player is flashed; fights lost and deaths need that row), but
+//               - SEEN tick (index 22) = the first tick it is seen; -1 = never. Everything about the player's aim starts there: the aim error at first
+//                 sight (indexes 6..8 are re-taken at that tick), aim travel and movement (summed only on ticks the enemy is seen), the tracking
+//                 samples and the lock time (a lock run is reset while the enemy is hidden, and the lock time is counted from the seen tick without
+//                 the hidden ticks);
+//               - HIDDEN ticks (index 21) = ticks after the seen tick on which the enemy was not seen (a wall, a smoke or a flash hid it; an enemy that
+//                 is only off screen is NOT hidden: that is the player's pre-aim and counts). expand() gives visibleTimeToKill = kill - seen - hidden.
+//             Rounds recorded before this have no sl: rounds()[].sight is false and the coach and the Stats screens leave their timing out
+//             (nothing is deleted; they are simply not used for what depends on sight). Row layout: index 20 tracking or null, 21 hidden ticks, 22 seen tick.
 //   Shots that are NOT recorded (17 Nov 2026; they are dropped before any row is written: no shot row, no near miss, no first contact, so
 //   they are neither a hit nor a miss anywhere, and every existing row layout is unchanged). Decided by feed() in event order, per round:
 //     Rule 1, after death: a player shot whose tick is at or after the tick of the round's playerDead event, when that event comes BEFORE
@@ -685,8 +700,15 @@
     cur.e.push([g.id, tIndex(g.tmpl), g.start, killed ? endTick : -1, round2(g.travel), round2(g.move), round2(g.err[0]), round2(g.err[1]), round2(g.err[2]),
       killed ? classify(g.travel, g.move) : null, indexIn(cur.W, weapon),
       ...(g.at || [null, null, null, null]).map(round2),
-      g.contact ? g.contact.tick : null, ...(g.contact ? g.contact.at : [null, null, null, null]).map(round2), ...trackingRow(g)]);
+      g.contact ? g.contact.tick : null, ...(g.contact ? g.contact.at : [null, null, null, null]).map(round2), ...tailOf(g)]);
   }
+  // The end of an engagement row: tracking (20), hidden ticks (21) and the seen tick (22) in a round with sight data, else just the tracking entry.
+  function tailOf(g) {
+    const tk = trackingRow(g);
+    return cur.sl ? [tk.length ? tk[0] : null, g.hid || 0, g.seen === null || g.seen === undefined ? -1 : g.seen] : tk;
+  }
+  // The enemy is hidden (a wall, a smoke, a flash): a lock run and the motion sample chain are broken.
+  function trackHidden(g) { const t = g.tk; if (t) { t.runB = 0; t.runH = 0; t.prev = null; t.prevErr = null; } }
   // The engagement row's index 20 (see "tracking" in the header): [] when nothing was sampled and the aim never locked.
   function trackingRow(g) {
     const t = g.tk;
@@ -698,7 +720,7 @@
     const body = bodyOf(a);
     if (!body) return;
     const dt = cur.dt > 0 ? cur.dt : 1 / 128;
-    const t = g.tk || (g.tk = { n: 0, b: 0, h: 0, eb: 0, eh: 0, lag: 0, jit: 0, jn: 0, sp: 0, lockB: -1, lockH: -1, runB: 0, runH: 0, startB: 0, startH: 0, prev: null, prevErr: null });
+    const t = g.tk || (g.tk = { n: 0, b: 0, h: 0, eb: 0, eh: 0, lag: 0, jit: 0, jn: 0, sp: 0, lockB: -1, lockH: -1, runB: 0, runH: 0, startB: 0, startH: 0, hidB: 0, hidH: 0, prev: null, prevErr: null });
     const centre = [(body.min[0] + body.max[0]) / 2, (body.min[1] + body.max[1]) / 2, (body.min[2] + body.max[2]) / 2];
     const fw = aimDir(yaw, pitch);
     const vb = [centre[0] - eye[0], centre[1] - eye[1], centre[2] - eye[2]], dist = Math.hypot(vb[0], vb[1], vb[2]);
@@ -712,8 +734,9 @@
     const onH = along > 0 && Math.sqrt(Math.max(0, vh[0] * vh[0] + vh[1] * vh[1] + vh[2] * vh[2] - along * along)) <= headR;
     // lock: first run of LOCK_S seconds in a row on the target, counted from the engagement start, on every tick
     const need = Math.max(1, Math.round(LOCK_S / dt));
-    if (onB) { if (!t.runB) t.startB = tick; t.runB++; if (t.lockB < 0 && t.runB >= need) t.lockB = Math.max(0, t.startB - g.start); } else t.runB = 0;
-    if (onH) { if (!t.runH) t.startH = tick; t.runH++; if (t.lockH < 0 && t.runH >= need) t.lockH = Math.max(0, t.startH - g.start); } else t.runH = 0;
+    const from = g.seen ?? g.start;
+    if (onB) { if (!t.runB) { t.startB = tick; t.hidB = g.hid || 0; } t.runB++; if (t.lockB < 0 && t.runB >= need) t.lockB = Math.max(0, t.startB - from - t.hidB); } else t.runB = 0;
+    if (onH) { if (!t.runH) { t.startH = tick; t.hidH = g.hid || 0; } t.runH++; if (t.lockH < 0 && t.runH >= need) t.lockH = Math.max(0, t.startH - from - t.hidH); } else t.runH = 0;
     // the enemy's own motion across the player's view, from the world direction to its centre (the player's aim does not enter)
     const eY = Math.atan2(-vb[0], -vb[2]), eP = Math.asin(Math.max(-1, Math.min(1, vb[1] / dist)));
     const prev = t.prev;
@@ -761,11 +784,18 @@
     const crouch = Math.max(0, Math.min(1, +P.crouchAmount || 0));
     const eye = [x, P.position.y + EYE_STAND_M - (EYE_STAND_M - EYE_CROUCH_M) * crouch, z];
     const last = cur.last;
+    // sight: who the player can see this tick (see the header, "sight"). No los in the snapshot (an older worker) = every enemy counts as seen, as before.
+    const dtS = cur.dt > 0 ? cur.dt : 1 / 128, blind = typeof P.blindUntil === "number" && P.blindUntil > tick * dtS, losOf = new Map();
+    for (const a of snap.actors || []) if (a.los === 0 || a.los === 1) { losOf.set(a.id, a.los); cur.sl = 1; }
+    const sees = (id) => !blind && losOf.get(id) !== 0;
     if (last && tick > last.tick) {
       const dAim = lookStepDeg(last.yaw, last.pitch, yaw, pitch);
       let dMove = Math.hypot(x - last.x, z - last.z);
       if (dMove > MOVE_JUMP_M) dMove = 0;
-      for (const g of cur.eng.values()) { g.travel += dAim; g.move += dMove; }
+      for (const g of cur.eng.values()) {
+        if (g.seen === null || g.seen === undefined) continue; // not seen yet: no aim clock
+        if (sees(g.id)) { g.travel += dAim; g.move += dMove; } else g.hid = (g.hid || 0) + (tick - last.tick);
+      }
     }
     cur.last = { tick, yaw, pitch, x, z };
     sampleLook(tick, yaw);
@@ -781,13 +811,22 @@
       present.add(a.id);
       let g = cur.eng.get(a.id);
       if (g && g.born !== a.bornTick) { closeEngagement(g, tick, false, weapon); cur.eng.delete(a.id); cur.over.set(a.id, g.born); g = null; } // a new life
+      if (g && (g.seen === null || g.seen === undefined)) { // started by its own fire: the aim clock starts when the player first SEES it
+        const b2 = bodyOf(a);
+        if (b2) { const e2 = aimError(yaw, pitch, eye, b2.head); if (e2[0] <= VIEW_CONE_DEG && sees(a.id)) { g.seen = tick; g.err = e2; g.travel = 0; g.move = 0; } }
+      }
       if (g || (a.bornTick !== undefined && cur.over.get(a.id) === a.bornTick)) continue; // running, or this life already finished
       const body = bodyOf(a);
       if (!body) continue;
       const err = aimError(yaw, pitch, eye, body.head);
-      if (err[0] <= VIEW_CONE_DEG || firing.has(a.id)) { cur.over.delete(a.id); cur.eng.set(a.id, { id: a.id, tmpl: a.templateId ?? null, born: a.bornTick, start: tick, travel: 0, move: 0, err, at: startAt(x, z, a) }); }
+      const inView = err[0] <= VIEW_CONE_DEG && sees(a.id);
+      if (inView || firing.has(a.id)) { cur.over.delete(a.id); cur.eng.set(a.id, { id: a.id, tmpl: a.templateId ?? null, born: a.bornTick, start: tick, seen: inView ? tick : null, hid: 0, travel: 0, move: 0, err, at: startAt(x, z, a) }); }
     }
-    for (const a of actors) { const g = cur.eng.get(a.id); if (g && present.has(a.id)) trackTick(g, a, yaw, pitch, eye, tick); }
+    for (const a of actors) {
+      const g = cur.eng.get(a.id);
+      if (!g || !present.has(a.id) || g.seen === null || g.seen === undefined) continue;
+      if (sees(a.id)) trackTick(g, a, yaw, pitch, eye, tick); else trackHidden(g);
+    }
     // first contact: the player's and the enemy's position on the tick of the first shot at it, hit on it or damage from it
     if (touch) for (const id of touch) {
       const g = cur.eng.get(id);
@@ -803,7 +842,7 @@
     for (const [id, killTick] of kills) {
       const a = actors.find((q) => q.id === id), body = bodyOf(a);
       if (!a || !body || (cur.over.has(id) && cur.over.get(id) === a.bornTick)) continue;
-      closeEngagement({ id, tmpl: a.templateId ?? null, born: a.bornTick, start: killTick, travel: 0, move: 0, err: aimError(yaw, pitch, eye, body.head), at: startAt(x, z, a), contact: { tick: killTick, at: startAt(x, z, a) } }, killTick, true, weapon);
+      closeEngagement({ id, tmpl: a.templateId ?? null, born: a.bornTick, start: killTick, seen: killTick, hid: 0, travel: 0, move: 0, err: aimError(yaw, pitch, eye, body.head), at: startAt(x, z, a), contact: { tick: killTick, at: startAt(x, z, a) } }, killTick, true, weapon);
       cur.over.set(id, a.bornTick);
     }
     // a finished life of an actor without a bornTick can start again once the actor has been gone for a tick
@@ -1084,12 +1123,18 @@
   const trackingOf = (t, dt) => (Array.isArray(t) && t.length >= 10 && typeof t[0] === "number" ? {
     samples: t[0], seconds: round2(t[0] * dt), bodyOn: t[1], headOn: t[2], bodyErrorSum: t[3], headErrorSum: t[4], lagSum: t[5], jitterSum: t[6], jitterPairs: t[7],
     lockBodySeconds: t[8] >= 0 ? round2(t[8] * dt) : null, lockHeadSeconds: t[9] >= 0 ? round2(t[9] * dt) : null, enemySpeedSum: typeof t[10] === "number" ? t[10] : 0 } : null);
+  // What the engagement row says about sight (indexes 21, 22): { hiddenTicks, seenTick, visibleTimeToKill } or the nulls of a round without sight data.
+  const sightOf = (e, dt) => {
+    const hid = typeof e[21] === "number" ? e[21] : null, seen = typeof e[22] === "number" && e[22] >= 0 ? e[22] : null;
+    return { hiddenTicks: hid, seenTick: seen, hiddenSeconds: hid === null ? null : round2(hid * dt),
+      visibleTimeToKill: hid !== null && seen !== null && e[3] >= 0 ? round2(Math.max(0, e[3] - seen - hid) * dt) : null };
+  };
   const expand = (r) => {
     const dt = r.dt || 1 / 128, W = r.W || [], T = r.T || [], K = r.K || {};
     const target = (i) => (i >= 0 && T[i] != null ? T[i] : null);
     const point = (x, y, z) => (x == null ? null : { x, y, z });
     return {
-      id: r.id ?? null, day: r.day ?? null,
+      id: r.id ?? null, day: r.day ?? null, sight: r.sl === 1,
       at: r.at, code: r.code, map: r.map, mode: r.mode, drillWeapon: r.wpn, tickSeconds: dt, end: r.end, truncated: !!r.cut,
       ...(r.sens != null || r.sensAds != null ? { input: { sensitivity: r.sens ?? null, adsMultiplier: r.sensAds ?? null, scopedMultiplier: r.sensScoped ?? null,
         invertY: r.sensInvY === 1, accelerationNotice: r.sensAccel === 1 } } : {}),
@@ -1118,7 +1163,7 @@
         contactTick: typeof e[15] === "number" ? e[15] : null,
         playerContact: typeof e[16] === "number" && typeof e[17] === "number" ? { x: e[16], z: e[17] } : null,
         enemyContact: typeof e[18] === "number" && typeof e[19] === "number" ? { x: e[18], z: e[19] } : null,
-        tracking: trackingOf(e[20], dt) })),
+        tracking: trackingOf(e[20], dt), ...sightOf(e, dt) })),
       nearMisses: (r.m || []).map((n) => {
         const shot = (r.s || [])[n[1]], v = n[5];
         return { shotTick: n[0], time: round2(n[0] * dt), shotIndex: n[1], weapon: shot ? (W[shot[1]] ?? null) : null, enemyId: n[2], template: target(n[3]),
@@ -1190,7 +1235,7 @@
     try {
       const f = filter || {}, out = [];
       for (const r of (await storedRounds({ code: f.code, map: f.map, limit: f.rounds })).map(expand)) {
-        for (const row of r[listName]) if (!f.weapon || row.weapon === f.weapon) out.push({ roundId: r.id, day: r.day, at: r.at, code: r.code, map: r.map, mode: r.mode, ...row });
+        for (const row of r[listName]) if (!f.weapon || row.weapon === f.weapon) out.push({ roundId: r.id, day: r.day, at: r.at, code: r.code, map: r.map, mode: r.mode, sight: r.sight, ...row });
       }
       return f.limit > 0 ? out.slice(-f.limit) : out;
     } catch (err) { warn("could not read " + listName, err); return []; }
