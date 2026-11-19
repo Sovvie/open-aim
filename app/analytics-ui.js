@@ -810,6 +810,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
   }
   function placePanel(overlay, html) {
     let panel = overlay.querySelector("." + MARK);
+    if (!html) { if (panel) panel.remove(); return; } // tracking drills: no hit report, and no column that would push the result card sideways
     if (!panel) {
       panel = document.createElement("section");
       panel.className = MARK;
@@ -895,7 +896,8 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
       withTimeout(loadDiedRound(end), READ_TIMEOUT_MS)
         .then((round) => {
           const selected = (died && pendingPick.get(overlay)) || null; // a row clicked while the round was still being read
-          const html = hitPanelHtml(round, "killer", selected, died); overlayDone.set(overlay, { round, tab: "killer", html, selected, died }); placePanel(overlay, html);
+          const html = round && round.mode === "tracking" ? "" : hitPanelHtml(round, "killer", selected, died); // a round scored by time on target has no shots to report
+          overlayDone.set(overlay, { round, tab: "killer", html, selected, died }); placePanel(overlay, html);
         })
         .catch(() => { const html = hitPanelHtml(null); overlayDone.set(overlay, { round: null, tab: "killer", html, died }); try { placePanel(overlay, html); } catch {} });
     } catch {}

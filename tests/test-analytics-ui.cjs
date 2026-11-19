@@ -152,6 +152,16 @@ for (const verdict of ["cleared", "time"]) {
     assert.strictEqual(A.calls.length, 1);
   });
 }
+test("result screen: a tracking drill (scored by time on target) gets no hit report, so the result card is not pushed aside", async () => {
+  const A = stub({ rounds: [{ ...diedRound([shot({ part: "head" }), shot()]), end: "time", mode: "tracking" }] });
+  const { ui, document } = load({ analytics: A });
+  const { overlay } = resultOverlay(document, false, "time");
+  ui.syncResult(); await settle();
+  assert.ok(!overlay.querySelector(".aim-an-hit"), "no panel for a tracking round");
+  ui.syncResult(); ui.syncResult(); await settle();
+  assert.ok(!overlay.querySelector(".aim-an-hit"), "and none after a re-render");
+  assert.strictEqual(A.calls.length, 1, "one read");
+});
 test("result screen: a cleared screen whose newest stored round is a death shows the no-record message, not that death", async () => {
   const A = stub({ rounds: [diedRound([shot()])] });
   const { ui, document } = load({ analytics: A });
