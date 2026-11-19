@@ -11,6 +11,7 @@ import {
   BLOCK_SHAPES, newBlock, structureTops, gameBlock,
   PLAYBACKS, RECORD_SECONDS, copycatFrames, copycatAt, copycatSmokes, trackFromTake, compileRecording,
   canRandomSpot, usesOwnDispatcher, hasZone, zoneCorners, ZONE_MOVES, zoneCenter, zoneTurn, zoneTurnHandle, zoneTurnToward, tradeTarget, stuckTradeRings,
+  botSpots, swingRadiusOn, soundRuleOn, newSoundRule, SWING_EVENTS, SOUND_SOURCES,
 } from "./drill.js";
 import { arenaSize, arenaRect, setArenaRect, ARENA_REACH, ARENA_MIN, arenaWallHeight, surfaceFor, darkArena, targetColor, arenaSurface, setArenaSurface, SURFACES } from "./arena.js";
 import { resizePiece, wallDepth, createPieceSnap, MIN_SIZE, MAX_SIZE } from './transform.js';
@@ -166,6 +167,46 @@ function shiftItem(o, ox, oz) {
   if (Array.isArray(o.spots)) for (const s of o.spots) { mv(s); if (s.route) s.route.forEach(mv); }
   if (o.trigger) for (const end of ["a", "b"]) o.trigger[end] = { x: r(o.trigger[end].x + ox), z: r(o.trigger[end].z + oz) };
   if (o.flash && o.flash.target) o.flash.target = { ...o.flash.target, x: r(o.flash.target.x + ox), z: r(o.flash.target.z + oz) };
+  if (o.soundRule) shiftSoundRule(o.soundRule, ox, oz);
+}
+// A sound rule's listening area and the spot it swings to move with the bot when it is moved in a group.
+function shiftSoundRule(rule, ox, oz) {
+  const r = (v) => Math.round(v * 100) / 100;
+  if (rule.area) rule.area = { x0: r(rule.area.x0 + ox), z0: r(rule.area.z0 + oz), x1: r(rule.area.x1 + ox), z1: r(rule.area.z1 + oz) };
+  if (rule.spot) { rule.spot.x = r(rule.spot.x + ox); rule.spot.z = r(rule.spot.z + oz); if (rule.spot.route) for (const q of rule.spot.route) { q.x = r(q.x + ox); q.z = r(q.z + oz); } }
+}
+// The sound box (a bot's soundRule.area, map metres): always x0 < x1, z0 < z1, at least SOUND_MIN wide, inside the
+// map (or the arena on the range). Dragging and the sliders both go through these.
+const SOUND_MIN = 1;
+const orderedArea = (a) => ({ x0: Math.min(a.x0, a.x1), z0: Math.min(a.z0, a.z1), x1: Math.max(a.x0, a.x1), z1: Math.max(a.z0, a.z1) });
+function soundBounds() {
+  const b = worldBounds();
+  return { x0: Math.min(b.x0, b.x1), x1: Math.max(b.x0, b.x1), z0: Math.min(b.z0, b.z1), z1: Math.max(b.z0, b.z1) };
+}
+// Same size, shifted back inside the bounds (a box bigger than the map is shrunk to it).
+function fitSoundArea(a) {
+  const o = orderedArea(a), b = soundBounds(), r = (v) => Math.round(v * 100) / 100;
+  const fit = (lo, hi, lo0, hi0) => {
+    const size = Math.min(Math.max(hi - lo, SOUND_MIN), hi0 - lo0), start = Math.max(lo0, Math.min(lo, hi0 - size));
+    return [r(start), r(start + size)];
+  };
+  const [x0, x1] = fit(o.x0, o.x1, b.x0, b.x1), [z0, z1] = fit(o.z0, o.z1, b.z0, b.z1);
+  return { x0, z0, x1, z1 };
+}
+// One drag step: orig is the box when the drag began, (dx, dz) how far the pointer moved. sx / sz say what each
+// axis does: "both" moves the box, "x0" / "x1" (and "z0" / "z1") pull that edge, null leaves the axis alone.
+function dragSoundArea(orig, sx, sz, dx, dz, snap) {
+  const b = soundBounds(), r = (v) => Math.round(v * 100) / 100, out = { ...orig };
+  const axis = (k0, k1, mode, delta, lo, hi) => {
+    if (mode === "both") {
+      const size = Math.min(orig[k1] - orig[k0], hi - lo), start = Math.max(lo, Math.min(snap(orig[k0] + delta), hi - size));
+      out[k0] = r(start); out[k1] = r(start + size);
+    } else if (mode === k0) out[k0] = r(Math.max(lo, Math.min(snap(orig[k0] + delta), orig[k1] - SOUND_MIN)));
+    else if (mode === k1) out[k1] = r(Math.min(hi, Math.max(snap(orig[k1] + delta), orig[k0] + SOUND_MIN)));
+  };
+  axis("x0", "x1", sx, dx, b.x0, b.x1);
+  axis("z0", "z1", sz, dz, b.z0, b.z1);
+  return out;
 }
 const onMap = () => S.drill && S.drill.place !== "range";
 const DRAFT_KEY = 'studio-active-draft-v1';
@@ -1536,6 +1577,7 @@ function paint(t) {
       ctx.font = "800 12px Bahnschrift, Segoe UI"; ctx.textAlign = "center"; ctx.fillStyle = "#ffffff"; ctx.fillText("you cross", mx, my + 18); ctx.restore();
     }
     if (it.tradeOf) drawTrade(it, isSel);
+    drawSwing(it, isSel);
     if (it.flash && it.flash.on) drawFlash(it, isSel, S.preview ? at.flashAge : undefined);
     if (at.shown) body(it, at, isSel, bad(it.x, it.z));
     if (at.deadAge !== undefined) {
@@ -1946,6 +1988,57 @@ function drawBlock(b, isSel, isBad) {
   if (isSel && S.group.length < 2) for (const h of blockHandles(b)) handleArrow(h.x, h.z, h.dir.x, h.dir.z, drag && drag.type === "blockSide" && drag.dimension === h.dimension && drag.sign === h.sign);
 }
 
+// A bot's swing triggers (see swingGroup): a ring of its radius around where it holds, and a blue box for the area
+// where a sound you make sends it, with a dashed link to the spot it swings to.
+const SWING = "#ff8a5c", HEAR = "#5cc8ff";
+// " (60%)" for a swing chance under 100 (percent, 0-100); nothing when it always swings.
+const chancePart = (c) => (Number.isFinite(c) && c < 100 ? ` (${Math.round(Math.max(0, c))}%)` : "");
+function drawSwing(it, isSel) {
+  const k = S.view.k;
+  if (swingRadiusOn(it)) {
+    const [px, py] = pt(it.x, it.z);
+    ctx.save();
+    ctx.fillStyle = isSel ? "rgba(255,138,92,.08)" : "rgba(255,138,92,.03)";
+    ctx.strokeStyle = isSel ? SWING : "rgba(255,138,92,.55)"; ctx.lineWidth = isSel ? 2.5 : 1.5; ctx.setLineDash(isSel ? [] : [7, 4]);
+    ctx.beginPath(); ctx.arc(px, py, it.swingRadius * k, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.setLineDash([]);
+    if (isSel || k >= 5) {
+      ctx.font = "700 11px Bahnschrift, Segoe UI"; ctx.textAlign = "center"; ctx.lineWidth = 3; ctx.strokeStyle = "#0a1118"; ctx.fillStyle = SWING;
+      const text = `swings on a ${it.swingOn === "damage" ? "hit" : "kill"} within ${metres(it.swingRadius)}${chancePart(it.swingChance)}`;
+      ctx.strokeText(text, px, py - it.swingRadius * k - 6); ctx.fillText(text, px, py - it.swingRadius * k - 6);
+    }
+    ctx.restore();
+  }
+  if (soundRuleOn(it)) {
+    const { x0, z0, x1, z1 } = it.soundRule.area, sp = it.soundRule.spot;
+    ctx.save();
+    ctx.fillStyle = isSel ? "rgba(92,200,255,.12)" : "rgba(92,200,255,.05)";
+    ctx.strokeStyle = isSel ? HEAR : "rgba(92,200,255,.6)"; ctx.lineWidth = isSel ? 2.5 : 1.5; ctx.setLineDash(isSel ? [] : [7, 4]);
+    ctx.beginPath();
+    [[x0, z0], [x1, z0], [x1, z1], [x0, z1]].forEach(([x, z], i) => ctx[i ? "lineTo" : "moveTo"](...pt(x, z)));
+    ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.setLineDash([2, 4]); ctx.lineWidth = 1;
+    const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+    line(cx, cz, sp.x, sp.z);
+    ctx.setLineDash([]); ctx.lineWidth = 2;
+    const [sx, sy] = pt(sp.x, sp.z);
+    ctx.beginPath(); ctx.arc(sx, sy, Math.max(7, 0.45 * k), 0, Math.PI * 2); ctx.stroke();
+    if (isSel || k >= 5) {
+      const [mx, my] = pt(cx, cz);
+      ctx.font = "700 11px Bahnschrift, Segoe UI"; ctx.textAlign = "center"; ctx.lineWidth = 3; ctx.strokeStyle = "#0a1118"; ctx.fillStyle = HEAR;
+      const text = `hears you here${chancePart(it.soundRule.swingChance)}`;
+      ctx.strokeText(text, mx, my - 14); ctx.fillText(text, mx, my - 14);
+    }
+    ctx.restore();
+    // Grab handles (drag a corner or an edge to resize, the centre handle to move): the geometry never depends on the chance.
+    if (isSel && S.group.length < 2) {
+      const a = orderedArea(it.soundRule.area), mx = (a.x0 + a.x1) / 2, mz = (a.z0 + a.z1) / 2;
+      for (const [x, z] of [[a.x0, a.z0], [a.x1, a.z0], [a.x1, a.z1], [a.x0, a.z1]]) handle(x, z, HEAR);
+      for (const [x, z] of [[mx, a.z0], [mx, a.z1], [a.x0, mz], [a.x1, mz]]) handle(x, z, "#9ddcff");
+      handle(mx, mz, HEAR, "+");
+    }
+  }
+}
+
 // A bot's trigger line: it shows up when you walk across it. Yellow, with a faint link to its bot.
 const TRIGGER = "#ffd84a";
 function drawTrigger(it, isSel) {
@@ -2117,6 +2210,19 @@ function hitTest(px, py) {
   for (const i of items) if (i.kind === "bot" && near(i.x, i.z, r)) return { type: "item", item: i };
   for (const i of items) if (i.kind === "targets" && near(i.x, i.z, 14)) return { type: "item", item: i };
   for (const i of items) if (i.kind === "bot" && i.route) for (let n = 1; n < i.route.length; n++) if (near(i.route[n].x, i.route[n].z, 7)) return { type: "item", item: i };
+  // The selected bot's sound box: a corner or an edge resizes it, the centre handle moves it. A click inside the box
+  // that misses its border and handles is not a hit, so it deselects or pans like a click on empty map (the box
+  // comes after the bots and their handles, so those stay grabbable inside it).
+  const hearing = it && it.kind === "bot" && S.group.length < 2 && soundRuleOn(it) ? it : null;
+  if (hearing) {
+    const a = orderedArea(hearing.soundRule.area);
+    const grab = (sx, sz, x, z) => ({ type: "soundArea", item: hearing, sx, sz, cursor: resizeCursor({ x, z, dir: { x: sx === "x0" ? -1 : sx === "x1" ? 1 : 0, z: sz === "z0" ? -1 : sz === "z1" ? 1 : 0 } }) });
+    for (const [sx, x] of [["x0", a.x0], ["x1", a.x1]]) for (const [sz, z] of [["z0", a.z0], ["z1", a.z1]]) if (near(x, z, 11)) return grab(sx, sz, x, z);
+    const mx = (a.x0 + a.x1) / 2, mz = (a.z0 + a.z1) / 2;
+    if (near(mx, mz, 11)) return { type: "soundArea", item: hearing, sx: "both", sz: "both", cursor: "move" };
+    for (const sx of ["x0", "x1"]) if (segDist(px, py, ...pt(a[sx], a.z0), ...pt(a[sx], a.z1)) < 6) return grab(sx, null, a[sx], mz);
+    for (const sz of ["z0", "z1"]) if (segDist(px, py, ...pt(a.x0, a[sz]), ...pt(a.x1, a[sz])) < 6) return grab(null, sz, mx, a[sz]);
+  }
   for (const i of items) if (i.kind === "wall") {
     const [a, b] = wallEnds(i);
     if (segDist(px, py, ...pt(a.x, a.z), ...pt(b.x, b.z)) < Math.max(8, 0.2 * S.view.k)) return { type: "item", item: i };
@@ -2202,6 +2308,7 @@ function bindCanvas() {
       ...(hit.type === "spotMove" ? { ax: at.x, az: at.z, orig: structuredClone(hit.item.spots[hit.spot]) } : {}),
       baseY: obj.y, snapping: hit.type === "item" && !hit.trigLine ? createPieceSnap(S.drill.items, obj) : null,
       ...(hit.trigLine ? { ax: at.x, az: at.z, orig: structuredClone(hit.item.trigger) } : {}),
+      ...(hit.type === "soundArea" ? { ax: at.x, az: at.z, orig: orderedArea(hit.item.soundRule.area) } : {}),
       ...(hit.type === "blockSide" ? { original: structuredClone(hit.item) } : {}) };
     draw();
   });
@@ -2285,12 +2392,17 @@ function dragMove(e, at3) {
         // The whole group moves by the same amount, each with its route, spots, trigger line and flash target.
         if (Array.isArray(it.spots)) for (const s of it.spots) { s.x = snap(s.x + ox); s.z = snap(s.z + oz); if (s.route) for (const p of s.route) { p.x = snap(p.x + ox); p.z = snap(p.z + oz); } }
         if (it.trigger) for (const end of ["a", "b"]) it.trigger[end] = { x: snap(it.trigger[end].x + ox), z: snap(it.trigger[end].z + oz) };
+        if (it.soundRule) shiftSoundRule(it.soundRule, ox, oz);
         for (const o of d.items) if (o.id !== it.id && inGroup(o.id)) shiftItem(o, ox, oz);
       }
       // The route goes up or down with the bot (onto a box, off a ledge), each point to the floor nearest that height.
       const oy = at.stand ? (it.y ?? 0) - oldY : 0;
       if (it.route) for (const p of it.route) { p.x = snap(p.x + ox); p.z = snap(p.z + oz); p.y = floorAt(p.x, p.z, (p.y ?? 0) + oy) ?? p.y; }
       if (it.flash && it.flash.target) it.flash.target = { x: snap(it.flash.target.x + ox), z: snap(it.flash.target.z + oz) };
+    } else if (drag.type === "soundArea") {
+      // Same pointer handling as the other handles (snap: 0.1 m, Alt = free); sizes in the compiler's map metres.
+      const it = d.items.find((i) => i.id === drag.item.id);
+      if (it && it.soundRule) it.soundRule.area = dragSoundArea(drag.orig, drag.sx, drag.sz, at.x - drag.ax, at.z - drag.az, snap);
     } else if (drag.type === "botTurn") {
       const it = d.items.find((i) => i.id === drag.item.id);
       it.facing = Math.round(yawDeg(it, at));
@@ -2701,6 +2813,72 @@ function showsUpField(b, d) {
     timed ? null : "Takes its turn with the other bots.");
 }
 const mod = (fn) => (d) => { const it = d.items.find((i) => i.id === S.sel); if (it) fn(it, d); };
+// Swing triggers (game patch studio-swing-events in the game bundles): the bot holds its angle and swings, once per
+// event, after a delay. Radius: when you kill or hit a bot within some metres of it (the nearest holder swings).
+// Sound: when a sound you make is inside an area; it swings to one of its spots. Gunshots, running footsteps and
+// landings make sounds. Drag the blue box on the map to place it (the sliders are for exact numbers). Each rule has a
+// swingChance (percent): the game rolls it each time the rule would fire, the preview always shows the geometry.
+function swingGroup(b, d) {
+  if (b.trigger || b.tradeOf) {
+    return h("div", { class: "group" }, field("Swings when", h("p", { class: "help" }, "Not with a trigger line or a trade: those already decide when this bot shows up. Set Shows up to \"With the round\" to use a radius or sound trigger.")));
+  }
+  const radius = b.swingRadius || 0, lo = b.swingMin ?? 0.3, hi = b.swingMax ?? 1;
+  const rule = b.soundRule && b.soundRule.on ? b.soundRule : null;
+  const setRule = (fn) => (dd, v) => mod((it) => fn(it.soundRule, v, it))(dd);
+  const parts = [
+    field("Swings near a kill", h("div", {},
+      slider(0, 40, 0.5, radius, (v) => (v ? `within ${metres(v)}` : "off"), (dd, v) => mod((it) => (it.swingRadius = v))(dd)),
+      radius > 0 ? seg(SWING_EVENTS.map(([v, label]) => [v, label]), b.swingOn === "damage" ? "damage" : "kill", (v) => edit(mod((it) => (it.swingOn = v)))) : null,
+      radius > 0 ? h("div", {}, h("p", { class: "help" }, "It swings this long after the event (random between the two):"),
+        slider(0, 3, 0.05, lo, (v) => `from ${secs(v)}`, (dd, v) => mod((it) => { it.swingMin = v; if ((it.swingMax ?? 1) < v) it.swingMax = v; })(dd)),
+        slider(0, 3, 0.05, hi, (v) => `to ${secs(v)}`, (dd, v) => mod((it) => { it.swingMax = v; if ((it.swingMin ?? 0.3) > v) it.swingMin = v; })(dd))) : null),
+      radius > 0 ? chanceControl(b.swingChance, (dd, v) => mod((it) => (it.swingChance = v))(dd)) : null,
+      radius > 0 ? "The orange ring on the map. Every bot whose ring holds the event is a candidate; only the nearest one swings. It holds its angle until then." : "Off. Give it a radius and it holds its angle, then swings when you kill or hit a bot that close to it."),
+    field("Swings to a sound", h("div", {},
+      toggle(!!rule, "Swings when it hears you", "A sound you make inside an area sends it to a spot", (dd, v) => mod((it) => {
+        if (v) { it.soundRule = it.soundRule || newSoundRule(it, dd.start); it.soundRule.on = true; } else if (it.soundRule) it.soundRule.on = false;
+      })(dd)),
+      ...(rule ? soundRuleControls(b, rule, setRule) : [])),
+      rule ? "The blue box on the map is where the sound has to be made. Your gunshots, running footsteps (not crouched, not Shift-walking) and landings make sounds; reloads and abilities are not wired yet." : null),
+  ];
+  return h("div", { class: "group" }, ...parts);
+}
+function soundRuleControls(b, rule, setRule) {
+  const a = rule.area, cx = (a.x0 + a.x1) / 2, cz = (a.z0 + a.z1) / 2, w = Math.abs(a.x1 - a.x0), dd0 = Math.abs(a.z1 - a.z0);
+  const r1 = (v) => Math.round(v * 10) / 10;
+  // Rebuilds the box from its centre and size, so each slider changes one thing.
+  const area = (c, ww, hh) => ({ x0: r1(c.x - ww / 2), z0: r1(c.z - hh / 2), x1: r1(c.x + ww / 2), z1: r1(c.z + hh / 2) });
+  const has = (k) => (rule.sources || []).includes(k);
+  const spots = botSpots(b), bounds = soundBounds();
+  const span = (c, lo, hi) => [Math.max(lo, c - 40), Math.min(hi, c + 40)];
+  const [mx0, mx1] = span(cx, bounds.x0, bounds.x1), [mz0, mz1] = span(cz, bounds.z0, bounds.z1), top = Math.max(SOUND_MIN, Math.min(40, bounds.x1 - bounds.x0, bounds.z1 - bounds.z0));
+  return [
+    h("p", { class: "help" }, "Which sounds:"),
+    ...SOUND_SOURCES.map(([k, label]) => toggle(has(k), label, null, (dd, v) => setRule((r) => { r.sources = SOUND_SOURCES.map(([id]) => id).filter((id) => (id === k ? v : (r.sources || []).includes(id))); })(dd))),
+    h("p", { class: "help" }, "Where: drag the blue box on the map (corners and edges resize it). For exact numbers (map coordinates; the box's middle and size):"),
+    slider(mx0, mx1, 0.5, cx, (v) => `middle x ${v.toFixed(1)}`, (dd, v) => setRule((r) => (r.area = fitSoundArea(area({ x: v, z: cz }, w, dd0))))(dd)),
+    slider(mz0, mz1, 0.5, cz, (v) => `middle z ${v.toFixed(1)}`, (dd, v) => setRule((r) => (r.area = fitSoundArea(area({ x: cx, z: v }, w, dd0))))(dd)),
+    slider(SOUND_MIN, top, 0.5, Math.min(w, top), (v) => `width ${metres(v)}`, (dd, v) => setRule((r) => (r.area = fitSoundArea(area({ x: cx, z: cz }, v, dd0))))(dd)),
+    slider(SOUND_MIN, top, 0.5, Math.min(dd0, top), (v) => `depth ${metres(v)}`, (dd, v) => setRule((r) => (r.area = fitSoundArea(area({ x: cx, z: cz }, w, v))))(dd)),
+    h("p", { class: "help" }, "It swings to:"),
+    h("div", { class: "btn-row" }, spots.map((s, i) => h("button", {
+      class: "btn small" + (Math.abs(s.x - rule.spot.x) < 0.01 && Math.abs(s.z - rule.spot.z) < 0.01 ? " primary" : ""),
+      onclick: () => edit(mod((it) => { const sp = botSpots(it)[i]; it.soundRule.spot = { x: sp.x, y: sp.y, z: sp.z, ...(sp.route ? { route: sp.route.map((p) => ({ ...p })) } : {}) }; })),
+    }, i ? `Spot ${i + 1}` : "Its spot"))),
+    h("p", { class: "help" }, "It swings this long after the sound (random between the two):"),
+    slider(0, 3, 0.05, rule.delayMin ?? 0.3, (v) => `from ${secs(v)}`, (dd, v) => setRule((r) => { r.delayMin = v; if ((r.delayMax ?? 1) < v) r.delayMax = v; })(dd)),
+    slider(0, 3, 0.05, rule.delayMax ?? 1, (v) => `to ${secs(v)}`, (dd, v) => setRule((r) => { r.delayMax = v; if ((r.delayMin ?? 0.3) > v) r.delayMin = v; })(dd)),
+    chanceControl(rule.swingChance, (dd, v) => setRule((r) => (r.swingChance = v))(dd)),
+  ];
+}
+// "Swings 60% of the time": percent 0-100 (missing = 100). The game rolls it each time the rule would fire;
+// the map preview does not change with it.
+function chanceControl(value, set) {
+  const pct = Number.isFinite(value) ? Math.max(0, Math.min(100, value)) : 100;
+  return h("div", {},
+    slider(0, 100, 1, pct, (v) => `Swings ${Math.round(v)}% of the time`, set),
+    h("p", { class: "help" }, "The game rolls this each time the trigger would fire. The map preview always shows the full area; it does not change with the chance."));
+}
 
 function renderSide() {
   if (!side || !S.drill) return;
@@ -2878,6 +3056,7 @@ function botPanel(b) {
       field("What it does", seg(Object.entries(MOVES).map(([k, v]) => [k, v.short, v.label]), b.move, (v) => changeMove(b, v)))),
     // When it appears (with the round / a line / a trade) comes right after what it does, then where.
     h("div", { class: "group" }, showsUpField(b, d)),
+    swingGroup(b, d),
     randomSpotsGroup(b),
     randomZoneGroup(b),
   ];
@@ -3135,7 +3314,7 @@ async function useSavedRun(b) {
 // settings into the drill, so drills never depend on the library.
 let savedBots = [];
 let savedBotsEl = null;
-const NOT_SAVED = ["id", "kind", "move", "x", "y", "z", "route", "trigger", "facing", "spots", "tradeOf"];
+const NOT_SAVED = ["id", "kind", "move", "x", "y", "z", "route", "trigger", "facing", "spots", "tradeOf", "soundRule"];
 
 function botSettings(b) {
   const s = JSON.parse(JSON.stringify(b));

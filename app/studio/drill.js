@@ -145,7 +145,7 @@ export const ARMOR = [[100, "No armor (100)"], [125, "Light armor (125)"], [150,
 export const TARGET_SIZES = { small: 0.12, medium: 0.2, large: 0.32 };
 
 // Bumped whenever compile() changes what it writes; the Studio re-saves older drills.
-export const COMPILER = 23; // 23: random player starts (playerSpawns); 22: per-spot peek strafe width, copycat with spots starts at round start; 21: Studio smokes are always Omen; 20: peeker strafe width (peekWidth) and "random" strafe-or-hold at the peek (dispatcher route groups, aim-dispatch-group in BiMsX6Xn.js); 19: a peeker with its own dispatcher (random wait/spots) waits back-after after a kill; 18: flashing/once peekers wait their own back-after time after a kill; // 16: Unpredictable strafe taps / full speed, crouch "Only when fully stopped"; 17: Yoru flash bounce surface (normal)
+export const COMPILER = 25; // 25: swingChance (0-1) on swing/sound dispatchers; 24: swing triggers (swingRadius, soundRule: dispatcher swing/hear, game patch studio-swing-events); 23: random player starts (playerSpawns); 22: per-spot peek strafe width, copycat with spots starts at round start; 21: Studio smokes are always Omen; 20: peeker strafe width (peekWidth) and "random" strafe-or-hold at the peek (dispatcher route groups, aim-dispatch-group in BiMsX6Xn.js); 19: a peeker with its own dispatcher (random wait/spots) waits back-after after a kill; 18: flashing/once peekers wait their own back-after time after a kill; // 16: Unpredictable strafe taps / full speed, crouch "Only when fully stopped"; 17: Yoru flash bounce surface (normal)
 export const DEFAULT_JUMP_HEIGHT = 1.15;
 
 let counter = 0;
@@ -192,6 +192,16 @@ export function newBot(move, at) {
     // trigger: null (shows up with the round) or { a: {x, z}, b: {x, z} }: a line on the map;
     // the bot shows up `delay` seconds after you cross it.
     trigger: null,
+    // Swing triggers (game patch studio-swing-events; not with a trigger line or a trade): the bot holds its
+    // angle and swings after an event, swingMin-swingMax seconds later, once per event.
+    // swingRadius: 0 = off, else metres: swings when swingOn ("kill": you kill a bot, "damage": you hurt or
+    // kill one) happens within that distance of it; with several holders in range the nearest one swings.
+    swingRadius: 0, swingOn: "kill", swingMin: 0.3, swingMax: 1,
+    // swingChance: percent 0-100 (default 100) that the radius trigger swings each time it would; the game rolls it.
+    swingChance: 100,
+    // soundRule: null or newSoundRule(): { on, area: {x0, z0, x1, z1}, spot: {x, y, z, route?} (one of its spots),
+    // sources: any of "shot", "footstep", "land"; delayMin, delayMax, swingChance (percent 0-100, default 100) }. A sound you make inside the area sends it to the spot.
+    soundRule: null,
   };
   if (move === "peek") bot.route = [{ x: at.x - 2, y: at.y, z: at.z, wait: 0 }, { x: at.x, y: at.y, z: at.z, wait: 1.2 }];
   if (move === "cross") bot.route = [{ x: at.x - 4, y: at.y, z: at.z, wait: 0 }, { x: at.x + 4, y: at.y, z: at.z, wait: 0 }];
@@ -226,7 +236,8 @@ export function normalize(drill) {
     if (it.kind !== "bot") continue;
     const fresh = newBot(it.move, it);
     for (const k of ["spots", "randomWait", "zone", "tradeOf", "tradeMin", "tradeMax", "tradeStart", "tradeStartMin", "tradeStartMax", "peekStrafe", "peekWidth", "coverWait", "flash", "unpredictable", "hitSlow", "jump", "jumpHeight", "jumpMin", "jumpMax", "crouchRandom", "crouchStill", "crouchMin", "crouchMax", "crouchGapMin", "crouchGapMax",
-      "track", "playback", "replaySpeed", "mirror", "randomStart", "fireWhen", "trigger"]) if (it[k] === undefined) it[k] = fresh[k];
+      "track", "playback", "replaySpeed", "mirror", "randomStart", "fireWhen", "trigger", "swingRadius", "swingOn", "swingMin", "swingMax", "swingChance", "soundRule"]) if (it[k] === undefined) it[k] = fresh[k];
+    if (it.soundRule && typeof it.soundRule === "object" && it.soundRule.swingChance === undefined) it.soundRule.swingChance = 100;
   }
   return drill;
 }
@@ -336,6 +347,8 @@ export function problems(drill, floorAt) {
       else if (trackBlocked(drill, item)) out.push({ id: item.id, text: `${name}'s run goes through a wall or box. Move it or record again.`, soft: true });
     }
     if (item.kind === "bot" && item.trigger && !drill.round.move) out.push({ id: item.id, text: `${name} waits for you to cross its line, but you can't move. Turn on "I can walk around" in drill settings.` });
+    if (item.kind === "bot" && !drill.round.move && item.soundRule && item.soundRule.on && (item.soundRule.sources || []).some((k) => k !== "shot") && !(item.soundRule.sources || []).includes("shot")) out.push({ id: item.id, text: `${name} listens for your footsteps or landings, but you can't move. Turn on "I can walk around" in drill settings, or add gunshots.`, soft: true });
+    if (item.kind === "bot" && (item.trigger || item.tradeOf) && ((item.swingRadius || 0) > 0 || (item.soundRule && item.soundRule.on))) out.push({ id: item.id, text: `${name} has a swing trigger, but it also shows up by a trigger line or a trade, which wins. Turn one off.`, soft: true });
     if (floorAt && floorAt(item.x, item.z) === null) out.push({ id: item.id, text: `${name} is off the floor. Drag it onto the floor.` });
     if (floorAt && item.route) item.route.forEach((p, i) => {
       if (i > 0 && floorAt(p.x, p.z) === null) out.push({ id: item.id, text: `${name}: route point ${i + 1} is off the floor.` });
@@ -697,7 +710,65 @@ function spotsWithZones(bot, start, floorAt) {
 // A bot gets its own dispatcher (one entry per spot, picked at random, random gap) when it has
 // extra spots, a random wait, or a zone the area spawner can't do; otherwise it compiles as before.
 // A peeker set to strafe-or-hold at random needs one too: one actor per way, picked each time it comes out.
-export const usesOwnDispatcher = (bot) => canRandomSpot(bot) && !zoneSpawner(bot) && (botSpots(bot).length > 1 || hasZone(bot) || (bot.move === "peek" && ((bot.randomWait || 0) > 0 || bot.peekStrafe === "random")));
+// A bot with a swing trigger (below) always needs one: the game's dispatcher holds it until the event.
+export const usesOwnDispatcher = (bot) => canRandomSpot(bot) && (hasSwingGate(bot) || (!zoneSpawner(bot) && (botSpots(bot).length > 1 || hasZone(bot) || (bot.move === "peek" && ((bot.randomWait || 0) > 0 || bot.peekStrafe === "random")))));
+
+// ---------- swing triggers: radius and sound ----------
+// A bot that holds an angle and swings (shows up and does its move) when something happens, after a delay,
+// once per event. Not with a trigger line or a trade (those already decide when it shows up).
+// Radius: an event near it. Sound: a sound you make inside an area. The game side is tools/patch-swing-events.cjs.
+export const SWING_EVENTS = [["kill", "You kill a bot"], ["damage", "You hit or kill a bot"]];
+// Sounds the game makes events for: your gunshots, your running footsteps (not crouched, not Shift-walking) and your
+// landings. Reloads, abilities and bot sounds are not wired yet.
+export const SOUND_SOURCES = [["shot", "Your gunshots"], ["footstep", "Your footsteps (running)"], ["land", "Your landings"]];
+const swingable = (bot) => canRandomSpot(bot) && !bot.trigger && !bot.tradeOf;
+export const swingRadiusOn = (bot) => swingable(bot) && Number.isFinite(bot.swingRadius) && bot.swingRadius > 0;
+export const soundRuleOn = (bot) => swingable(bot) && !!(bot.soundRule && bot.soundRule.on && bot.soundRule.area && bot.soundRule.spot
+  && Array.isArray(bot.soundRule.sources) && bot.soundRule.sources.some((k) => SOUND_SOURCES.some(([id]) => id === k)));
+export const hasSwingGate = (bot) => swingRadiusOn(bot) || soundRuleOn(bot);
+// A starter sound rule: an 8 x 8 m area 8 m toward you from the bot, sending it to its own spot.
+export function newSoundRule(bot, start) {
+  const dx = start.x - bot.x, dz = start.z - bot.z, len = Math.hypot(dx, dz) || 1;
+  const cx = bot.x + (dx / len) * 8, cz = bot.z + (dz / len) * 8, r1 = (n) => Math.round(n * 10) / 10;
+  return {
+    on: true, area: { x0: r1(cx - 4), z0: r1(cz - 4), x1: r1(cx + 4), z1: r1(cz + 4) },
+    spot: { x: bot.x, y: bot.y, z: bot.z, ...(bot.route ? { route: bot.route.map((p) => ({ ...p })) } : {}) },
+    sources: ["shot", "footstep"], delayMin: 0.3, delayMax: 1, swingChance: 100,
+  };
+}
+// With a sound rule the bot swings to the rule's spot (the angle it was holding is where its radius is measured from).
+function swingSpotItem(item) {
+  if (!soundRuleOn(item)) return item;
+  const s = item.soundRule.spot;
+  if (item.route && !(Array.isArray(s.route) && s.route.length >= 2)) return item;
+  return { ...item, x: s.x, y: s.y, z: s.z, spots: [], ...(s.route ? { route: s.route } : {}) };
+}
+// swingChance is stored as a percent (0-100); the game gets a number 0-1 and rolls it each time the rule would fire.
+// Missing or not a number: 1 (older drills always swing).
+export const swingChance01 = (percent) => (Number.isFinite(percent) ? r2(Math.max(0, Math.min(100, percent)) / 100) : 1);
+// What the game's dispatcher reads (BiMsX6Xn.js, studio-swing-gate): swing (radius) and/or hear (sound area).
+function swingFields(item, ground) {
+  const lim = (lo, hi) => { const a = Math.max(0, Math.min(5, Number.isFinite(lo) ? lo : 0.3)); return [r2(a), r2(Math.max(a, Math.min(5, Number.isFinite(hi) ? hi : 1)))]; };
+  const out = {};
+  if (swingRadiusOn(item)) {
+    out.swing = {
+      radius: r2(Math.min(100, item.swingRadius)), on: item.swingOn === "damage" ? "damage" : "kill",
+      at: { x: r2(item.x), y: r2(ground(item.x, item.z, item.y)), z: r2(item.z) }, delay: lim(item.swingMin, item.swingMax), swingChance: swingChance01(item.swingChance),
+    };
+  }
+  if (soundRuleOn(item)) {
+    const rule = item.soundRule, a = rule.area;
+    out.hear = {
+      area: { x0: r2(Math.min(a.x0, a.x1)), z0: r2(Math.min(a.z0, a.z1)), x1: r2(Math.max(a.x0, a.x1)), z1: r2(Math.max(a.z0, a.z1)) },
+      sources: rule.sources.filter((k) => SOUND_SOURCES.some(([id]) => id === k)), delay: lim(rule.delayMin, rule.delayMax), swingChance: swingChance01(rule.swingChance),
+    };
+  }
+  out.spawnDelay = (out.swing || out.hear).delay;
+  // Dispatcher-level swingChance: the rule's own when there is one rule; with both, the higher of the two
+  // (each rule also carries its own swingChance in swing / hear, which the game should prefer).
+  out.swingChance = Math.max(out.swing ? out.swing.swingChance : 0, out.hear ? out.hear.swingChance : 0);
+  return out;
+}
 
 function botTemplate(bot, drill, id, name, start, once) {
   // Random strafe-or-hold where the game can't pick each time (a trigger line or a trade): picked once per Play.
@@ -909,7 +980,7 @@ export function compile(drill, floorAt) {
         });
         continue;
       }
-      const turnTaker = oneByOne && !bot.trigger && !(bot.move === "patrol" && !(bot.flash && bot.flash.on)) && bot.move !== "copycat";
+      const turnTaker = oneByOne && !bot.trigger && !hasSwingGate(bot) && !(bot.move === "patrol" && !(bot.flash && bot.flash.on)) && bot.move !== "copycat";
       if (!turnTaker && usesOwnDispatcher(item)) {
         ownDispatchers.push(randomSpotDispatcher(item, n, drill, start, ground, floorAt));
         continue;
@@ -1010,6 +1081,9 @@ function randomSpotDispatcher(item, n, drill, start, ground, floorAt, trade = nu
   const clear = drill.round.goal === "clear";
   const name = itemName(drill, item);
   const trigger = !trade && item.trigger;
+  // A swing trigger (radius / sound): read before the sound rule moves the bot to its spot.
+  const swing = !trade && !trigger && hasSwingGate(item) ? swingFields(item, ground) : null;
+  if (swing) item = swingSpotItem(item);
   if (trade) item = { ...item, back: false, trigger: null };
   const actors = [], routes = [];
   // A peeker that strafes or holds at random: two actors per spot (strafes / holds) in one route group, so
@@ -1057,7 +1131,9 @@ function randomSpotDispatcher(item, n, drill, start, ground, floorAt, trade = nu
   }
   // A copycat runs from the round start (after its Shows-up delay), like one without spots;
   // after that its gap is Comes back after (aim-dispatch-gates, firstDelay).
-  if (item.move === "copycat" && !trigger) {
+  // The game's dispatcher holds it until the event, then swings after the delay (BiMsX6Xn.js, studio-swing-gate).
+  if (swing) Object.assign(dispatcher, swing);
+  if (item.move === "copycat" && !trigger && !swing) {
     const d = r2(Math.max(0.05, item.delay || 0));
     dispatcher.firstDelay = [d, d];
   }
