@@ -137,14 +137,16 @@
      the map screens get theirs, instead of inside the card under the stats. The panel is then a direct child of the
      overlay (class aim-an-hit-side, set by placePanel only in this media range); each :has() ends in a class. */
   html[data-aim-local]:not(#es) body .al-result-overlay:has(> .aim-an-hit-side) {
-    grid-template-columns: clamp(260px, 21vw, 340px) minmax(0, 960px) !important;
-    gap: 18px !important; justify-content: center !important; align-items: center !important; }
-  html[data-aim-local]:not(#es) body .al-result-overlay:has(> .aim-an-hit-side):has(> .al-bots-card) {
-    grid-template-columns: clamp(260px, 21vw, 340px) minmax(0, 960px) auto !important; }
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
+    gap: 18px !important; justify-content: stretch !important; align-items: center !important; }
+  /* Centred card (19 Nov 2026): the result card stays in the middle of the screen (the two outer columns are equal), the hit report
+     is attached to its left edge and the game's bots card, when there is one, to its right edge. */
+  html[data-aim-local]:not(#es) body .al-result-overlay:has(> .aim-an-hit-side) > .al-result-modal { justify-self: center; }
+  html[data-aim-local]:not(#es) body .al-result-overlay:has(> .aim-an-hit-side) > .al-bots-card { justify-self: start; }
   html[data-aim-local]:not(#es) body .al-result-overlay:has(> .aim-an-hit-side) > .aim-an-hit-side { grid-column: 1; grid-row: 1; }
   html[data-aim-local]:not(#es) body .al-result-overlay:has(> .aim-an-hit-side) > .al-result-modal { grid-column: 2; grid-row: 1; }
   html[data-aim-local]:not(#es) body .al-result-overlay:has(> .aim-an-hit-side) > .al-bots-card { grid-column: 3; grid-row: 1; }
-  html[data-aim-local]:not(#es) body .al-result-overlay > .aim-an-hit.aim-an-hit-side { align-self: center; justify-self: stretch; width: 100%; max-height: 92vh;
+  html[data-aim-local]:not(#es) body .al-result-overlay > .aim-an-hit.aim-an-hit-side { align-self: center; justify-self: end; width: min(100%, clamp(260px, 21vw, 340px)); max-height: 92vh;
     margin: 0; padding: 14px 16px 14px; overflow: hidden auto; scrollbar-width: thin;
     box-shadow: inset 0 0 0 1px var(--an-line), 0 30px 90px rgba(0, 0, 0, 0.5); }
 }

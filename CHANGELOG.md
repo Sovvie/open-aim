@@ -28,10 +28,11 @@ All notable changes to openVaim (formerly AimTrainer). Newest first.
 - New tracking measurement: for enemies that move across your view, the recorder keeps how long your crosshair stays on the body and the head, how far off it is, whether it trails or leads the enemy, how steady it is and how long it takes to lock on.
 - Stats has a Tracking tab (Body or Head view, by weapon and by day), the result screen shows a one-line tracking readout, and the coach has two tracking tips.
 - The hit report now also shows on cleared and timed-out result screens (the All my shots pane), not only after a death.
+- On wide windows the result card now stays in the middle of the screen, with the hit report attached to its left edge.
 - Against round targets (Target Workshop) the hit report draws a circle to scale instead of the body, with Centre, Top, Right, Bottom and Left.
 
 ### Target Workshop
-- Tracking drills fire by themselves: you no longer hold mouse button 1, your score is the time your crosshair is on the target. The result screen of a tracking drill has no hit report.
+- Tracking drills need no shooting: you do not press mouse button 1 and nothing fires, your score is the time your crosshair is on the target. The result screen of a tracking drill has no hit report.
 - Five new tracking drills: Slow sweep, Fast sweep, Diagonals, Strafe reversals and Small and far.
 
 ### Medals and routines

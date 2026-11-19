@@ -1506,7 +1506,8 @@ test("no-shot screen, wide window: the hit panel floats in its own column LEFT o
   const wide = css.slice(css.indexOf("@media (min-width: 1180px) and (min-height: 680px)"));
   assert.ok(/\.al-result-overlay:has\(> \.aim-an-hit-side\) > \.aim-an-hit-side \{ grid-column: 1; grid-row: 1; \}/.test(wide), "panel in the first (left) column");
   assert.ok(/\.al-result-overlay:has\(> \.aim-an-hit-side\) > \.al-result-modal \{ grid-column: 2;/.test(wide) && /> \.al-bots-card \{ grid-column: 3;/.test(wide), "card in the middle, bots card on the right");
-  assert.ok(/:has\(> \.aim-an-hit-side\):has\(> \.al-bots-card\) \{\s*grid-template-columns: clamp\(260px, 21vw, 340px\) minmax\(0, 960px\) auto/.test(wide), "three columns, the card can shrink, nothing overlaps");
+  assert.ok(/:has\(> \.aim-an-hit-side\) \{\s*grid-template-columns: minmax\(0, 1fr\) auto minmax\(0, 1fr\)/.test(wide), "equal outer columns: the result card stays centred, the report sits on its left and the bots card on its right");
+  assert.ok(/> \.al-result-modal \{ justify-self: center; \}/.test(wide) && /> \.aim-an-hit\.aim-an-hit-side \{[^}]*justify-self: end;/.test(wide), "card centred, report attached to its left edge");
   assert.ok(/> \.aim-an-hit\.aim-an-hit-side \{[^}]*max-height: 92vh;[^}]*overflow: hidden auto;/.test(wide), "never cut off: scrolls inside itself like the bots card");
   assert.ok(wide.indexOf("aim-an-hit-side") < wide.indexOf("\n}\n"), "the side rules only apply inside the wide media range");
   // a re-render that drops the panel: put back in the same place, no new read; repeated syncs do not move it
