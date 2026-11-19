@@ -121,6 +121,9 @@ contextBridge.exposeInMainWorld("__aimDesktop", {
     }),
   },
   restart: () => ipcRenderer.send("aim:shell:restart"),
+  quit: () => ipcRenderer.send("aim:shell:quit"),
+  // Runs a named page action with a user gesture (menu-shortcuts.js: Esc closes the pause menu).
+  runWithGesture: (name) => ipcRenderer.send("aim:gesture-run", String(name)),
 });
 
 const shellInfo = ipcRenderer.sendSync("aim:shell:info");
@@ -142,6 +145,7 @@ webFrame.executeJavaScript(`(() => {
     displays: info.displays,
     setVsync(on) { this.vsyncSaved = on === true; window.__aimDesktop.setVsync(on === true); },
     restart() { window.__aimDesktop.restart(); },
+    quit() { window.__aimDesktop.quit(); },
     pageReady() {},
     pointerLock() {},
   };
