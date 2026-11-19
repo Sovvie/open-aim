@@ -1,0 +1,172 @@
+{
+  "item": {
+    "name": "Tracking — Strafe reversals",
+    "description": "The ball runs, stops and changes direction at random, like a player strafing. Train staying on it through the reversals.",
+    "shareCode": "e5c5b7ce13f247f6",
+    "sceneKey": "set-e5c5b7ce13f247f6",
+    "createTime": "2026-11-18 12:00:00",
+    "updateTime": "2026-11-18 12:00:00",
+    "docBytes": 1355,
+    "playCount": 0,
+    "status": 1,
+    "featured": false,
+    "parSeconds": null,
+    "mapId": null,
+    "sort": 203,
+    "type": "ball"
+  },
+  "scene": {
+    "name": "Tracking — Strafe reversals",
+    "description": "The ball runs, stops and changes direction at random, like a player strafing. Train staying on it through the reversals.",
+    "shareCode": "e5c5b7ce13f247f6",
+    "sceneKey": "set-e5c5b7ce13f247f6",
+    "createTime": "2026-11-18 12:00:00",
+    "updateTime": "2026-11-18 12:00:00",
+    "docBytes": 1355,
+    "playCount": 0,
+    "status": 1,
+    "featured": false,
+    "parSeconds": null,
+    "schemaVersion": 2,
+    "blockCount": 1,
+    "authorNickname": "openVaim",
+    "authorUid": "openvaim",
+    "sceneHash": "9c19f02d394b81ee",
+    "doc": {
+      "schemaVersion": 2,
+      "meta": {
+        "id": "scene-240933756",
+        "name": "Tracking — Strafe reversals",
+        "seed": 240933756,
+        "createdAt": 0
+      },
+      "environment": {
+        "skyColor": "#000000",
+        "fogNear": 15,
+        "fogFar": 40,
+        "ambientIntensity": 1.55,
+        "keyLightIntensity": 2.2,
+        "grid": {
+          "size": 42,
+          "divisions": 28,
+          "centerColor": "#ffffff",
+          "gridColor": "#0091ff",
+          "position": {
+            "x": 0,
+            "y": -0.02,
+            "z": 4.2
+          }
+        }
+      },
+      "blocks": [
+        {
+          "id": "ground",
+          "shape": "plane",
+          "position": {
+            "x": -0.2,
+            "y": -13.6,
+            "z": -8.8
+          },
+          "rotationY": 0,
+          "size": {
+            "x": 40,
+            "y": 0.4,
+            "z": 45
+          },
+          "color": "#18222b",
+          "collidable": true,
+          "transparent": true
+        }
+      ],
+      "playerSpawn": {
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 4.2
+        },
+        "yaw": 0
+      },
+      "spawners": [
+        {
+          "id": "spawner-1",
+          "kind": "area",
+          "actorTemplateId": "actor-1",
+          "position": {
+            "x": 0,
+            "y": 1.7,
+            "z": -15
+          },
+          "size": {
+            "x": 11,
+            "y": 0.1,
+            "z": 1
+          },
+          "maxAlive": 1,
+          "spawnDelay": [
+            0.2,
+            0.5
+          ]
+        }
+      ],
+      "actors": [
+        {
+          "id": "actor-1",
+          "name": "Target",
+          "body": {
+            "shape": "sphere",
+            "headSize": 1,
+            "bodyWidth": 0.44,
+            "bodyHeight": 0,
+            "radius": 0.42
+          },
+          "color": "#ff4655",
+          "behaviors": [
+            {
+              "kind": "strafe",
+              "speed": [
+                3,
+                7
+              ],
+              "dwell": [
+                0.06,
+                0.35
+              ],
+              "travel": [
+                1,
+                3.5
+              ],
+              "counterStrafe": true
+            }
+          ],
+          "hitSlow": true
+        }
+      ],
+      "rules": {
+        "duration": 60,
+        "scoring": "tracking",
+        "weapon": "vandal",
+        "playerMovable": false,
+        "fireMode": "hold",
+        "targetsInvincible": true,
+        "perfectAccuracy": true,
+        "tunables": [
+          {
+            "field": "radius",
+            "id": "actor-1",
+            "label": "Target size",
+            "min": 0.1,
+            "max": 0.8,
+            "step": 0.01
+          },
+          {
+            "field": "duration",
+            "label": "Round length",
+            "min": 30,
+            "max": 180,
+            "step": 15
+          }
+        ]
+      }
+    }
+  }
+}
