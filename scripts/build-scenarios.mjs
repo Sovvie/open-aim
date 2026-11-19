@@ -18,6 +18,7 @@ const items = [];
 const scenes = {};
 const seenCodes = new Map();
 const seenNames = new Map();
+const codeOfFile = new Map(); // file stem -> shareCode, to pair <stem>-easy / <stem>-hard
 
 for (const file of fs.readdirSync(SCENARIOS).filter((f) => f.endsWith(".json")).sort()) {
   const fail = (msg) => errors.push(`${FOLDER}/${file}: ${msg}`);
@@ -53,6 +54,7 @@ for (const file of fs.readdirSync(SCENARIOS).filter((f) => f.endsWith(".json")).
   if (seenNames.has(item.name)) fail(`same name as ${seenNames.get(item.name)}`);
   seenCodes.set(item.shareCode, file);
   seenNames.set(item.name, file);
+  codeOfFile.set(file.replace(/\.json$/, ""), item.shareCode);
 
   items.push(item);
   scenes[item.shareCode] = scene;
@@ -65,8 +67,18 @@ if (errors.length) {
 }
 
 items.sort((a, b) => a.sort - b.sort || a.name.localeCompare(b.name));
+// siblings: <stem>-easy.json and <stem>-hard.json are one drill at two difficulties (app/sibling-switch.js).
+// shareCode -> { code, difficulty } of the other one; a drill without a pair has no entry.
+const siblings = {};
+for (const [stem, easy] of codeOfFile) {
+  if (!stem.endsWith("-easy")) continue;
+  const hard = codeOfFile.get(stem.slice(0, -5) + "-hard");
+  if (!hard) continue;
+  siblings[easy] = { code: hard, difficulty: "hard" };
+  siblings[hard] = { code: easy, difficulty: "easy" };
+}
 console.log(`${items.length} scenarios OK.`);
 if (!CHECK_ONLY && FOLDER === "scenarios") {
-  fs.writeFileSync(OUT, JSON.stringify({ items, scenes }, null, 1));
+  fs.writeFileSync(OUT, JSON.stringify({ items, scenes, siblings }, null, 1));
   console.log(`Wrote ${path.relative(ROOT, OUT)}`);
 }

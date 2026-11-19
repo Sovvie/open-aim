@@ -21,3 +21,6 @@ Desktop.ini
 .DS_Store
 .vscode/
 .idea/
+
+# Local run data of the desktop app (test copy): user data, backups and performance runs. Never committed.
+/test-data/

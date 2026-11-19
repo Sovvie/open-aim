@@ -207,9 +207,33 @@
     document.body.appendChild(dock);
   }
 
+  // Quit tab (desktop app only, 17 Nov 2026): a lobby tab (.hall-tab, same look as the others) right after the "Settings"
+  // tab in the top nav's tab row (.hall-topnav .hall-tabs). Vue may re-render the row and drop it, so every sync puts it back
+  // after Settings when it is missing or out of place. Asks first, so a stray click does not lose the session.
+  let quitTab = null;
+  function syncQuitTab() {
+    if (!window.__aimDesktop?.quit) return;
+    const settings = [...document.querySelectorAll(".hall-topnav .hall-tabs .hall-tab, .hall-tabs .hall-tab")]
+      .find((tab) => tab !== quitTab && /^\s*setting/i.test(tab.textContent || ""));
+    if (!settings) return;
+    if (!quitTab) {
+      quitTab = document.createElement("button");
+      quitTab.type = "button";
+      quitTab.className = "hall-tab es-quit-tab";
+      quitTab.title = "Quit the game";
+      quitTab.textContent = "Quit";
+      quitTab.addEventListener("click", (event) => {
+        event.stopPropagation();
+        if (window.confirm("Quit Open Aim?")) window.__aimDesktop.quit();
+      });
+    }
+    if (settings.nextElementSibling !== quitTab) settings.after(quitTab);
+  }
+
   function syncBar() {
 
     syncDiscordContact();
+    syncQuitTab();
     const topnavRight = document.querySelector(".hall-topnav > .hall-topnav-right");
     if (!topnavRight) return;
     const previousElement = topnavRight.previousElementSibling;
@@ -264,6 +288,8 @@
       button.addEventListener("click", () => window.__aimTools?.[toolMethod]());
       bar.appendChild(button);
     }
+
+    // Stats (analytics-ui.js) is page content on the Training history tab since 17 Nov 2026, not a top-bar button.
 
     // Check for updates (release-updates-ui.js), in the installed and portable apps.
     if (window.__aimDesktop?.updates) {
