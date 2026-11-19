@@ -2,6 +2,39 @@
 
 All notable changes to openVaim (formerly AimTrainer). Newest first.
 
+## [Unreleased]
+
+### Studio
+- Swing triggers: a bot can hold an angle and swing when you kill a bot, hit a bot, or make a sound.
+- Sound areas: draw a box on the map and a bot swings when you make a sound inside it (your gunshots, running footsteps or landings).
+- Swing chance: set how often a trigger or sound makes the bot swing, so it isn't the same every time.
+- Footstep and landing sounds count as sounds you make. Crouch-walking and Shift-walking stay silent.
+
+### Menus
+- Esc again closes the Paused / Tab menu, and T plays again from the Eliminated screen. Both have an On / Off row in Settings > General > Mouse.
+- Switch difficulty: on the result screen and in the Esc menu, one button starts the same drill's other difficulty.
+
+### Analytics
+- Every round now keeps each shot (weapon, hit part, hit point, distance, target, kill) and each death, tagged with the map and the drill's code.
+- Rounds are stored in the browser's IndexedDB (database "aim-analytics"). Rounds older than 30 days are rolled up into one row per day and the raw rounds are deleted. Rounds left by the first version in localStorage move over on the next start.
+- Each round also keeps one row per enemy engagement (aim travel in degrees, how far you moved, how far off the crosshair the enemy was when it appeared, and whether the kill was a flick or a strafe) and the near misses of missed shots (how far the shot passed from the enemy, and whether above or below its centre). The day rows count near misses, over-aim and under-aim, flicks and strafes per map and weapon. Run `node tools/patch-analytics-hooks.cjs` once to update an already patched game.
+
+### Tracking and the hit report
+- New tracking measurement: for enemies that move across your view, the recorder keeps how long your crosshair stays on the body and the head, how far off it is, whether it trails or leads the enemy, how steady it is and how long it takes to lock on.
+- Stats has a Tracking tab (Body or Head view, by weapon and by day), the result screen shows a one-line tracking readout, and the coach has two tracking tips.
+- The hit report now also shows on cleared and timed-out result screens (the All my shots pane), not only after a death.
+- Against round targets (Target Workshop) the hit report draws a circle to scale instead of the body, with Centre, Top, Right, Bottom and Left.
+
+### Target Workshop
+- Five new tracking drills: Slow sweep, Fast sweep, Diagonals, Strafe reversals and Small and far.
+
+### Medals and routines
+- Medals for every drill, against your own recent runs: bronze is your typical run, silver a good one, gold at least your best. Generated shield badges, shown on the result screen, drill cards and the new Medals page.
+- Routines: a Routines tab in the lobby. Build a playlist of drills with a drop-down picker (bookmarked, recently played, a searchable gallery) or the + on any drill card. Each step has a number of runs, an optional minimum score or medal, the enemy rank (the lobby card's own arrows) and an easy / hard switch. The result screen shows the progress and a Next drill button.
+
+### Development
+- Unit tests for the recorder, coach, screens, routines and menu shortcuts are in tests/ (node tests/run-all.cjs). Notes on everything added since 1.4.0: docs/WORK-NOTES.md.
+
 ## [1.4.0] - 2026-11-14
 
 AimTrainer is now openVaim. This one's big: I rebuilt the maps, added Pearl and Icebox, moved the game to its own thread, and added the Community Workshop, Chamber, Blade Storm, a bunch of skins and a lot of Creator stuff.
