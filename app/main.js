@@ -98,6 +98,20 @@ const FRAME_METER_JS = fs.readFileSync(path.join(__dirname, "frame-meter.js"), "
 const AGENT_PICKER_JS = fs.readFileSync(path.join(__dirname, "agent-picker.js"), "utf-8");
 // Settings › General › Mouse: "2x zoom (toggle scope)" choice (second click or 2x key only).
 const SCOPE_ZOOM_SETTING_JS = fs.readFileSync(path.join(__dirname, "scope-zoom-setting.js"), "utf-8");
+// Menu shortcuts: T on the Eliminated screen = Play again, Esc again in the pause menu = Resume; On/Off rows in Settings (menu-shortcuts.js).
+const MENU_SHORTCUTS_JS = fs.readFileSync(path.join(__dirname, "menu-shortcuts.js"), "utf-8");
+// Switch difficulty button on the result screen and in the pause menu (sibling-switch.js; pairs from training-set.json).
+const SIBLING_SWITCH_JS = fs.readFileSync(path.join(__dirname, "sibling-switch.js"), "utf-8");
+// Per-round shot and death records for later analysis (analytics-recorder.js; needs tools/patch-analytics-hooks.cjs applied).
+const ANALYTICS_RECORDER_JS = fs.readFileSync(path.join(__dirname, "analytics-recorder.js"), "utf-8");
+// Plain-language findings from those records (coach.js; window.__aimCoach.insights(), shown by analytics-ui.js).
+const COACH_JS = fs.readFileSync(path.join(__dirname, "coach.js"), "utf-8");
+// Screens for those records: hit zones on the Eliminated screen, and the Stats panel (heatmap, progress, coach) from the top bar (analytics-ui.js).
+const ANALYTICS_UI_JS = fs.readFileSync(path.join(__dirname, "analytics-ui.js"), "utf-8");
+// Medals and routine playlists (routines.js; the Medals and Routines tabs of the Stats panel are in analytics-ui.js).
+const ROUTINES_JS = fs.readFileSync(path.join(__dirname, "routines.js"), "utf-8");
+// One coach tip about the round just finished, on the Eliminated screen above the buttons (round-tip.js; coach.js roundTip()).
+const ROUND_TIP_JS = fs.readFileSync(path.join(__dirname, "round-tip.js"), "utf-8");
 // Detailed recording wraps every GPU draw and times every tick; enable only for diagnosis.
 const FRAME_LOG_ENABLED = process.env.AIM_FRAME_LOG === "1";
 const FRAME_LOG_JS = FRAME_LOG_ENABLED ? fs.readFileSync(path.join(__dirname, "frame-log.js"), "utf-8") : "";
@@ -170,6 +184,13 @@ const UI_SCRIPTS = [
   ["ENEMY RANK CARDS", ENEMY_RANK_CARDS_JS],
   ["AGENT PICKER", AGENT_PICKER_JS],
   ["SCOPE ZOOM SETTING", SCOPE_ZOOM_SETTING_JS],
+  ["MENU SHORTCUTS", MENU_SHORTCUTS_JS],
+  ["SIBLING SWITCH", SIBLING_SWITCH_JS],
+  ["ANALYTICS RECORDER", ANALYTICS_RECORDER_JS],
+  ["COACH", COACH_JS],
+  ["ANALYTICS UI", ANALYTICS_UI_JS],
+  ["ROUTINES", ROUTINES_JS],
+  ["ROUND TIP", ROUND_TIP_JS],
   ["STUDIO LAUNCH", STUDIO_LAUNCH_JS],
   ["COMMUNITY WORKSHOP", COMMUNITY_WORKSHOP_JS],
   ["SHOT GRAPH", SHOT_GRAPH_JS],
@@ -709,6 +730,13 @@ async function handle(req, res) {
     }
     return;
   }
+  // sibling-switch.js: the other difficulty of a VALORANT Training drill (<stem>-easy / <stem>-hard pair, from build-scenarios.mjs).
+  if (requested === "/api/local/drill-sibling") {
+    const link = (trainingSet.siblings || {})[url.searchParams.get("code") || ""];
+    const item = link && trainingSet.items.find((i) => i.shareCode === link.code);
+    sendJson(req, res, item ? { code: item.shareCode, name: drillName(item), difficulty: link.difficulty } : {});
+    return;
+  }
   // enemy-rank-v1: lobby cards ask which drills can have an enemy rank (?codes=a,b,...) and save a pick
   // (?code=..&set=<rank>, only with the X-Aim-Local header so another page can't change it).
   if (requested === "/api/local/enemy-rank") {
@@ -976,6 +1004,14 @@ ipcMain.on("aim:frame-log", (_event, report) => {
     console.log(`FRAME LOG: ${err}`);
   }
 });
+// menu-shortcuts.js: Esc is not a user gesture for the browser, but Resume has to take the mouse back. The page asks
+// here, and the fixed script runs in that page with a user gesture. Only named actions; no page-supplied code.
+const GESTURE_ACTIONS = { "pause-resume": "window.__aimMenuShortcuts && window.__aimMenuShortcuts.resumeNow()" };
+ipcMain.on("aim:gesture-run", (event, name) => {
+  const code = GESTURE_ACTIONS[name];
+  if (code) event.sender.executeJavaScript(code, true).catch(() => {});
+});
+
 // The portable build runs from a temporary copy, so relaunch the .exe itself. Settings
 // saved in the page's localStorage just before (map culling) are flushed first, since
 // app.exit skips Chromium's normal shutdown.
@@ -984,6 +1020,13 @@ ipcMain.on("aim:shell:restart", () => {
   session.defaultSession.flushStorageData();
   app.relaunch(exe ? { execPath: exe } : undefined);
   app.exit(0);
+});
+
+// Quit from the game's own top bar (lobby-bar.js "Quit"): a normal quit, so the
+// performance recorder and the analytics store finish writing first.
+ipcMain.on("aim:shell:quit", () => {
+  session.defaultSession.flushStorageData();
+  app.quit();
 });
 
 app.on("second-instance", () => {
