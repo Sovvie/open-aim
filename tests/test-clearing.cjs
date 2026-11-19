@@ -24,7 +24,7 @@ const stub = (rounds) => ({ rounds: async (f) => rounds.filter((r) => (!f.code |
 const run = async (rounds, filter) => loadCoach(stub(rounds)).insights(filter || {});
 const find = (list, id) => list.find((f) => f.id === id || f.id.startsWith(id + ":"));
 const T = loadCoach(stub([])).thresholds;
-const round = (o = {}) => ({ id: "r" + Math.random(), day: "2026-11-15", at: at("2026-11-15"), code: "drillA", map: "bind", mode: "score", tickSeconds: 1 / 128, shots: [], deaths: [], engagements: [], nearMisses: [], ...o });
+const round = (o = {}) => ({ id: "r" + Math.random(), day: "2026-11-15", at: at("2026-11-15"), code: "drillA", map: "bind", mode: "score", tickSeconds: 1 / 128, sight: true, shots: [], deaths: [], engagements: [], nearMisses: [], ...o });
 const rep = (n, make) => Array.from({ length: n }, (_, i) => make(i));
 let nextId = 1;
 // One lost fight: the player at the origin, the enemy `bearing` degrees away (the game's yaw convention: 0 = along -z, 90 = along -x), 10 m off;

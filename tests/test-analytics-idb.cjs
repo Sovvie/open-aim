@@ -1379,6 +1379,85 @@ async function test(name, fn) {
     assert.strictEqual((await api.raw())[0].KR, undefined);
   });
 
+  // ---- sight (19 Nov 2026): an enemy behind a wall is not "seen"; the clocks start at first sight; hidden stretches are counted ----
+  const DTS = 1 / 128;
+  const sightRound = async (plan, { shots = true, N = 30 } = {}) => {
+    // plan(k) -> { los, fire?, kill?, yaw?, blind?, x? } for tick k; the enemy stands 10 m ahead of the player (inside the view cone)
+    const { api } = boot({ idb: makeFactory(), ls: makeLocalStorage() });
+    begin(api, TODAY);
+    const list = [];
+    for (let k = 0; k <= N; k++) {
+      const p = plan(k);
+      const snap = tickSnap(k, { yaw: p.yaw ?? 0, actors: [enemy(7, p.x ?? 0, -10, { ...(p.los === undefined ? {} : { los: p.los }), ...(p.kill ? { alive: false } : {}) })] });
+      if (p.blind !== undefined) snap.player.blindUntil = p.blind;
+      const ev = [];
+      if (p.fire) ev.push({ kind: "enemyShot", tick: k, actorId: 7, hit: false });
+      if (p.kill) ev.push({ kind: "kill", tick: k, actorId: 7 });
+      if (shots && k === 2) ev.push(miss(k, near(0, 1.75, 0), ahead));
+      list.push([snap, ev]);
+    }
+    const r = await roundOf(api, list);
+    return { r, raw: (await api.raw())[0], e: r.engagements[0] };
+  };
+  await test("sight: an enemy in the view cone but behind a wall is not an engagement; it starts when the line is clear; the round is marked as having sight data", async () => {
+    const { r, e } = await sightRound((k) => ({ los: k < 10 ? 0 : 1 }), { N: 30 });
+    assert.strictEqual(r.sight, true);
+    assert.strictEqual(r.engagements.length, 1);
+    assert.strictEqual(e.startTick, 10, "not at tick 0, where the enemy is hidden behind a wall");
+    assert.strictEqual(e.seenTick, 10); assert.strictEqual(e.hiddenTicks, 0);
+  });
+  await test("sight: ticks hidden after first sight are counted; the visible time to kill leaves them out; the raw time to kill still has them", async () => {
+    // seen from 10, hidden 20..29, seen again 30..39, killed at 40
+    const { e } = await sightRound((k) => ({ los: k >= 20 && k < 30 ? 0 : k < 10 ? 0 : 1, kill: k === 40 }), { N: 41 });
+    assert.strictEqual(e.startTick, 10); assert.strictEqual(e.killTick, 40);
+    assert.strictEqual(e.hiddenTicks, 10);
+    closeTo(e.timeToKill, 30 * DTS, 0.01, "raw: from first sight to the kill");
+    closeTo(e.visibleTimeToKill, 20 * DTS, 0.01, "visible: without the ten hidden ticks");
+    assert.strictEqual(e.killed, true);
+  });
+  await test("sight: an enemy that fires at you before you can see it still makes an engagement, but the aim clock starts when you first see it", async () => {
+    // it fires at tick 3 (los 0, you are turning toward it), you see it at tick 10
+    const { e } = await sightRound((k) => ({ los: k < 10 ? 0 : 1, fire: k === 3, yaw: k < 10 ? 0.05 * (10 - k) : 0 }), { N: 20 });
+    assert.strictEqual(e.startTick, 3, "the fight began with its first shot");
+    assert.strictEqual(e.seenTick, 10, "first sight");
+    assert.ok(e.aimError.degrees < 1, "the aim error is the one at first sight (yaw 0 at tick 10), not the one at tick 3: " + e.aimError.degrees);
+    assert.strictEqual(e.aimTravel, 0, "the sweep before first sight is not counted");
+  });
+  await test("sight: being flashed (blindUntil ahead of the tick) means nothing is seen; an enemy that is only off screen is not hidden", async () => {
+    const blind = await sightRound((k) => ({ los: 1, blind: k < 10 ? 5 : 0 }), { N: 20 });
+    assert.strictEqual(blind.e.seenTick, 10, "seen only once the flash is over (blindUntil 5 s is far ahead of tick 10)");
+    // 5 s of round time is tick 640: use a short blind in seconds so it really ends at tick 10
+    const short = await sightRound((k) => ({ los: 1, blind: 10 * DTS - 1e-9 }), { N: 20 });
+    assert.strictEqual(short.e.seenTick, 10, "blindUntil = a bit before tick 10");
+    // off screen (yaw far from the enemy) with a clear line: not seen yet, but also never counted as hidden
+    const off = await sightRound((k) => ({ los: 1, yaw: k < 10 ? 2.0 : 0 }), { N: 20 });
+    assert.strictEqual(off.e.seenTick, 10); assert.strictEqual(off.e.hiddenTicks, 0);
+  });
+  await test("sight: a round with no line-of-sight data (an older worker) behaves as before and is not marked; its rows have no sight numbers", async () => {
+    const { r, e, raw } = await sightRound((k) => ({ kill: k === 20 }), { N: 25 });
+    assert.strictEqual(r.sight, false);
+    assert.strictEqual(e.startTick, 0); assert.strictEqual(e.hiddenTicks, null); assert.strictEqual(e.seenTick, null); assert.strictEqual(e.visibleTimeToKill, null);
+    assert.strictEqual(raw.sl, undefined);
+    const rows = await (async () => { const { api } = boot({ idb: makeFactory(), ls: makeLocalStorage() }); begin(api, TODAY); return null; })();
+    void rows;
+  });
+  await test("sight: tracking only counts the ticks the enemy is seen; a lock run is cut by a wall and the lock time leaves the hidden ticks out", async () => {
+    const { api } = boot({ idb: makeFactory(), ls: makeLocalStorage() });
+    begin(api, TODAY);
+    const list = [], N = 128, xAt = (k) => -3 + (6 * k) / N;
+    for (let k = 0; k <= N; k++) {
+      const hidden = k >= 40 && k < 60;
+      const yaw = Math.atan2(-xAt(k), 10), pitch = Math.atan2(0.9 - 1.75, 10);
+      list.push([tickSnap(k, { yaw, pitch, actors: [enemy(5, xAt(k), -10, { los: hidden ? 0 : 1 })] }), k === N ? [miss(N, near(0, 1.75, 0), ahead)] : []]);
+    }
+    const r = await roundOf(api, list, "time");
+    const e = r.engagements[0], tk = e.tracking;
+    assert.strictEqual(e.hiddenTicks, 20);
+    assert.ok(tk.samples > 80 && tk.samples <= N - 20 + 1, "the 20 hidden ticks are not sampled: " + tk.samples);
+    assert.strictEqual(tk.bodyOn, tk.samples, "dead on the body every sampled tick");
+    assert.ok(tk.lockBodySeconds !== null && tk.lockBodySeconds <= 0.01, "locked at once");
+  });
+
   const failed = results.filter((r) => !r[1]).length;
   console.log(failed ? failed + " FAILED of " + results.length : "all " + results.length + " tests passed");
   process.exit(failed ? 1 : 0);

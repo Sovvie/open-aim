@@ -44,13 +44,13 @@ const SIM = [
 const WORKER_FROM = "const slim={kind:'shot',tick:e.tick,origin:e.origin,direction:e.direction,hitActorId:e.hitActorId,hitPart:e.hitPart,hitPoint:e.hitPoint};";
 const WORKER = [{ from: WORKER_FROM, to: WORKER_FROM + "/*aim-shot-move-4*/if(e.move)slim.move=e.move;", marker: "/*aim-shot-move-4*/" }];
 const BRIDGE_OLD = "'/local/worker-game-entry.mjs?v=timeline-1-analytics-2'", BRIDGE_NEW = "'/local/worker-game-entry.mjs?v=timeline-1-analytics-3'";
-const BRIDGE = [{ from: BRIDGE_OLD, to: BRIDGE_NEW, marker: BRIDGE_NEW }];
+const BRIDGE = [{ from: BRIDGE_OLD, to: BRIDGE_NEW, marker: BRIDGE_NEW, done: (s) => s.includes(BRIDGE_NEW) || s.includes("timeline-1-analytics-4'") }]; // analytics-4 = patch-sight-line.cjs ran
 
 const plan = [];
 function plan1(file, edits) {
   let s = fs.readFileSync(file, "utf8");
   const label = path.relative(SITE, file).replace(/\\/g, "/");
-  const done = edits.filter((e) => s.includes(e.marker)).length;
+  const done = edits.filter((e) => (e.done ? e.done(s) : s.includes(e.marker))).length;
   if (done === edits.length) { plan.push({ label, file, text: null }); return; }
   if (done !== 0) throw new Error(`${label}: partly patched (${done}/${edits.length} markers)`);
   for (const e of edits) {

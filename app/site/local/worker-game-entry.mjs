@@ -68,8 +68,8 @@ async function initialize(message){
     }else{events2.push(e);if(e.actorId!=null)ids.add(e.actorId);}
    }
    const p=snap.player,actors=[];
-   for(const a of snap.actors)if((a.alive===true&&a.visible===true)||ids.has(a.id)){const o=a.offset;actors.push({id:a.id,templateId:a.templateId,bornTick:a.bornTick,position:{x:a.position.x+(o?o.x:0),y:a.position.y+(o?o.y:0),z:a.position.z+(o?o.z:0)},scale:a.scale??1,alive:a.alive===true,visible:a.visible===true});}
-   const entry={snap:{tick:snap.tick,player:{position:{x:p.position.x,y:p.position.y,z:p.position.z},yaw:p.yaw,pitch:p.pitch,crouchAmount:p.crouchAmount??0,weapon:p.weapon??null,knife:p.knife??0},actors}};
+   for(const a of snap.actors)if((a.alive===true&&a.visible===true)||ids.has(a.id)){const o=a.offset;actors.push({id:a.id,templateId:a.templateId,bornTick:a.bornTick,position:{x:a.position.x+(o?o.x:0),y:a.position.y+(o?o.y:0),z:a.position.z+(o?o.z:0)},scale:a.scale??1,alive:a.alive===true,visible:a.visible===true,/*aim-sightline-3*/...(a.los===0||a.los===1?{los:a.los}:{})});}
+   const entry={snap:{tick:snap.tick,player:{position:{x:p.position.x,y:p.position.y,z:p.position.z},yaw:p.yaw,pitch:p.pitch,crouchAmount:p.crouchAmount??0,weapon:p.weapon??null,knife:p.knife??0,/*aim-sightline-5*/...(typeof p.blindUntil==="number"?{blindUntil:p.blindUntil}:{})},actors}};
    if(events2.length)entry.events=events2;
    batch.push(entry);
    if(batch.length>=32)flush();

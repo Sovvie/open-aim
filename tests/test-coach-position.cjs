@@ -22,13 +22,13 @@ const run = async (rounds, filter) => loadCoach(stub(rounds)).insights(filter ||
 const find = (list, id) => list.find((f) => f.id === id || f.id.startsWith(id + ":"));
 const T = loadCoach(stub([])).thresholds;
 
-const round = (o = {}) => ({ id: "r" + Math.random(), day: "2026-11-15", at: at(o.day || "2026-11-15"), code: "drillA", map: "bind", mode: "score", tickSeconds: 1 / 128, shots: [], deaths: [], engagements: [], nearMisses: [], ...o });
+const round = (o = {}) => ({ id: "r" + Math.random(), day: "2026-11-15", at: at(o.day || "2026-11-15"), code: "drillA", map: "bind", mode: "score", tickSeconds: 1 / 128, sight: true, shots: [], deaths: [], engagements: [], nearMisses: [], ...o });
 // One fight: result "won" (kill) or "lost" (death by that enemy's shot) at a contact position; start 100, contact after `delay` ticks.
 // `bearing` (degrees, the game's yaw convention: 0 = enemy along -z, 90 = along -x) places the enemy 10 m from the player.
 let nextId = 1;
 function fight(result, x, z, { delay = 20, weapon = "vandal", bearing = 0 } = {}) {
   const enemyId = nextId++, b = bearing * Math.PI / 180;
-  const e = { enemyId, startTick: 100, killed: result === "won", killTick: result === "won" ? 400 : null, weapon, contactTick: 100 + delay, playerContact: { x, z },
+  const e = { enemyId, startTick: 100, seenTick: 100, killed: result === "won", killTick: result === "won" ? 400 : null, weapon, contactTick: 100 + delay, playerContact: { x, z },
     enemyContact: { x: x - 10 * Math.sin(b), z: z - 10 * Math.cos(b) }, timeToKill: null };
   const d = result === "lost" ? { tick: 300, cause: "shot", killerId: enemyId, position: { x, y: 0, z } } : null;
   return { e, d };

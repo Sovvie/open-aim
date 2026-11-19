@@ -65,6 +65,7 @@ Each patch edits the game's compiled bundles in both copies (`app/site/next/js` 
 | `patch-enemy-shot-tracer.cjs` | Every `enemyShot` event carries origin, direction and the point where the ray ends (a wall, the aim point, or the end of range). |
 | `patch-enemy-tracer-draw.cjs` | Enemy tracers are drawn along that resolved path instead of a guessed one. Shots stopped by a wall are drawn up to the wall. |
 | `patch-enemy-tracer-original.cjs` | The same enemy tracers in the "Original" appearance mode (they used to need Custom mode). |
+| `patch-sight-line.cjs` | **Line of sight to each enemy** (19 Nov 2026). Every enemy in the analytics snapshot says whether the player can see it (`los` 1 or 0: a clear line from the player's eye to its head, chest or legs, or to a sphere target's centre; walls, smokes and flash volumes block it), reusing the game's own bot "can see" test (`canSee`). The worker also forwards the player's `blindUntil` (a flash). Only computed while analytics is on. |
 | `patch-swing-events.cjs` | A short list of world events kept by the simulation: you killed or hurt a bot, and sounds you make (gunshots, running footsteps). |
 | `patch-swing-jump-land-chance.cjs` | A landing sound, and a per-trigger swing chance (rolled with the dispatcher's own RNG; a chance of 100 % never touches the RNG, so old drills replay exactly as before). |
 
@@ -132,6 +133,13 @@ Added to the recorder as one trailing field (index 20) of each engagement row. I
 - **On target** is measured against the body box and against the head (a sphere of 13 cm radius, scaled with the body; a sphere-shaped enemy has body = head).
 - **Stored per engagement:** sampled ticks, ticks on body, ticks on head, summed angle error to the body and to the head, summed lag (signed error along the enemy's path: positive = the crosshair is behind), summed jitter, jitter pairs, ticks to lock on the body and on the head (first run of 0.15 s on target, counted from first sight), summed enemy angular speed.
 - All thresholds are guesses and are named constants at the top of the recorder (`TRACK_MOVING_DEG_S`, `LOCK_S`, `HEAD_RADIUS_M`); they have not been tuned against real play.
+
+**Sight (19 Nov 2026).** The recorder used to start an engagement when an enemy was alive and inside the view cone, with no wall test, so an enemy behind a wall already counted as "in view" and time to kill, first-sight aim error, flick or strafe, hold time and tracking all started too early. With `patch-sight-line.cjs` the snapshot carries `los` and the player's blindness, and the recorder separates two things:
+
+- An engagement **starts** when the enemy is seen or when it fires at the player. Enemies often see you first (off screen, behind you, through a smoke, while you are flashed), and the fight still counts for fights lost and deaths.
+- The **seen tick** (row index 22) is the first tick the player could really see it: in the view cone, with a clear line, and not blinded. Everything about the player's aim starts there: the aim error at first sight, aim travel and movement (summed only while the enemy is seen), the tracking samples and the lock time (a lock run is cut while the enemy is hidden).
+- **Hidden ticks** (index 21) are the ticks after first sight on which a wall, a smoke or a flash hid the enemy again (an enemy only off screen is not hidden: that is pre-aim and counts). `visibleTimeToKill` = kill - seen - hidden.
+- Rounds get `sl: 1` when they carry sight data (`rounds()[].sight`). **Older rounds are kept but not used** for anything that depends on when you saw an enemy: kill time and its trend, crosshair height at first sight, flick or strafe, strafe by map or drill, hold sooner, died without firing back, and tracking (coach rules and the Stats Progress and Tracking views). Fights lost, fight spots and angles, deaths and the hit report still use every round. The Stats Tracking tab shows how many recorded fights have sight data.
 
 Where it shows up: the Stats Tracking tab, a one-line readout on the result screen, and two coach tips (section 10).
 
@@ -237,6 +245,8 @@ At the time of writing every test passes. Run `node scripts/build-scenarios.mjs 
 - **Rank side effect (dev copy).** Setting an enemy rank from a routine uses the same endpoint as the lobby card. In this unpacked copy that rewrites the drill's default in `scenarios/`; in an installed build it is a per-player setting. A step's rank also stays set on that drill afterwards, as if picked on the card.
 - **Starting a drill from a routine** clicks the lobby's own cards. If a card is hidden by a search filter it cannot be found and nothing starts.
 - **Scaled targets.** Round targets scaled larger or smaller than normal may be drawn slightly off in the circle hit report, because the stored radius ignores the actor's scale.
+- **Sight data is not yet verified in a live round.** The patch was checked for syntax, scope (the sight test, the template map and `snapshot()` are in the same block of the simulation), idempotence and against synthetic ticks in the recorder tests, but a real round was not played with it. The Stats Tracking tab says "Line-of-sight data on X of Y recorded fights"; if X stays 0 after playing a round, the data is not arriving and the coach's timing rules stay silent (safe, not wrong).
+- **Blindness is approximate.** The player is treated as unable to see while `blindUntil` is ahead of the round time; a partial flash counts as fully blind for its duration.
 - **Old rounds** have no tracking data and no stored radii; the circle report then falls back to the farthest hit from the centre.
 - **Patches are order-dependent.** Run `patch-trades.cjs` before `patch-swing-events.cjs`, and `patch-swing-jump-land-chance.cjs` after it. `patch-analytics-hooks.cjs` upgrades a tree patched by its first version in place.
 - **Local data.** `test-data/` (the desktop app's local user data, backups and performance runs) is ignored and never committed.
