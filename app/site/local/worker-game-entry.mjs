@@ -44,6 +44,37 @@ async function initialize(message){
  globalThis.__aimPrepareMapSections=prepareMapSections;
  // Round timeline samples move to the page (results screen) without being copied.
  globalThis.__aimTimelineSink=(data,buffers)=>send({type:'timeline',data},buffers);
+ /* aim-analytics-v2: the worker keeps only what the recorder (page side, app/analytics-recorder.js) reads, and posts it.
+    Every tick it adds one sample (aim angles, player position, live enemies, this tick's events) to a batch that is posted with
+    32 ticks, at round start and at round end, so the page is not messaged 128 times a second. */
+ {
+  const KEEP={shot:1,kill:1,enemyShot:1,playerDead:1,playerFell:1};
+  let batch=[];
+  const flush=()=>{if(!batch.length)return;const list=batch;batch=[];try{send({type:'analytics',kind:'ticks',list:wire(list)})}catch{}};
+  globalThis.__aimAnalyticsStart=info=>{try{flush();send({type:'analytics',kind:'start',info:wire(info)})}catch{}};
+  globalThis.__aimAnalyticsEnd=reason=>{try{flush();send({type:'analytics',kind:'end',reason:typeof reason==='string'?reason:null})}catch{}};
+  globalThis.__aimAnalyticsFeed=(snap,events)=>{try{
+   const events2=[],ids=new Set();
+   for(const e of events??[]){
+    if(!KEEP[e.kind])continue;
+    if(e.kind==='shot'){
+     const slim={kind:'shot',tick:e.tick,origin:e.origin,direction:e.direction,hitActorId:e.hitActorId,hitPart:e.hitPart,hitPoint:e.hitPoint};/*aim-shot-move-4*/if(e.move)slim.move=e.move;
+     if(e.pellets)slim.pellets=e.pellets.map(p=>({hitActorId:p.hitActorId,hitPart:p.hitPart}));
+     if(e.also)slim.also=e.also.map(a=>({actorId:a.actorId,part:a.part}));
+     events2.push(slim);
+     if(e.hitActorId!=null)ids.add(e.hitActorId);
+     for(const p of e.pellets??[])if(p.hitActorId!=null)ids.add(p.hitActorId);
+     for(const a of e.also??[])if(a.actorId!=null)ids.add(a.actorId);
+    }else{events2.push(e);if(e.actorId!=null)ids.add(e.actorId);}
+   }
+   const p=snap.player,actors=[];
+   for(const a of snap.actors)if((a.alive===true&&a.visible===true)||ids.has(a.id)){const o=a.offset;actors.push({id:a.id,templateId:a.templateId,bornTick:a.bornTick,position:{x:a.position.x+(o?o.x:0),y:a.position.y+(o?o.y:0),z:a.position.z+(o?o.z:0)},scale:a.scale??1,alive:a.alive===true,visible:a.visible===true});}
+   const entry={snap:{tick:snap.tick,player:{position:{x:p.position.x,y:p.position.y,z:p.position.z},yaw:p.yaw,pitch:p.pitch,crouchAmount:p.crouchAmount??0,weapon:p.weapon??null,knife:p.knife??0},actors}};
+   if(events2.length)entry.events=events2;
+   batch.push(entry);
+   if(batch.length>=32)flush();
+  }catch{}};
+ }
  if(typeof globalThis.requestAnimationFrame!=='function')throw Error('Worker display frame callbacks are unavailable in this runtime');
  globalThis.__aimWorkerScheduler=createWorkerScheduler({raf:requestAnimationFrame.bind(globalThis),cancelRaf:cancelAnimationFrame.bind(globalThis),visible:()=>globalThis.document?.visibilityState!=='hidden'&&settings?.phase?.current==='running'});
  globalThis.__aimWorkerRunLoading=async prepare=>{try{await prepare(activeCommand?.report??(()=>{}),activeCommand?.signal);return true}catch(error){if(error?.name==='AbortError')return false;throw error}};
