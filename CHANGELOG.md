@@ -28,6 +28,7 @@ All notable changes to openVaim (formerly AimTrainer). Newest first.
 - New tracking measurement: for enemies that move across your view, the recorder keeps how long your crosshair stays on the body and the head, how far off it is, whether it trails or leads the enemy, how steady it is and how long it takes to lock on.
 - Stats has a Tracking tab (Body or Head view, by weapon and by day), the result screen shows a one-line tracking readout, and the coach has two tracking tips.
 - The hit report now also shows on cleared and timed-out result screens (the All my shots pane), not only after a death.
+- On wide windows the result card now stays in the middle of the screen, with the hit report attached to its left edge.
 - Against round targets (Target Workshop) the hit report draws a circle to scale instead of the body, with Centre, Top, Right, Bottom and Left.
 
 ### Target Workshop
