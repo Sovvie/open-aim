@@ -31,7 +31,7 @@ All notable changes to openVaim (formerly AimTrainer). Newest first.
 - Against round targets (Target Workshop) the hit report draws a circle to scale instead of the body, with Centre, Top, Right, Bottom and Left.
 
 ### Target Workshop
-- Tracking drills fire by themselves: you no longer hold mouse button 1, your score is the time your crosshair is on the target. The result screen of a tracking drill has no hit report.
+- Tracking drills need no shooting: you do not press mouse button 1 and nothing fires, your score is the time your crosshair is on the target. The result screen of a tracking drill has no hit report.
 - Five new tracking drills: Slow sweep, Fast sweep, Diagonals, Strafe reversals and Small and far.
 
 ### Medals and routines
