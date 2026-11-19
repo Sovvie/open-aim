@@ -143,7 +143,7 @@ patchFile(path.join(SITE, "local", "threaded-game-bridge.mjs"), [
     from: "'/local/worker-game-entry.mjs?v=timeline-1'",
     old: "'/local/worker-game-entry.mjs?v=timeline-1-analytics-1'",
     // tools/patch-shot-movement.cjs moves the version on to analytics-3: that is also done
-    marker: ["'/local/worker-game-entry.mjs?v=timeline-1-analytics-2'", "'/local/worker-game-entry.mjs?v=timeline-1-analytics-3'"],
+    marker: ["'/local/worker-game-entry.mjs?v=timeline-1-analytics-2'", "'/local/worker-game-entry.mjs?v=timeline-1-analytics-3'", "'/local/worker-game-entry.mjs?v=timeline-1-analytics-4'"],
     to: "'/local/worker-game-entry.mjs?v=timeline-1-analytics-2'",
   },
 ]);

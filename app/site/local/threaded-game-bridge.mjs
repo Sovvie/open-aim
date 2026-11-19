@@ -16,7 +16,7 @@ export function createThreadedGame(host,settings,callbacks,options,runtimeURL){
  configureRecordingKey(settings.keybinds?.current);
  const canvas=document.createElement('canvas');canvas.className='al-stage-canvas';Object.assign(canvas.style,{display:'block',width:'100%',height:'100%'});host.appendChild(canvas);
  if(!canvas.transferControlToOffscreen)throw Error('This Electron runtime does not support OffscreenCanvas');
- const worker=new Worker('/local/worker-game-entry.mjs?v=timeline-1-analytics-3',{type:'module',name:'AimTrainer simulation and rendering'});
+ const worker=new Worker('/local/worker-game-entry.mjs?v=timeline-1-analytics-4',{type:'module',name:'AimTrainer simulation and rendering'});
  /* shared-mouse-v1 (14 Nov 2026): mouse moves go into a shared ring (no worker message queue); the worker reads it at
     every frame start and before any other input event. Per slot: movementX, movementY, page wait (ms), sent at (epoch ms).
     idx[0] = written count (page), idx[1] = read count (worker). Full ring or no SharedArrayBuffer -> postMessage as before.
