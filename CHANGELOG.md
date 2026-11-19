@@ -2,7 +2,7 @@
 
 All notable changes to openVaim (formerly AimTrainer). Newest first.
 
-## [Unreleased]
+## [1.5.0] - 2026-11-19
 
 ### Studio
 - Swing triggers: a bot can hold an angle and swing when you kill a bot, hit a bot, or make a sound.
