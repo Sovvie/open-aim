@@ -306,7 +306,9 @@ test("heatmap: empty store and failing readers give a plain message", async () =
 });
 test("progress: seven charts with first / latest values and arrows; range picker re-cuts without a new read", async () => {
   const days = [dayRow(40), dayRow(20), dayRow(5), dayRow(1, { hits: 120, headshots: 30 })];
-  const engagements = [{ day: dayN(5), killed: true, timeToKill: 0.9 }, { day: dayN(1), killed: true, timeToKill: 0.5 }, { day: dayN(1), killed: true, timeToKill: 0.7 }, { day: dayN(1), killed: false, timeToKill: null }];
+  const sk = (day, v) => ({ day, killed: true, sight: true, timeToKill: v + 1, visibleTimeToKill: v });
+  const engagements = [sk(dayN(5), 0.9), sk(dayN(1), 0.5), sk(dayN(1), 0.7), { day: dayN(1), killed: false, sight: true, timeToKill: null },
+    { day: dayN(5), killed: true, sight: false, timeToKill: 9, visibleTimeToKill: null }, { day: dayN(1), killed: true, sight: false, timeToKill: 9, visibleTimeToKill: null }]; // the last two: recorded before line-of-sight data, not used
   const A = stub({ days, engagements });
   const { ui, document } = load({ analytics: A });
   ui.open("progress"); await settle();
@@ -873,7 +875,7 @@ test("progress nodes: each node's y is the value on the chart's scale, in a box 
   assert.ok(css.includes(".aim-an-plotbox svg { position: absolute; inset: 0; width: 100%; height: 100%; }"), "the svg fills the box the nodes are placed in");
 });
 test("progress focus: a large chart on top and six thumbnails; the focus follows the last clicked thumbnail and resets on another Stats tab", async () => {
-  const A = stub({ days: [dayRow(20), dayRow(5), dayRow(1)], engagements: [{ day: dayN(5), killed: true, timeToKill: 0.9 }, { day: dayN(1), killed: true, timeToKill: 0.5 }] });
+  const A = stub({ days: [dayRow(20), dayRow(5), dayRow(1)], engagements: [{ day: dayN(5), killed: true, sight: true, timeToKill: 1.9, visibleTimeToKill: 0.9 }, { day: dayN(1), killed: true, sight: true, timeToKill: 1.5, visibleTimeToKill: 0.5 }] });
   const { ui, document } = load({ analytics: A });
   ui.open("progress"); await settle();
   const focusClick = (id) => content(document).listeners.click[0]({ target: { closest: (sel) => (sel === "[data-focus]" ? { dataset: { focus: id } } : null) } });
@@ -1245,7 +1247,7 @@ const FIXTURE = {
   "round-tip-vertical": ["Your shots went high this round", { thisRound: 0.15, baselineMean: 0.04 }],
 };
 // ---- tracking (18 Nov 2026) ----
-const trackRow = (o = {}) => ({ day: "2026-11-17", weapon: "vandal", ...o, tracking: { samples: 100, seconds: 0.78, bodyOn: 60, headOn: 20, bodyErrorSum: 300, headErrorSum: 500, lagSum: 0, jitterSum: 40, jitterPairs: 90,
+const trackRow = (o = {}) => ({ day: "2026-11-17", weapon: "vandal", sight: true, ...o, tracking: { samples: 100, seconds: 0.78, bodyOn: 60, headOn: 20, bodyErrorSum: 300, headErrorSum: 500, lagSum: 0, jitterSum: 40, jitterPairs: 90,
   lockBodySeconds: 0.2, lockHeadSeconds: null, enemySpeedSum: 4000, ...(o.tracking || {}) } });
 test("tracking tab: body and head are two views of the same fights; the numbers are weighted by sampled ticks", () => {
   const { ui } = load({ analytics: stub() });
@@ -1281,7 +1283,7 @@ test("tracking tab: opens from the tab bar, the Head button switches the view", 
 
 test("result screen: a one-line tracking readout under the hit report (both tabs, died and cleared), only when the round has moving-enemy data", () => {
   const { ui } = load({ analytics: stub() });
-  const withTracking = (round, rows) => ({ ...round, engagements: rows });
+  const withTracking = (round, rows) => ({ ...round, sight: true, engagements: rows });
   const base = diedRound([shot({ part: "head" }), shot()]);
   assert.ok(!ui.render.hitPanelHtml(base).includes("data-hit-track"), "no engagements, no readout");
   assert.ok(!ui.render.hitPanelHtml(withTracking(base, [{ weapon: "vandal" }])).includes("data-hit-track"), "an engagement without tracking, no readout");
@@ -1330,6 +1332,18 @@ test("sphere targets: a round with only misses still gets the circle; humanoid r
   // a mixed round shows the shape most hits were on
   const mixed = ui.render.hitSummary(diedRound([ball(), ball(), shot({ part: "body", targetShape: "humanoid", target: "bot" })]));
   assert.strictEqual(mixed.shape, "sphere");
+});
+test("sight: kill times, flick and strafe counts and tracking leave out rounds recorded before line-of-sight data", () => {
+  const { ui } = load({ analytics: stub() });
+  const oldRows = [trackRow({ sight: false })], newRows = [trackRow()];
+  assert.ok(ui.render.trackingHtml(oldRows, "body").includes("No tracking recorded yet"), "an old round gives no tracking numbers");
+  assert.ok(ui.render.trackingHtml(newRows, "body").includes("On the body"));
+  const base = diedRound([shot({ part: "head" }), shot()]);
+  const eRow = trackRow().tracking;
+  assert.ok(!ui.render.hitPanelHtml({ ...base, sight: false, engagements: [{ tracking: eRow }] }).includes("data-hit-track"), "no readout for an old round");
+  assert.ok(ui.render.hitPanelHtml({ ...base, sight: true, engagements: [{ tracking: eRow }] }).includes("data-hit-track"));
+  const series = ui.render.progressSeries([], [{ day: dayN(1), killed: true, sight: false, timeToKill: 9, visibleTimeToKill: null }, { day: dayN(1), killed: true, sight: true, timeToKill: 3, visibleTimeToKill: 0.8 }], 7);
+  assert.deepStrictEqual(series.killTime.map((p) => p.value), [0.8], "only the sighted kill, and its visible time");
 });
 test("every coach rule id has an icon and a short summary (ids read from coach.js insights() and roundTip())", () => {
   const ids = coachRuleIds();

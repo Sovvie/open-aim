@@ -2,6 +2,13 @@
 
 All notable changes to openVaim (formerly AimTrainer). Newest first.
 
+## [Unreleased]
+
+### Stats and coach
+- Walls are now taken into account. An enemy behind a wall used to count as "in view", so time to kill, the crosshair at first sight, flick or strafe, hold time and tracking all started too early and looked too slow. openVaim now checks the line of sight to every enemy (walls, smokes and flashes), starts those clocks when you could really see the enemy, and leaves out the time it was hidden again.
+- An enemy that shoots you before you can see it still counts as a fight, but your timing starts when you first see it.
+- Rounds recorded before this are kept, but the coach and the Stats screens no longer use them for anything that depends on when you saw an enemy. Fights lost, fight spots, deaths and the hit report still use every round.
+
 ## [1.5.0] - 2026-11-19
 
 ### Studio

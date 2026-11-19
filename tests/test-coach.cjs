@@ -33,9 +33,9 @@ const find = (list, id) => list.find((f) => f.id === id);
 const ids = (list) => list.map((f) => f.id);
 
 // ---- builders (the expanded shape of __aimAnalytics.rounds()) ----
-const round = (o = {}) => ({ id: "r" + Math.random(), day: "2026-11-15", at: at(o.day || "2026-11-15"), code: "drillA", map: "bind", mode: "score", tickSeconds: 1 / 128, shots: [], deaths: [], engagements: [], nearMisses: [], ...o });
+const round = (o = {}) => ({ id: "r" + Math.random(), day: "2026-11-15", at: at(o.day || "2026-11-15"), code: "drillA", map: "bind", mode: "score", tickSeconds: 1 / 128, sight: true, shots: [], deaths: [], engagements: [], nearMisses: [], ...o });
 const near = (n, side, off, weapon = "vandal") => Array.from({ length: n }, () => ({ weapon, side, verticalOffset: off, missDistance: 0.2 }));
-const eng = (o = {}) => ({ enemyId: 1, startTick: 100, killed: true, killTick: 200, timeToKill: 0.8, aimError: { degrees: 20, yaw: 0, pitch: 0 }, kind: "mixed", weapon: "vandal", ...o });
+const eng = (o = {}) => { const e = { enemyId: 1, startTick: 100, killed: true, killTick: 200, timeToKill: 0.8, aimError: { degrees: 20, yaw: 0, pitch: 0 }, kind: "mixed", weapon: "vandal", ...o }; if (e.seenTick === undefined) e.seenTick = e.startTick; if (e.visibleTimeToKill === undefined) e.visibleTimeToKill = e.timeToKill; return e; };
 const many = (n, make) => Array.from({ length: n }, (_, i) => make(i));
 const shot = (o = {}) => ({ tick: 0, time: 0, weapon: "vandal", part: null, targetShape: null, ...o });
 const hit = (o = {}) => shot({ part: "body", targetShape: "humanoid", ...o });
@@ -760,6 +760,42 @@ const HEAD_CM = T.HEAD_ABOVE_CENTRE_CM;
     const C = loadCoach(stub({ rounds: trackRounds(10, { lagSum: 300 }) }));
     const t = (await C.insights({})).find((x) => x.id === "tracking");
     assert.ok(/% on body/.test(t.summary) && /behind/.test(t.summary), t.summary);
+  });
+
+  // ---- sight (19 Nov 2026): rounds recorded without line-of-sight data are not used for what depends on when you saw the enemy ----
+  await test("sight: rounds without sight data are left out of kill time, pre-aim, flick or strafe and tracking, and nothing is read from their timing", async () => {
+    const withSight = () => round({ engagements: many(40, () => eng({ timeToKill: 0.8, aimError: { degrees: 20, yaw: 0, pitch: -5 }, kind: "flick" })) });
+    const old = () => round({ sight: false, engagements: many(40, () => eng({ timeToKill: 3, visibleTimeToKill: null, seenTick: null, aimError: { degrees: 20, yaw: 0, pitch: -5 }, kind: "flick" })) });
+    assert.ok(find(await run({ rounds: [withSight()] }), "kill-time"), "a round with sight data counts");
+    assert.ok(!find(await run({ rounds: [old()] }), "kill-time"), "an old round does not give a kill time");
+    assert.ok(!find(await run({ rounds: [old()] }), "pre-aim") && !find(await run({ rounds: [old()] }), "pre-aim-low"), "nor a first-sight crosshair finding");
+    assert.ok(!find(await run({ rounds: [old()] }), "kill-style"), "nor a flick or strafe finding");
+    const both = find(await run({ rounds: [withSight(), old()] }), "kill-time");
+    assert.strictEqual(both.evidence.kills, 40, "mixed: only the 40 kills of the round with sight data");
+    assert.strictEqual(both.evidence.medianSeconds, 0.8, "and their time, not the old 3 s");
+  });
+  await test("sight: the time to kill is the VISIBLE time (hidden behind a wall left out), and a kill that was never seen has none", async () => {
+    const eRows = many(24, () => eng({ timeToKill: 4, visibleTimeToKill: 0.9 })).concat(many(5, () => eng({ timeToKill: 4, visibleTimeToKill: null, seenTick: null })));
+    const f = find(await run({ rounds: [round({ engagements: eRows })] }), "kill-time");
+    assert.strictEqual(f.evidence.kills, 24); assert.strictEqual(f.evidence.medianSeconds, 0.9);
+    assert.ok(/first saw an enemy/.test(f.detail), "the wording says first sight");
+  });
+  await test("sight: died without firing back only counts fights where you had seen the killer first; a kill from out of sight is not 'no answer'", async () => {
+    const deathFight = (seen) => round({ engagements: [eng({ enemyId: 5, startTick: 100, seenTick: seen, killed: false, killTick: null, timeToKill: null, visibleTimeToKill: null })],
+      deaths: [{ tick: 300, cause: "shot", killerId: 5, killer: "bot", killerDistance: 12 }], shots: [] });
+    const unseen = many(14, () => deathFight(null));
+    assert.ok(!find(await run({ rounds: unseen }), "deaths-unanswered"), "killed from out of sight: no finding");
+    const seenSilent = many(14, () => deathFight(150));
+    const f = find(await run({ rounds: seenSilent }), "deaths-unanswered");
+    assert.ok(f && f.evidence.deathsMatched === 14 && f.evidence.deathsWithoutFiring === 14, "seen, then died without a shot");
+    const late = many(14, () => deathFight(400));
+    assert.ok(!find(await run({ rounds: late }), "deaths-unanswered"), "seen only after the death tick: nothing to answer");
+  });
+  await test("sight: rules that only need who won or where (fights lost) still use rounds recorded before sight data", async () => {
+    const lost = (n) => many(n, () => round({ sight: false, engagements: [eng({ killed: false, killTick: null })], deaths: [{ tick: 300, cause: "shot", killerId: 1, killer: "bot", killerDistance: 10 }] }));
+    const won = (n) => many(n, () => round({ sight: false, engagements: [eng()], deaths: [] }));
+    const f = find(await run({ rounds: [...lost(20), ...won(15)] }), "fights-lost");
+    assert.ok(f, "fights lost does not need sight");
   });
 
   const failed = results.filter(([, ok]) => !ok).length;

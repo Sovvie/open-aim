@@ -11,6 +11,12 @@
 //
 // Rules and the recorded fields they read (rounds = __aimAnalytics.rounds(), days = __aimAnalytics.days()):
 //   miss-side          rounds[].nearMisses[]: side, verticalOffset (metres, from the middle of the enemy's body box), weapon
+// SIGHT (19 Nov 2026). Rules about WHEN the player saw an enemy (time to kill, the crosshair at first sight, flick or strafe, the hold time
+// before a fight, "died without firing back", tracking) use only rounds recorded with line-of-sight data (rounds()[].sight, recorder header
+// "sight"). Earlier rounds counted an enemy behind a wall as seen, so their times were far too long; they are not deleted, just not used for these
+// rules (the rules that only need who won and where, like fights lost, fight spots and angles, still use every round). An enemy that fires
+// at you before you can see it still makes a fight, but the clock starts when you first see it (engagement.seenTick); time to kill leaves out the
+// ticks the enemy was hidden again behind a wall or a smoke (engagement.visibleTimeToKill).
 //   kill-style         rounds[].engagements[]: killed, kind ("flick" | "strafe" | "mixed"), aimError.degrees, weapon
 //   pre-aim            engagements[]: aimError.pitch (positive = the head is above the crosshair when the enemy comes into view)
 //   pre-aim-low        the same pitch values: the share of engagements that begin with the crosshair far below head height
@@ -250,8 +256,12 @@
   // ---- rules: each takes ctx = { f: filter, rounds (limited to f.since), allRounds(), days(), fromDay } and returns findings ----
 
   // The killed engagements of the filtered rounds (weapon = the weapon at the kill).
-  const killsOf = (ctx) => { const out = []; for (const r of ctx.rounds) for (const e of r.engagements) if (e.killed && (!ctx.f.weapon || e.weapon === ctx.f.weapon)) out.push(e); return out; };
-  const engagementsOf = (ctx) => { const out = []; for (const r of ctx.rounds) for (const e of r.engagements) if (!ctx.f.weapon || e.weapon === ctx.f.weapon) out.push(e); return out; };
+  // Rounds recorded with line-of-sight data: the ones the rules about when you SAW an enemy can use (see the header, SIGHT).
+  const sightRounds = (ctx) => ctx.rounds.filter((r) => r.sight);
+  // The tick the player first saw the enemy of an engagement (null: never seen, e.g. it killed you from out of sight).
+  const seenAt = (e) => (num(e.seenTick) ? e.seenTick : null);
+  const killsOf = (ctx) => { const out = []; for (const r of sightRounds(ctx)) for (const e of r.engagements) if (e.killed && (!ctx.f.weapon || e.weapon === ctx.f.weapon)) out.push(e); return out; };
+  const engagementsOf = (ctx) => { const out = []; for (const r of sightRounds(ctx)) for (const e of r.engagements) if (!ctx.f.weapon || e.weapon === ctx.f.weapon) out.push(e); return out; };
 
   // 1. Over-aim or under-aim, from the near misses.
   function missSide(ctx) {
@@ -331,18 +341,18 @@
 
   // 4. Time to kill, and whether it is getting faster (last 7 days against the 7 before).
   async function killTime(ctx) {
-    const times = (list) => list.filter((e) => e.killed && num(e.timeToKill) && e.timeToKill > 0).map((e) => e.timeToKill);
+    const times = (list) => list.filter((e) => e.killed && num(e.visibleTimeToKill) && e.visibleTimeToKill > 0).map((e) => e.visibleTimeToKill);
     const out = [], now = times(killsOf(ctx));
     if (now.length >= TTK_MIN) {
       out.push({
         id: "kill-time", severity: "info", sample: now.length, title: "You kill in about " + r2(median(now)) + " s",
-        detail: "From the moment an enemy came into view to its kill, your typical time was " + r2(median(now)) + " seconds over " + now.length + " kills (average " + r2(avg(now)) + " s). Lower is better: shoot as soon as your crosshair is on the enemy.",
+        detail: "From the moment you first saw an enemy to its kill (time hidden behind walls left out), your typical time was " + r2(median(now)) + " seconds over " + now.length + " kills (average " + r2(avg(now)) + " s). Lower is better: shoot as soon as your crosshair is on the enemy.",
         evidence: { kills: now.length, medianSeconds: r2(median(now)), averageSeconds: r2(avg(now)) },
       });
     }
     const recentFrom = dayBack(6), prevFrom = dayBack(13), prevTo = dayBack(7), recent = [], prev = [];
     for (const r of await ctx.allRounds()) {
-      if (r.day == null || (r.day < prevFrom)) continue;
+      if (r.day == null || (r.day < prevFrom) || !r.sight) continue;
       const list = r.day >= recentFrom ? recent : r.day <= prevTo ? prev : null;
       if (list) for (const e of r.engagements) if (!ctx.f.weapon || e.weapon === ctx.f.weapon) list.push(e);
     }
@@ -433,13 +443,13 @@
   function deathsUnanswered(ctx) {
     if (ctx.f.weapon) return [];
     let matched = 0, silent = 0;
-    for (const r of ctx.rounds) {
+    for (const r of sightRounds(ctx)) {
       if (!r.engagements.length) continue;
       for (const d of shotDeaths(r)) {
         const e = killerFight(r, d);
-        if (!e) continue;
+        if (!e || seenAt(e) === null || seenAt(e) > d.tick) continue; // killed from out of sight: nothing you could have answered
         matched++;
-        if (!r.shots.some((s) => s.tick >= e.startTick && s.tick <= d.tick)) silent++;
+        if (!r.shots.some((s) => s.tick >= seenAt(e) && s.tick <= d.tick)) silent++;
       }
     }
     if (matched < UNANSWERED_MIN) return [];
@@ -590,17 +600,17 @@
     return out;
   }
 
-  // 10d. Hold or move sooner: the delay from the enemy coming into play to first contact, in lost fights against won fights.
+  // 10d. Hold or move sooner: the delay from first sight of the enemy to first contact, in lost fights against won fights.
   function holdSooner(ctx) {
     if (ctx.f.weapon) return []; // a death does not record which weapon you held
     const won = [], lost = [];
-    for (const r of ctx.rounds) {
+    for (const r of sightRounds(ctx)) {
       if (r.engagementsTruncated) continue;
       const dt = num(r.tickSeconds) && r.tickSeconds > 0 ? r.tickSeconds : 1 / 128, lostFights = new Set();
       for (const d of shotDeaths(r)) { const e = killerFight(r, d); if (e) lostFights.add(e); }
       for (const e of r.engagements) {
-        if (!num(e.contactTick) || !num(e.startTick) || e.contactTick < e.startTick) continue;
-        const delay = (e.contactTick - e.startTick) * dt;
+        if (!num(e.contactTick) || seenAt(e) === null || e.contactTick < seenAt(e)) continue; // never seen, or it shot you before you saw it
+        const delay = (e.contactTick - seenAt(e)) * dt;
         if (e.killed) won.push(delay); else if (lostFights.has(e)) lost.push(delay);
       }
     }
@@ -609,7 +619,7 @@
     if (lostAvg <= HOLD_LOST_S || wonAvg > HOLD_WON_S) return [];
     return [{
       id: "hold-sooner", severity: "tip", sample: won.length + lost.length, title: "Hold or move sooner",
-      detail: "In the " + plural(lost.length, "fight", "fights") + " you lost, " + r1(lostAvg) + " seconds passed on average between the enemy coming into play (in view or firing) and the first shot or hit, against " + r1(wonAvg) + " seconds in the " + plural(won.length, "fight", "fights") + " you won. Either commit and shoot sooner, or step back behind cover instead of holding the angle in the open. (Check the lost fights for enemies who simply shot you from far away.)",
+      detail: "In the " + plural(lost.length, "fight", "fights") + " you lost, " + r1(lostAvg) + " seconds passed on average between you first seeing the enemy and the first shot or hit, against " + r1(wonAvg) + " seconds in the " + plural(won.length, "fight", "fights") + " you won. Either commit and shoot sooner, or step back behind cover instead of holding the angle in the open. (Check the lost fights for enemies who simply shot you from far away.)",
       evidence: { lostFights: lost.length, wonFights: won.length, lostAverageSeconds: r2(lostAvg), wonAverageSeconds: r2(wonAvg), lostThresholdSeconds: HOLD_LOST_S, wonThresholdSeconds: HOLD_WON_S },
     }];
   }
@@ -804,7 +814,7 @@
   function strafeBy(ctx, field, id, noun) {
     if (ctx.f[field === "map" ? "map" : "code"]) return []; // already narrowed to one
     const by = new Map();
-    for (const r of ctx.rounds) {
+    for (const r of sightRounds(ctx)) {
       const key = r[field];
       if (key == null) continue;
       for (const e of r.engagements) {
@@ -1187,7 +1197,7 @@
   const TRACK_LOCK_MIN = 6;        // engagements that locked before the lock time is judged
   function tracking(ctx) {
     const rows = [];
-    for (const r of ctx.rounds) for (const e of r.engagements) {
+    for (const r of sightRounds(ctx)) for (const e of r.engagements) {
       const t = e && e.tracking;
       if (t && num(t.samples) && t.samples >= TRACK_SAMPLES_MIN && (!ctx.f.weapon || e.weapon === ctx.f.weapon)) rows.push(t);
     }
@@ -1314,7 +1324,7 @@
     const done = (reason, extra) => { rep.reason = reason; Object.assign(rep, extra || {}); return null; };
     try {
       const A = window.__aimAnalytics, hasA = !!A && typeof A.rounds === "function";
-      const full = (r) => ({ ...r, shots: r.shots || [], nearMisses: r.nearMisses || [] });
+      const full = (r) => ({ ...r, sight: r.sight === true, shots: r.shots || [], nearMisses: r.nearMisses || [] });
       const byAt = (a, b) => (b.at || 0) - (a.at || 0);
       if (!round) {
         if (!hasA) return done("no-round");

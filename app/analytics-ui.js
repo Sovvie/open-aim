@@ -756,7 +756,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
   // The tracking readout of one round (18 Nov 2026): how well the crosshair stayed on enemies that moved, from the round's engagements
   // (recorder header, "tracking"). "" when no engagement of the round has enough moving ticks (a round with only still enemies, or recorded before).
   function trackReadoutHtml(round) {
-    const rows = (Array.isArray(round && round.engagements) ? round.engagements : []).filter((e) => e && e.tracking && num(e.tracking.samples) && e.tracking.samples >= TRACK_MIN_TICKS);
+    const rows = (round && round.sight === true && Array.isArray(round.engagements) ? round.engagements : []).filter((e) => e && e.tracking && num(e.tracking.samples) && e.tracking.samples >= TRACK_MIN_TICKS);
     if (!rows.length) return "";
     const b = trackingTotals(rows, "body"), h = trackingTotals(rows, "head");
     const fix = (v, d = 1) => String(+v.toFixed(d));
@@ -1243,9 +1243,9 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     }
     const ttk = new Map();
     for (const e of engagements) {
-      if (!e || !e.killed || !num(e.timeToKill) || typeof e.day !== "string" || e.day < from) continue;
+      if (!e || !e.killed || e.sight !== true || !num(e.visibleTimeToKill) || typeof e.day !== "string" || e.day < from) continue;
       if (!ttk.has(e.day)) ttk.set(e.day, []);
-      ttk.get(e.day).push(e.timeToKill);
+      ttk.get(e.day).push(e.visibleTimeToKill);
     }
     out.killTime = [...ttk.keys()].sort().map((day) => ({ day, value: median(ttk.get(day)) }));
     for (const m of METRICS) out[m.id].sort((a, b) => (a.day < b.day ? -1 : 1));
@@ -1262,7 +1262,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
   function daysWithData(days, engagements, range, now) {
     const from = daysAgo(range - 1, now), set = new Set();
     for (const row of days) if (row && typeof row.day === "string" && row.day >= from) set.add(row.day);
-    for (const e of engagements) if (e && e.killed && num(e.timeToKill) && typeof e.day === "string" && e.day >= from) set.add(e.day);
+    for (const e of engagements) if (e && e.killed && e.sight === true && num(e.visibleTimeToKill) && typeof e.day === "string" && e.day >= from) set.add(e.day);
     return set.size;
   }
   // One round (rounds() shape) as day-row counts, plus its kill times.
@@ -1277,9 +1277,9 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     c.deaths = Array.isArray(r.deaths) ? r.deaths.length : 0;
     c.nearMisses = new Set((Array.isArray(r.nearMisses) ? r.nearMisses : []).filter((n) => n && num(n.shotIndex)).map((n) => n.shotIndex)).size;
     for (const e of Array.isArray(r.engagements) ? r.engagements : []) {
-      if (!e || !e.killed) continue;
+      if (!e || !e.killed || r.sight !== true) continue; // flick or strafe and the kill time depend on when you saw the enemy: only rounds with line-of-sight data
       if (e.kind === "flick") c.flicks++; else if (e.kind === "strafe") c.strafes++;
-      if (num(e.timeToKill)) c.ttk.push(e.timeToKill);
+      if (num(e.visibleTimeToKill)) c.ttk.push(e.visibleTimeToKill);
     }
     return c;
   }
@@ -1411,8 +1411,10 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
   function trackingHtml(engagements, target) {
     target = target === "head" ? "head" : "body";
     const toggle = `<div class="aim-an-filters" role="group" aria-label="Track against">` + [["body", "Body"], ["head", "Head"]].map(([id, label]) => `<button type="button" data-track="${id}" aria-pressed="${id === target}">${label}</button>`).join("") + `</div>`;
-    const rows = (Array.isArray(engagements) ? engagements : []).filter((e) => e && e.tracking && num(e.tracking.samples) && e.tracking.samples >= TRACK_MIN_TICKS);
-    if (!rows.length) return toggle + `<p class="aim-an-msg">No tracking recorded yet. Fight enemies that move across your view (strafing bots, moving targets) and your crosshair's accuracy on them, and how fast you lock on, show up here. Rounds played before this feature have none.</p>`;
+    const everyFight = Array.isArray(engagements) ? engagements : [], sighted = everyFight.filter((e) => e && e.sight === true).length;
+    const sightNote = `<p class="aim-an-note" data-sight-note>Line-of-sight data on ${sighted} of ${everyFight.length} recorded fights. Fights recorded before it existed counted enemies behind walls as seen, so they are not used here.</p>`;
+    const rows = (Array.isArray(engagements) ? engagements : []).filter((e) => e && e.sight === true && e.tracking && num(e.tracking.samples) && e.tracking.samples >= TRACK_MIN_TICKS);
+    if (!rows.length) return toggle + sightNote + `<p class="aim-an-msg">No tracking recorded yet. Fight enemies that move across your view (strafing bots, moving targets) and your crosshair's accuracy on them, and how fast you lock on, show up here. Rounds played before this feature, or before line-of-sight data (enemies behind walls were counted as in view), are not used.</p>`;
     const T = trackingTotals(rows, target), word = target === "head" ? "head" : "body";
     const fix = (v, d = 1) => (num(v) ? String(+v.toFixed(d)) : "–");
     const lagText = !num(T.lagDeg) || Math.abs(T.lagDeg) < 0.1 ? "level" : fix(Math.abs(T.lagDeg)) + "° " + (T.lagDeg > 0 ? "behind" : "ahead");
@@ -1431,7 +1433,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     const byDay = new Map();
     for (const e of rows) { if (!e.day) continue; if (!byDay.has(e.day)) byDay.set(e.day, []); byDay.get(e.day).push(e); }
     const dayBars = barsRowsHtml([...byDay].sort((a, b) => (a[0] < b[0] ? -1 : 1)).slice(-TRACK_DAYS).map(([d, list]) => ({ label: d.slice(5) + " (" + list.length + ")", value: trackingTotals(list, target).onPercent })), "%", "track-day");
-    return toggle + tiles
+    return toggle + sightNote + tiles
       + (weaponBars ? `<h4>On the ${word} by weapon</h4>` + weaponBars : "")
       + (dayBars ? `<h4>On the ${word} by day</h4>` + dayBars : "")
       + `<p class="aim-an-note">${T.fights} fights, ${fix(T.seconds)} s of moving enemies, from your newest ${RAW_ROUNDS} stored rounds. Only moments when the enemy crossed your view count (it turns faster than 4° per second). Time to lock = from the enemy coming into view until your crosshair stays on it for 0.15 s. Numbers in brackets are fights.</p>`;
@@ -1448,7 +1450,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     const note = b
       ? `Only ${plural(dayCount, "day")} with data in the last ${range} days, so each point is ${unit === "round" ? "one round" : "one session (rounds less than 30 minutes apart)"}, `
         + `from the newest ${RAW_ROUNDS} stored rounds. Day-by-day points come back once more than ${FEW_DAYS} days have data. Arrows compare the first and the latest ${unit}.`
-      : `Arrows compare the first and the latest day with data in the range. Near misses are a count per day, so they also rise with the number of shots. Kill times come from the newest ${RAW_ROUNDS} stored rounds (the last 30 days).`;
+      : `Arrows compare the first and the latest day with data in the range. Near misses are a count per day, so they also rise with the number of shots. Kill times come from the newest ${RAW_ROUNDS} stored rounds (the last 30 days), counted from the moment you first saw the enemy, and only from rounds recorded with line-of-sight data (earlier rounds counted enemies behind walls).`;
     return tabs + (b ? `<p class="aim-an-note" data-unit="${unit}">Showing one point per ${unit}: ${plural(b.count, unit)}.</p>` : "")
       + `<div class="aim-an-charts">${progressCharts(series, range, now, unit, focus)}</div><p class="aim-an-note">${note}</p>`;
   }
