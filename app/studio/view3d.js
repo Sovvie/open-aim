@@ -796,6 +796,7 @@ export function createView3D(container, { redraw = () => {} } = {}) {
     orbit.dist = 26;
   }
   function focus(x, y, z) { orbit.target.set(x, y, z); }
+  const yaw = () => orbit.yaw; // which way the camera is turned (radians), for arrow-key nudging
   function dispose() {
     // A closed view must stop loading: the detailed map is shared, and a late finish here would
     // take it away from the view that replaced this one (that view then drew black).
@@ -809,5 +810,5 @@ export function createView3D(container, { redraw = () => {} } = {}) {
     renderer.dispose(); canvas.remove(); labels.remove(); status.remove();
   }
 
-  return { canvas, labels, status, resize, setWorld, sync, animate, still, render, pick, surfacePoint, mapPoint, screenPoint, hitPoint, planePoint, beginTransform, transformDelta, rotationDelta, orbitBy, panBy, moveBy, moveUp, zoomBy, frame, focus, dispose, forceRebuild: () => { key = ''; translationKey = ''; translatedItem = null; } };
+  return { canvas, labels, status, resize, setWorld, sync, animate, still, render, pick, surfacePoint, mapPoint, screenPoint, hitPoint, planePoint, beginTransform, transformDelta, rotationDelta, orbitBy, panBy, moveBy, moveUp, zoomBy, frame, focus, yaw, dispose, forceRebuild: () => { key = ''; translationKey = ''; translatedItem = null; } };
 }

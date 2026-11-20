@@ -17,6 +17,8 @@ import {
   nudgeDelta, alignDeltas, clipOf, parseClip, pasteItems, TEMPLATES, buildTemplate, defaultAnchor, lint, describeBot, SHORTCUTS,
   exportDrillText, parseDrillText, fileName,
 } from "./layout-tools.js";
+import { snapGuides, extentOf, toGrid, cameraNudge } from "./snap.js";
+import { dryRun } from "./timeline.js";
 import { arenaSize, arenaRect, setArenaRect, ARENA_REACH, ARENA_MIN, arenaWallHeight, surfaceFor, darkArena, targetColor, arenaSurface, setArenaSurface, SURFACES } from "./arena.js";
 import { resizePiece, wallDepth, createPieceSnap, MIN_SIZE, MAX_SIZE } from './transform.js';
 const FREE = { hardMin: MIN_SIZE, hardMax: MAX_SIZE }; // studio-free-size: what the number boxes accept
@@ -102,6 +104,8 @@ const ICON = {
   help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 1-1 1.7M12 17v.5"/>',
   templates: '<rect x="4" y="4" width="7" height="7"/><rect x="13" y="4" width="7" height="7"/><rect x="4" y="13" width="7" height="7"/><path d="M16.5 13v7M13 16.5h7"/>',
   download: '<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>',
+  snap: '<path d="M4 4h16v16H4z" stroke-dasharray="3 3"/><path d="M12 2v6M12 16v6M2 12h6M16 12h6"/>',
+  timeline: '<path d="M4 6h8M4 12h12M4 18h16"/><path d="M14 4v4M18 10v4M20 16v4"/>',
   upload: '<path d="M12 16V5M7 9l5-5 5 5M5 20h14"/>',
   hold: '<circle cx="12" cy="6" r="2.4"/><path d="M12 9v6M12 15l-2.5 5M12 15l2.5 5M7 12h10"/>',
   jiggle: '<path d="M3 4v16h6V4z" fill="currentColor" fill-opacity=".25"/><path d="M12 12h3M18 12h3M13 8l-2 4 2 4M20 8l2 4-2 4"/>',
@@ -154,6 +158,10 @@ const S = {
   view: null, preview: false, previewT0: 0, // previewT0: when Preview moves started (seconds, like frame time)
 };
 window.__studio = S; // for checking the editor from DevTools
+// Snap (header button): dragged things click onto a 0.5 m grid and line up with other things; Alt = off for one drag.
+try { S.snap = localStorage.getItem("studio-snap") !== "off"; } catch { S.snap = true; }
+S.guides = []; // guide lines to draw while dragging: [{ axis, v, a, b }] (snap.js)
+S.tl = false; // the "What happens when" panel is open
 const dirty = () => S.drill && JSON.stringify(S.drill) !== S.saved;
 // The checks box and saving use the compiler's checks plus the Studio's extra warnings (layout-tools.js lint).
 const allProblems = (d, floor) => [...problems(d, floor), ...lint(d)];
@@ -461,7 +469,7 @@ async function showLibrary({ fromEditor = false } = {}) {
       h("div", { class: "grow" }),
       h("button", { class: "btn", title: "Open a drill file someone shared", onclick: importDrill }, ic("upload"), "Import"),
       h("button", { class: "btn primary", onclick: newDrillDialog }, ic("plus"), "New drill")),
-    h("main", { class: "library" },
+    h("main", { class: "library", "data-drop": "Drop .openvaim-drill.json files to import them" },
       h("div", { class: "steps" },
         h("div", { class: "step" }, h("i", {}, "1"), h("div", {}, h("b", {}, "Pick a place"), h("span", {}, "The training range or any map."))),
         h("div", { class: "step" }, h("i", {}, "2"), h("div", {}, h("b", {}, "Drop in bots"), h("span", {}, "Choose what they do, drag them where you want."))),
@@ -476,6 +484,12 @@ async function showLibrary({ fromEditor = false } = {}) {
           S.drills.map(drillCard)),
         S.drills.length ? null : h("p", { class: "empty-note" }, "No drills yet. Your drills also show up first in VALORANT Training in the lobby."),
       ]));
+  const lib = app.querySelector("main.library");
+  const hasFiles = (e) => e.dataTransfer && [...e.dataTransfer.types].includes("Files");
+  let depth = 0;
+  lib.addEventListener("dragenter", (e) => { if (hasFiles(e)) { depth++; lib.classList.add("drop"); } });
+  lib.addEventListener("dragleave", () => { depth = Math.max(0, depth - 1); if (!depth) lib.classList.remove("drop"); });
+  lib.addEventListener("drop", (e) => { if (!hasFiles(e)) return; depth = 0; lib.classList.remove("drop"); dropDrillFiles(e.dataTransfer.files); });
 }
 
 // A saved copycat run in the library: its path, rename and delete.
@@ -514,6 +528,7 @@ function drillCard(entry) {
         h("button", { class: "btn small", onclick: () => openDrill(d) }, ic("edit"), "Edit"),
         workshop ? h("button", { class: "btn small", onclick: () => publishDrill(entry) }, "Publish") : null),
       h("div", { class: "drill-utility-actions" },
+        h("button", { class: "btn small icon", title: "Export as a file to share or back up", "aria-label": "Export", onclick: () => exportDrill(d) }, ic("download")),
         h("button", { class: "btn small icon", title: "Make a copy", "aria-label": "Make a copy", onclick: () => copyDrill(d) }, ic("copy")),
         h("button", { class: "btn small icon danger", title: "Delete", "aria-label": "Delete", onclick: () => deleteDrill(entry) }, ic("trash")))));
 }
@@ -720,8 +735,9 @@ function buildEditor() {
   app.append(h("header", { class: "top" },
     h("button", { class: "btn ghost", onclick: leaveEditor, title: "Back to your drills" }, ic("back"), "Drills"),
     nameInput, undoBtn, redoBtn, h("div", { class: "grow" }), topState,
+    snapBtn = h("button", { class: "btn small snap-btn" + (S.snap ? " on" : ""), "aria-pressed": String(S.snap), title: "Snap: things you drag click onto a 0.5 m grid and line up with other things (a red guide line shows). Hold Alt while dragging to turn it off.", onclick: toggleSnap }, ic("snap"), "Snap"),
     h("button", { class: "btn icon ghost", title: "Keyboard shortcuts (?)", "aria-label": "Keyboard shortcuts", onclick: helpDialog }, ic("help")),
-    h("button", { class: "btn icon ghost", title: "Export this drill as a file to share or back up", "aria-label": "Export drill file", onclick: exportCurrent }, ic("download")),
+    h("button", { class: "btn small ghost", title: "Save this drill as a file to share or back up", onclick: exportCurrent }, ic("download"), "Export"),
     h("button", { class: "btn", onclick: () => saveCurrent() }, "Save"),
     h("button", { class: "btn primary", "data-coach": "play", onclick: () => saveCurrent(true) }, ic("play"), "Play")));
 
@@ -756,12 +772,14 @@ function buildEditor() {
   ctx = canvas.getContext("2d");
   hintEl = h("div", { class: "hint" });
   const previewBtn = h("button", { class: "btn small preview-btn", title: "Show how the bots move", onclick: () => { S.preview = !S.preview; S.previewT0 = performance.now() / 1000; previewBtn.classList.toggle("on", S.preview); previewBtn.lastChild.textContent = S.preview ? "Stop preview" : "Preview moves"; draw(); } }, ic("eye"), "Preview moves");
+  tlBtn = h("button", { class: "btn small preview-btn timeline-btn" + (S.tl ? " on" : ""), title: "What each bot will do after the round starts, in time order, worked out from your triggers", "aria-pressed": String(S.tl), onclick: toggleTimeline }, ic("timeline"), "Timeline");
+  tlPanel = h("div", { class: "timeline", "aria-label": "What happens when", hidden: !S.tl });
   stage = h("section", { class: "stage", "data-coach": "map" }, canvas,
     h("div", { class: "zoom" },
       h("button", { class: "btn icon", title: "Zoom in", "aria-label": "Zoom in", onclick: () => zoomBy(1.3) }, ic("plus")),
       h("button", { class: "btn icon", title: "Zoom out", "aria-label": "Zoom out", onclick: () => zoomBy(1 / 1.3) }, ic("minus")),
       h("button", { class: "btn icon", title: "Show everything", "aria-label": "Show everything", onclick: () => { fitView(); draw(); } }, ic("fit"))),
-    previewBtn, hintEl,
+    previewBtn, tlBtn, tlPanel, hintEl,
     h("div", { class: "view-switch", role: "radiogroup", "aria-label": "View" },
       h("button", { "data-view": "2d", onclick: () => setView(false) }, "2D"),
       h("button", { "data-view": "3d", onclick: () => setView(true) }, "3D"),
@@ -776,6 +794,49 @@ function buildEditor() {
   setView(S.mode3d, true);
   new ResizeObserver(() => { const had = !!S.view; sizeCanvas(); if (!had) fitView(); draw(); }).observe(stage);
   updateTop();
+}
+
+let snapBtn = null;
+function toggleSnap() {
+  S.snap = !S.snap;
+  try { localStorage.setItem("studio-snap", S.snap ? "on" : "off"); } catch {}
+  if (snapBtn) { snapBtn.classList.toggle("on", S.snap); snapBtn.setAttribute("aria-pressed", String(S.snap)); }
+  toast(S.snap ? "Snap on: 0.5 m grid and guide lines. Hold Alt while dragging for free movement." : "Snap off: moves in 0.1 m steps.");
+}
+
+// ---------- what happens when (trigger dry run, timeline.js) ----------
+let tlBtn = null, tlPanel = null, tlKey = "";
+function toggleTimeline() {
+  S.tl = !S.tl;
+  tlBtn.classList.toggle("on", S.tl); tlBtn.setAttribute("aria-pressed", String(S.tl));
+  tlPanel.hidden = !S.tl;
+  tlKey = "";
+  if (S.tl) refreshTimeline();
+}
+function refreshTimeline() {
+  if (!S.tl || !tlPanel || !S.drill) return;
+  const key = JSON.stringify(S.drill) + "|" + S.sel;
+  if (key === tlKey) return;
+  tlKey = key;
+  const r = dryRun(S.drill);
+  const finite = r.rows.map((x) => x.tMax).filter(Number.isFinite);
+  const scale = Math.max(r.end || 0, ...finite, 5) * 1.05;
+  const pct = (t) => Math.min(100, Math.max(0, (t / scale) * 100));
+  const when = (x) => (x.t === Infinity ? "never" : x.exact ? (x.tMax > x.t ? `${Math.round(x.t * 10) / 10}-${Math.round(x.tMax * 10) / 10} s` : `${Math.round(x.t * 10) / 10} s`) : `from ${Math.round(x.t * 10) / 10} s`);
+  const rowEl = (x) => h("li", { class: "tl-row " + x.type + (x.t === Infinity ? " never" : "") + (x.id === S.sel ? " on" : ""), tabindex: "0", title: "Click to select it on the map",
+    onclick: () => { if (S.drill.items.some((i) => i.id === x.id)) { setGroup([x.id]); renderSide(); draw(); } } },
+    h("span", { class: "tl-when" }, when(x)),
+    h("span", { class: "tl-track" }, x.t === Infinity ? null : h("i", { class: x.exact ? "exact" : "after", style: `left:${pct(x.t)}%;width:${x.exact ? Math.max(0.8, pct(x.tMax) - pct(x.t)) : Math.max(1, (r.end ? pct(r.end) : 100) - pct(x.t))}%` })),
+    h("span", { class: "tl-what" }, h("b", {}, x.name), " ", x.text, x.id === S.sel && x.then.length ? h("small", {}, x.then.join(" ")) : null));
+  tlPanel.textContent = "";
+  tlPanel.append(
+    h("div", { class: "tl-head" }, h("b", {}, "What happens when"), h("span", {}, "Earliest times, if you run straight there and kill at once"),
+      h("button", { class: "btn small icon ghost", "aria-label": "Close timeline", title: "Close", onclick: toggleTimeline }, "\u00d7")),
+    ...(r.notes.length ? [h("ul", { class: "tl-notes" }, r.notes.map((t) => h("li", {}, t)))] : []),
+    h("ol", { class: "tl-rows" },
+      h("li", { class: "tl-row edge" }, h("span", { class: "tl-when" }, "0 s"), h("span", { class: "tl-track" }), h("span", { class: "tl-what" }, h("b", {}, "Round starts"), "You are at your start", r.canWalk ? "" : " and can't walk (I can walk around is off)", ".")),
+      r.rows.length ? r.rows.map(rowEl) : h("li", { class: "tl-row edge" }, h("span", { class: "tl-when" }), h("span", { class: "tl-track" }), h("span", { class: "tl-what" }, "No bots yet.")),
+      ...(r.end ? [h("li", { class: "tl-row edge" }, h("span", { class: "tl-when" }, `${r.end} s`), h("span", { class: "tl-track" }), h("span", { class: "tl-what" }, h("b", {}, "Round ends")))] : [])));
 }
 
 function updateTop() {
@@ -1427,6 +1488,7 @@ function frame(now) {
   if (S.mode3d && view3d) paint3d(now / 1000);
   else paint(now / 1000);
   updateHint();
+  refreshTimeline();
   if (S.preview) raf = requestAnimationFrame(frame);
 }
 
@@ -1635,6 +1697,18 @@ function paint(t) {
       const [qx, qy] = pt(it.x, it.z);
       const m = it.kind === "bot" ? 0.6 : it.kind === "smoke" ? 4.6 : it.kind === "wall" ? (it.length || 4) / 2 : it.kind === "targets" ? (it.width || 6) / 2 : Math.max(it.w || 1, it.d || 1) / 2 + 0.3;
       ctx.beginPath(); ctx.arc(qx, qy, Math.max(14, 0.45 * k + 6, m * k), 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.restore();
+  }
+  if (S.guides.length && drag && !S.mode3d) {
+    // Guide lines: thin red dashes through everything that lines up, with a small diamond where each line starts and ends.
+    ctx.save(); ctx.strokeStyle = "#ff4655"; ctx.fillStyle = "#ff4655"; ctx.lineWidth = 1.5; ctx.setLineDash([8, 5]); ctx.shadowColor = "rgba(255,70,85,.6)"; ctx.shadowBlur = 4;
+    for (const g of S.guides) {
+      const A = g.axis === "x" ? [g.v, g.a - 0.8] : [g.a - 0.8, g.v], B = g.axis === "x" ? [g.v, g.b + 0.8] : [g.b + 0.8, g.v];
+      line(A[0], A[1], B[0], B[1]);
+      ctx.setLineDash([]);
+      for (const [x, z] of [A, B]) { const [qx, qy] = pt(x, z); ctx.beginPath(); ctx.moveTo(qx, qy - 4); ctx.lineTo(qx + 4, qy); ctx.lineTo(qx, qy + 4); ctx.lineTo(qx - 4, qy); ctx.closePath(); ctx.fill(); }
+      ctx.setLineDash([8, 5]);
     }
     ctx.restore();
   }
@@ -2362,6 +2436,7 @@ function bindCanvas() {
     } else if (drag && drag.moved) renderSide();
     const handleDrag = drag && (drag.type === "arenaEdge" || drag.type === "blockSide");
     drag = null;
+    S.guides = [];
     stage.classList.remove("panning");
     if (handleDrag) draw(); // drop the "being resized" highlight
   };
@@ -2376,6 +2451,24 @@ function bindCanvas() {
 }
 
 // at3: the world point under the mouse in 3D (2D works it out from the pointer).
+// Snap on (2D): the dragged thing lines up with the centre or the edges of other things (guide lines), else it clicks onto a 0.5 m grid.
+// Alt = free. Group members and the thing itself are not targets.
+function guideSnap(obj, at, e) {
+  S.guides = [];
+  if (!S.snap || e.altKey || !S.view) return;
+  if (!drag.others) {
+    const skip = new Set([obj.id, drag.item && drag.item.id, ...(drag.groupGrab ? S.group : [])]);
+    drag.others = S.drill.items.filter((i) => !skip.has(i.id) && i.kind !== "smoke").map((i) => ({ x: i.x, z: i.z, ...extentOf(i) }));
+    if (obj !== S.drill.start) drag.others.push({ x: S.drill.start.x, z: S.drill.start.z });
+  }
+  const raw = { x: at.x + (drag.dx || 0), z: at.z + (drag.dz || 0) };
+  const r = snapGuides({ ...raw, ...extentOf(obj) }, drag.others, 8 / S.view.k);
+  const gx = r.guides.some((g) => g.axis === "x"), gz = r.guides.some((g) => g.axis === "z");
+  obj.x = gx ? r.x : toGrid(raw.x);
+  obj.z = gz ? r.z : toGrid(raw.z);
+  S.guides = r.guides;
+}
+
 function dragMove(e, at3) {
   const px = pointer.x, py = pointer.y;
   if (drag.type === "pan") {
@@ -2408,6 +2501,7 @@ function dragMove(e, at3) {
       d.start.facing = Math.round(yawDeg(d.start, at));
     } else if (drag.type === "start") {
       d.start.x = snap(at.x + drag.dx); d.start.z = snap(at.z + drag.dz);
+      if (!at3) guideSnap(d.start, at, e);
       d.start.y = floorAt(d.start.x, d.start.z, at.y ?? d.start.y) ?? d.start.y;
     } else if (drag.type === "item" && drag.trigLine) {
       // Dragging the trigger line itself moves the whole line, not the bot.
@@ -2418,6 +2512,7 @@ function dragMove(e, at3) {
       const it = d.items.find((i) => i.id === drag.item.id);
       const oldX = it.x, oldZ = it.z, oldY = it.y ?? 0;
       it.x = snap(at.x + drag.dx); it.z = snap(at.z + drag.dz);
+      if (!at3 && !drag.snapping) guideSnap(it, at, e);
       if (drag.snapping) {
         it.y = drag.baseY;
         drag.snapping.move(it, e.altKey);
@@ -2446,6 +2541,7 @@ function dragMove(e, at3) {
     } else if (drag.type === "trigEnd") {
       const it = d.items.find((i) => i.id === drag.item.id);
       it.trigger[drag.end] = { x: snap(at.x), z: snap(at.z) };
+      if (!at3) { const q = { ...it.trigger[drag.end] }; guideSnap(q, at, e); it.trigger[drag.end] = { x: q.x, z: q.z }; }
     } else if (drag.type === "flash") {
       const it = d.items.find((i) => i.id === drag.item.id);
       it.flash.target = { x: snap(at.x), z: snap(at.z) };
@@ -2457,6 +2553,7 @@ function dragMove(e, at3) {
       const it = d.items.find((i) => i.id === drag.item.id);
       const p = it.route[drag.index];
       p.x = snap(at.x); p.z = snap(at.z);
+      if (!at3) guideSnap(p, at, e);
       p.y = floorAt(p.x, p.z, at.y ?? p.y) ?? p.y;
       if (drag.index === 0) { it.x = p.x; it.y = p.y; it.z = p.z; }
     } else if (drag.type === "zoneTurn") {
@@ -2469,6 +2566,7 @@ function dragMove(e, at3) {
       if (s) {
         const p = drag.index >= 0 && s.route ? s.route[drag.index] : s;
         p.x = snap(at.x); p.z = snap(at.z);
+        if (!at3) guideSnap(p, at, e);
         p.y = floorAt(p.x, p.z, at.y ?? p.y) ?? p.y;
         if (drag.index === 0 && s.route) { s.x = p.x; s.y = p.y; s.z = p.z; }
       }
@@ -2479,7 +2577,7 @@ function dragMove(e, at3) {
       it.width = Math.round(Math.max(it.kind === "targets" ? 0 : 0.4, Math.min(it.kind === "targets" ? 30 : 12, w)) * 10) / 10;
     } else if (drag.type === "startSpot") {
       const s = d.start.spots && d.start.spots[drag.index];
-      if (s) { s.x = snap(at.x); s.z = snap(at.z); s.y = floorAt(s.x, s.z, at.y ?? s.y) ?? s.y; }
+      if (s) { s.x = snap(at.x); s.z = snap(at.z); if (!at3) guideSnap(s, at, e); s.y = floorAt(s.x, s.z, at.y ?? s.y) ?? s.y; }
     } else if (drag.type === "startSpotTurn") {
       const s = d.start.spots && d.start.spots[drag.index];
       if (s) s.facing = Math.round(yawDeg(s, at));
@@ -2683,7 +2781,7 @@ addEventListener("keydown", (e) => {
   if (mod && e.key.toLowerCase() === "s") { e.preventDefault(); saveCurrent(); return; }
   if (typing) return;
   if (e.key === "?" && !mod) { e.preventDefault(); helpDialog(); return; }
-  if (e.key.startsWith("Arrow") && !mod && !S.tool && !S.mode3d && !S.preview) { if (nudgeKey(e)) e.preventDefault(); return; }
+  if (e.key.startsWith("Arrow") && !mod && !S.tool && !S.preview) { if (nudgeKey(e)) e.preventDefault(); return; }
   if (mod && !e.shiftKey && (k === "c" || k === "x")) { if (copySelection(k === "x")) e.preventDefault(); return; }
   if (mod && e.key.toLowerCase() === "z" && !e.shiftKey) { e.preventDefault(); undo(); }
   else if (mod && (e.key.toLowerCase() === "y" || (e.key.toLowerCase() === "z" && e.shiftKey))) { e.preventDefault(); redo(); }
@@ -2746,7 +2844,9 @@ function nudgeKey(e) {
   if (!dir) return false;
   const ids = selectedIds();
   if (!ids.length && S.sel !== "start") return false;
-  const [dx, dz] = nudgeDelta(dir[0], dir[1], e.shiftKey ? 1 : e.altKey ? 0.1 : 0.5, turns());
+  const step = e.shiftKey ? 1 : e.altKey ? 0.1 : 0.5;
+  // 2D: along the screen (turned views too). 3D: along the nearest ground axis to where the camera looks (up = away from the camera).
+  const [dx, dz] = S.mode3d && view3d ? cameraNudge(dir[0], dir[1], step, view3d.yaw()) : nudgeDelta(dir[0], dir[1], step, turns());
   edit((d) => {
     if (ids.length) { for (const it of d.items) if (ids.includes(it.id)) shiftItem(it, dx, dz); return; }
     const r = (v) => Math.round(v * 100) / 100;
@@ -2845,25 +2945,55 @@ function helpDialog() {
 }
 
 // ---------- drill files ----------
-function exportCurrent() {
-  if (!S.drill) return;
-  const blob = new Blob([exportDrillText(S.drill)], { type: "application/json" });
+function exportCurrent() { if (S.drill) exportDrill(S.drill); }
+function exportDrill(drill) {
+  const blob = new Blob([exportDrillText(drill)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
-  const a = h("a", { href: url, download: fileName(S.drill) });
+  const a = h("a", { href: url, download: fileName(drill) });
   document.body.append(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 4000);
   toast("Exported. Share the file; anyone can open it with Import in the Studio.");
 }
+// A picked or dropped file -> { drill } or { error } (checked; never carries a saved copy's identity).
+async function readDrillFile(file) {
+  if (file.size > 8 * 1024 * 1024) return { error: "That file is too big to be a drill." };
+  const res = parseDrillText(await file.text());
+  if (res.error) return { error: `${file.name}: ${res.error}` };
+  if (res.drill.place !== "range" && !MAPS.some(([id]) => id === res.drill.place)) return { error: "That drill is for a map this version doesn't have." };
+  return res;
+}
+// Files dropped on the drill list: one opens like Import; several are saved straight into the list as new drills.
+async function dropDrillFiles(files) {
+  const picked = [...files].filter((f) => /\.json$/i.test(f.name) || f.type === "application/json");
+  if (!picked.length) { toast("Drop .openvaim-drill.json files here to import them.", true); return; }
+  const revision = screenRevision;
+  const made = [];
+  let firstError = "";
+  for (const f of picked) { const r = await readDrillFile(f); if (r.drill) made.push(r.drill); else firstError = firstError || r.error; }
+  if (revision !== screenRevision || S.screen !== "library") return;
+  if (!made.length) { toast(firstError, true); return; }
+  if (made.length === 1) { openDrill(made[0], true); toast("Imported. It's a new drill; Save keeps it."); return; }
+  let saved = 0;
+  for (const d of made) if (await saveDrill(d, { quietOk: true })) saved++;
+  if (revision !== screenRevision || S.screen !== "library") return;
+  toast(`Imported ${saved} of ${picked.length} drills.${firstError ? " " + firstError : ""}`, saved < picked.length);
+  showLibrary();
+}
+// A file dropped anywhere else must never make the page navigate to it.
+addEventListener("dragover", (e) => { if (e.dataTransfer && [...e.dataTransfer.types].includes("Files")) e.preventDefault(); });
+addEventListener("drop", (e) => {
+  if (!e.dataTransfer || ![...e.dataTransfer.types].includes("Files")) return;
+  e.preventDefault();
+  if (S.screen === "editor") toast("To import a drill, go back to your drills and drop the file there.", true);
+});
 function importDrill() {
   const input = h("input", { type: "file", accept: ".json,application/json", style: "display:none" });
   input.addEventListener("change", async () => {
     const file = input.files && input.files[0];
     input.remove();
     if (!file) return;
-    if (file.size > 8 * 1024 * 1024) { toast("That file is too big to be a drill.", true); return; }
-    const res = parseDrillText(await file.text());
-    if (res.error) { toast(res.error, true); return; }
-    if (res.drill.place !== "range" && !MAPS.some(([id]) => id === res.drill.place)) { toast("That drill is for a map this version doesn't have.", true); return; }
+    const res = await readDrillFile(file);
+    if (!res.drill) { toast(res.error, true); return; }
     openDrill(res.drill, true);
     toast("Imported. It's a new drill; Save keeps it.");
   });
