@@ -710,7 +710,29 @@ button.tw-back:focus-visible,.tw-tabs button:focus-visible,.tw-seg button:focus-
   const tierBadge = (tier) => (tier ? `<span class="es-tier is-${tier}">${tierWord(tier)}</span>` : "");
   const nameHtml = (name) => { const t = tierOf(name); return esc(t.title) + (t.tier ? " " + tierBadge(t.tier) : ""); };
   const plainName = (name) => { const t = tierOf(name); return t.tier ? `${t.title} (${tierWord(t.tier)})` : t.title; };
-  window.__aimTargetWorkshop = { mount, update, dialog, tierOf, tierBadge, nameHtml, plainName };
+  // A heading the game (Vue) renders as plain text: only its text node's data is changed and a badge appended, so Vue,
+  // which swaps the whole text when the name changes, keeps working (this runs again then). The full name stays in
+  // data-es-full. Used for the VALORANT Training cards (enemy-rank-cards.js), the result card and the pause menus.
+  function paintName(el) {
+    if (!el) return;
+    const tn = [...el.childNodes].find((n) => n.nodeType === 3 && n.data.trim());
+    if (!tn) return;
+    const text = tn.data.trim(), badge = el.querySelector(":scope > .es-tier");
+    if (badge && el.dataset.esTitle === text) return;
+    badge?.remove();
+    const { tier, title } = tierOf(text);
+    if (!tier) { delete el.dataset.esFull; delete el.dataset.esTitle; return; }
+    el.dataset.esFull = text;
+    el.dataset.esTitle = title;
+    tn.data = title + " ";
+    el.insertAdjacentHTML("beforeend", tierBadge(tier));
+  }
+  const fullName = (el) => (el.querySelector(":scope > .es-tier") && el.dataset.esFull) || el.textContent.trim();
+  window.__aimTargetWorkshop = { mount, update, dialog, tierOf, tierBadge, nameHtml, plainName, paintName, fullName };
+  // Result card title and the pause / Tab menu titles: two lookups after a page change, batched to a frame.
+  let namesQueued = false;
+  const paintRoundNames = () => { namesQueued = false; document.querySelectorAll(".al-result-modal h2, .al-pause-id h1").forEach(paintName); };
+  if (window.__aimWatchPage) window.__aimWatchPage(() => { if (!namesQueued) { namesQueued = true; requestAnimationFrame(paintRoundNames); } }, { childList: true, subtree: true });
   // The lobby may have mounted the tab before this script ran.
   const late = document.querySelector(".tw-root");
   if (late && window.__aimTWApi) mount(late, window.__aimTWApi);

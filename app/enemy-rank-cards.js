@@ -310,7 +310,7 @@
     let pen = card.querySelector(":scope > .es-rename");
     if (!state.renamable || !h3) { pen?.remove(); return; }
     const name = renamed.get(code);
-    if (name && h3.textContent.trim() !== name && !card.querySelector(":scope > .es-rename-box")) h3.textContent = name;
+    if (name && fullName(h3) !== name && !card.querySelector(":scope > .es-rename-box")) { h3.textContent = name; paintTier(card); }
     if (!pen) {
       pen = document.createElement("button");
       pen.type = "button";
@@ -323,6 +323,13 @@
     // Fixed spot next to the bookmark (CSS): no layout reads, which made scrolling stutter (lobby-scroll-fast-v1).
   }
 
+  // ui-integration-v1: VALORANT Training names end in "(Easy)" / "(Hard)" and the longest ran to three lines, cutting
+  // the end off. The card shows the plain name with an EASY / HARD badge (window.__aimTargetWorkshop, .es-tier).
+  // Only the text node's data is changed (Vue swaps the whole text when the name changes; this runs again then);
+  // the full name stays in data-es-full for rename. Scenario names and share codes are not touched.
+  const paintTier = (card) => window.__aimTargetWorkshop?.paintName?.(card.querySelector(".al-wk-body h3"));
+  const fullName = (h3) => (window.__aimTargetWorkshop?.fullName ? window.__aimTargetWorkshop.fullName(h3) : h3.textContent.trim());
+
   function openRename(card) {
     const code = card.dataset.shareCode, h3 = card.querySelector(".al-wk-body h3");
     if (!h3 || card.querySelector(":scope > .es-rename-box")) return;
@@ -331,7 +338,7 @@
     box.style.top = `${h3.offsetTop - 4}px`;
     const input = document.createElement("input");
     input.maxLength = 60;
-    input.value = h3.textContent.trim();
+    input.value = fullName(h3);
     input.spellcheck = false;
     const ok = document.createElement("button"); ok.type = "submit"; ok.textContent = "SAVE";
     const msg = document.createElement("div"); msg.className = "es-rename-msg";
@@ -343,7 +350,7 @@
     const save = async () => {
       if (busy || done) return;
       const name = input.value.replace(/\s+/g, " ").trim();
-      if (!name || name === h3.textContent.trim()) { close(); return; }
+      if (!name || name === fullName(h3)) { close(); return; }
       busy = true; ok.disabled = true; msg.textContent = "";
       try {
         const res = await fetch(`/api/local/drill-rename?code=${encodeURIComponent(code)}&name=${encodeURIComponent(name)}`, { headers: { "X-Aim-Local": "1" }, cache: "no-store" });
@@ -383,6 +390,7 @@
     const want = [];
     for (const card of document.querySelectorAll(".al-wk-card[data-share-code]:not(.al-wk-ad-card)")) {
       const code = card.dataset.shareCode;
+      paintTier(card);
       if (!cards.has(code)) want.push(code); else { paint(card, code); paintBack(card, code); paintNew(card, code); }
     }
     if (want.length) ask(want);

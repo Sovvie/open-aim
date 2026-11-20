@@ -4052,8 +4052,8 @@ html[data-aim-local]:not(#es) body .hall-bottombar .hall-search { width: clamp(3
 /* EASY / HARD badge next to a drill name (window.__aimTargetWorkshop.nameHtml): Routines, result screen, Stats,
    coach and heatmap filters, VALORANT Training cards. Same colours as the Target Workshop card badge (.tw-tier). */
 html[data-aim-local] .es-tier {
-  display: inline-block; vertical-align: .12em; margin-left: 2px; padding: 1px 7px 1px 6px;
-  font: 800 10px/1.4 var(--es-head, "Bahnschrift"); letter-spacing: .1em; text-transform: uppercase; white-space: nowrap;
+  display: inline-block; vertical-align: middle; margin-left: 2px; padding: 1px 7px 1px 6px;
+  font: 800 11px/1.4 var(--es-head, "Bahnschrift"); font-style: normal; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap;
   clip-path: polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%); border-radius: 0 !important;
 }
 html[data-aim-local] .es-tier.is-easy { background: #1f3b2e; color: #7ee2a8; }
