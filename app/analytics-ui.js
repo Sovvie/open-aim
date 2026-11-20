@@ -1706,7 +1706,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-tipm h3 { text-transform: non
   function progressHtml(days, engagements, range, now, rounds, focus) {
     const tabs = `<div class="aim-an-filters" role="group" aria-label="Range">` + RANGES.map((r) => `<button type="button" data-range="${r}" aria-pressed="${r === range}">${r} days</button>`).join("") + `</div>`;
     rounds = Array.isArray(rounds) ? rounds : [];
-    if (!days.length && !engagements.length && !rounds.length) return tabs + `<p class="aim-an-msg">No days recorded yet. Your accuracy, headshot rate and other trends show up here after you play.</p>`;
+    if (!days.length && !engagements.length && !rounds.length) return tabs + `<p class="aim-an-msg">No days recorded yet. Play a few rounds and your accuracy, headshot rate and kill time show up here as lines, one point per round at first and one per day once you have played on a few days.</p>`;
     const dayCount = daysWithData(days, engagements, range, now);
     const b = dayCount <= FEW_DAYS ? progressBuckets(rounds, range, now, dayCount) : null;
     const series = b ? b.series : progressSeries(days, engagements, range, now);
@@ -2083,7 +2083,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-tipm h3 { text-transform: non
       + `<span class="aim-an-drill-trend" title="${esc(trendTitle)}">${esc(trendText(m))}<small>trend</small></span>${sp}</div></li>`;
   }
   function drillsHtml(models, sort, top = "") {
-    if (!models.length) return `<p class="aim-an-msg">No drills yet. Finish a drill and its score history, medals and trend show up here.</p>`;
+    if (!models.length) return `<p class="aim-an-msg">No drills yet. Finish a drill and it shows up here with its score history and trend; after 3 finished runs it gets bronze, silver and gold scores to beat, and you can set a goal.</p>`;
     sort = DRILL_SORTS.some((s) => s[0] === sort) ? sort : "recent";
     const bar = `<div class="aim-an-filters" role="group" aria-label="Sort drills">` + DRILL_SORTS.map(([id, label]) => `<button type="button" data-sort="${id}" aria-pressed="${id === sort}">${label}</button>`).join("") + `</div>`;
     return top + bar + `<ul class="aim-an-drills" data-drill-list>` + sortDrills(models, sort).map(drillRowHtml).join("") + `</ul>`
@@ -2645,7 +2645,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-tipm h3 { text-transform: non
   // title (h4, two lines at most), the summary (one line), the small visual or the clamped text, and the Numbers button.
   function coachHtml(list, failed) {
     if (failed) return `<p class="aim-an-msg">The coach is not available in this window.</p>`;
-    if (!list.length) return `<p class="aim-an-msg">No findings yet. The coach needs a few rounds of data for each rule before it says anything.</p>`;
+    if (!list.length) return `<p class="aim-an-msg">No findings yet. The coach waits until it is sure: most tips need 20 or more fights, deaths or rounds behind them. Play a few sessions of the drills you like and check back; tips show up here on their own.</p>`;
     const items = list.filter(isFinding).map((f, i) => {
       const hid = `aim-an-coach-${i}`, { main: body } = splitNote(f.detail), refs = refsOf(f, f.detail);
       const main = labelCodes(cardSummary(f), refs), vis = cardVisual(f), lead = sentences(body).lead;
@@ -3412,7 +3412,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-tipm h3 { text-transform: non
       refHtml, withRefs, refsOf, splitNote, coachIcon, cardSummary,
       roundSeconds, roundFacts, groupSessions, totalsOf, compareMetric, compareRows, sessionVersus, changeText, timelineOf, sessionDrills, sessionLabel, sessionHtml, totalsFromDays, periodCompare, compareHtml,
       mergeRawDays, sessionDrillChanges, changeCellHtml, normalizeGoal, normalizeGoals, addGoal, removeGoal, evaluateGoal, goalsHtml, warmupRoutine, warmupHtml,
-      drillModel, drillModels, sortDrills, sparkSvg, drillsHtml, drillDetailHtml, scoreChartSvg, csvCell, toCsv, roundsCsv, daysCsv, exportJson, burstSplit, burstHtml, heatHtml },
+      drillModel, drillModels, sortDrills, sparkSvg, drillsHtml, drillDetailHtml, scoreChartSvg, keyLabel, goalHint, timelineHtml, chartHtml, csvCell, toCsv, roundsCsv, daysCsv, exportJson, burstSplit, burstHtml, heatHtml },
     runExport,
     coachIconIds: Object.keys(COACH_ICON),
     syncResult,
