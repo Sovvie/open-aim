@@ -108,7 +108,7 @@ async function test(name, fn) {
     const out = await run([roundOf([...at_(90, 14, 10), ...at_(0, 14, 4)])]);
     const f = out.find((x) => x.id === "angle-lose:bind");
     assert.ok(f, "no losing-sector tip");
-    assert.strictEqual(f.title, "You lose most fights from the -x direction");
+    assert.strictEqual(f.title, "You lose most fights from the -x direction on " + f.evidence.map);
     assert.strictEqual(f.severity, "tip");
     assert.strictEqual(f.sample, 14);
     for (const k of ["id", "title", "detail", "severity", "evidence", "sample"]) assert.ok(k in f, k);
@@ -126,7 +126,7 @@ async function test(name, fn) {
     const out = await run([roundOf([...at_(180, 15, 3), ...at_(270, 12, 5)])]);
     const f = out.find((x) => x.id === "angle-win:bind");
     assert.ok(f, "no winning-sector note");
-    assert.strictEqual(f.title, "You win most fights from the +z direction");
+    assert.strictEqual(f.title, "You win most fights from the +z direction on " + f.evidence.map);
     assert.strictEqual(f.severity, "info");
     assert.strictEqual(f.sample, 15);
     assert.strictEqual(f.evidence.winPercent, 80);

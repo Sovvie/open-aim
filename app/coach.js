@@ -586,15 +586,15 @@
       const gapPoints = (bestWin.won / bestWin.n - worst.won / worst.n) * 100;
       if (worst.k !== bestWin.k && worst.lost / worst.n >= ANGLE_LOSS_SHARE && gapPoints >= ANGLE_WIN_GAP) {
         out.push({
-          id: "angle-lose:" + map, severity: "tip", sample: worst.n, title: "You lose most fights from " + SECTORS[worst.k],
-          detail: "On " + map + " you lost " + worst.lost + " of the " + worst.n + " fights where the enemy was first in " + SECTORS[worst.k] + " of you (" + pct(worst.lost / worst.n) + "%), against a win rate of " + pct(bestWin.won / bestWin.n) + "% when the enemy was in " + SECTORS[bestWin.k] + ". Directions are world directions on the map (yaw 0 looks along -z, it grows toward -x). Think about what you do differently on that side: how you hold it, where you stand, whether you clear it first.",
+          id: "angle-lose:" + map, severity: "tip", sample: worst.n, title: "You lose most fights from " + SECTORS[worst.k] + " on " + map,
+          detail: "On " + map + " you lost " + worst.lost + " of the " + worst.n + " fights where the enemy was first in " + SECTORS[worst.k] + " of you (" + pct(worst.lost / worst.n) + "%), against a win rate of " + pct(bestWin.won / bestWin.n) + "% when the enemy was in " + SECTORS[bestWin.k] + ". Directions are fixed directions on the map, the same in every round (like north on a compass), not left or right of where you were looking. Think about what you do differently on that side: how you hold it, where you stand, whether you clear it first.",
           evidence: { map, sector: SECTORS[worst.k], sectorYawDeg: worst.k * 45, fights: worst.n, lost: worst.lost, won: worst.won, lostPercent: pct(worst.lost / worst.n), bestSector: SECTORS[bestWin.k], bestWinPercent: pct(bestWin.won / bestWin.n), gapPoints: Math.round(gapPoints), bearing: "world", sectors, minFights: ANGLE_FIGHTS_MIN, minLossShare: ANGLE_LOSS_SHARE, minGapPoints: ANGLE_WIN_GAP },
         });
       }
       if (bestWin.won / bestWin.n >= ANGLE_WIN_SHARE) {
         out.push({
-          id: "angle-win:" + map, severity: "info", sample: bestWin.n, title: "You win most fights from " + SECTORS[bestWin.k],
-          detail: "On " + map + " you won " + bestWin.won + " of the " + bestWin.n + " fights where the enemy was first in " + SECTORS[bestWin.k] + " of you (" + pct(bestWin.won / bestWin.n) + "%). Whatever you do on that side works: try to bring the same habits to the other directions. Directions are world directions on the map (yaw 0 looks along -z, it grows toward -x).",
+          id: "angle-win:" + map, severity: "info", sample: bestWin.n, title: "You win most fights from " + SECTORS[bestWin.k] + " on " + map,
+          detail: "On " + map + " you won " + bestWin.won + " of the " + bestWin.n + " fights where the enemy was first in " + SECTORS[bestWin.k] + " of you (" + pct(bestWin.won / bestWin.n) + "%). Whatever you do on that side works: try to bring the same habits to the other directions. Directions are fixed directions on the map, the same in every round (like north on a compass), not left or right of where you were looking.",
           evidence: { map, sector: SECTORS[bestWin.k], sectorYawDeg: bestWin.k * 45, fights: bestWin.n, won: bestWin.won, lost: bestWin.lost, winPercent: pct(bestWin.won / bestWin.n), bearing: "world", sectors, minFights: ANGLE_FIGHTS_MIN, minWinShare: ANGLE_WIN_SHARE },
         });
       }
@@ -1180,7 +1180,7 @@
       const before = rate(a[top], a[bottom]), now = rate(b[top], b[bottom]), change = Math.round((now - before) * 100);
       const v = change >= TREND_FLAT_POINTS ? "improving" : change <= -TREND_FLAT_POINTS ? "dropping" : "flat";
       out.push({
-        id, severity: v === "dropping" ? dropSeverity : "info", sample: a[bottom] + b[bottom], title: "Your " + name + " is " + v,
+        id, severity: v === "dropping" ? dropSeverity : "info", sample: a[bottom] + b[bottom], title: "Your " + name + (v === "flat" ? " is holding steady" : " is " + v),
         detail: "Your " + name + " was " + pct(now) + "% in the last 7 days and " + pct(before) + "% in the 7 days before" + (v === "flat" ? ": no real change." : ", " + (v === "improving" ? "up " : "down ") + Math.abs(change) + " points.") + (v === "dropping" ? " " + advice : ""),
         evidence: { recentPercent: pct(now), previousPercent: pct(before), changePoints: change, recentCount: b[bottom], previousCount: a[bottom], trend: v },
       });

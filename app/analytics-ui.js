@@ -547,6 +547,58 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
   .aim-an-drill-name small { display: none; }
   .aim-an-drill-trend { min-width: 52px; }
 }
+/* ---- Stats review (round 3, ui-stats, 20 Nov 2026): legibility, density, motion and keyboard ---- */
+/* axis labels: 11px in the muted grey (the dim grey was under AA contrast on the dark cards) */
+.aim-an-yaxis span, .aim-an-xaxis span { color: var(--an-muted); font-size: 11px; }
+.aim-an-score .aim-an-axis { fill: var(--an-muted); font-size: 11px; }
+.aim-an-xaxis { height: 16px; }
+/* the large progress chart leaves room for the thumbnails under it */
+.aim-an-focus .aim-an-plotbox { height: clamp(170px, 30vh, 340px); }
+/* coach cards: a fixed card height, not stretched to fill the view (two findings made two half-screen-tall cards) */
+.aim-an-coach { --an-card-h: 244px; grid-auto-rows: var(--an-card-h); min-height: 0; align-content: start; }
+/* tiles: six fit one row from about 800px of view width */
+.aim-an-track-tiles { grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); }
+/* the heatmap is never taller than the view, so its legend shows without scrolling */
+.aim-an-map { width: min(100%, 560px, calc(var(--an-view-h, 620px) - 200px)); min-width: min(100%, 260px); }
+/* bars (tracking by weapon and by day, the coach's visuals): label, bar and value stay together on wide screens */
+.es-tool.aim-an-panel .aim-an-content > .aim-an-bars { max-width: 640px; }
+/* drill detail: white title like the other titles, a progress bar that does not read as a divider, a run list as wide as the chart */
+.es-tool.aim-an-panel .es-tool-body .aim-an-drill-title { margin: 4px 0 12px; color: #fff; font: 800 italic 22px/1.15 var(--an-head); font-stretch: 75%; letter-spacing: 0.04em; overflow-wrap: anywhere; }
+.aim-an-prog { max-width: 520px; }
+.aim-an-goal .aim-an-prog { max-width: none; }
+.aim-an-drill-runs { max-width: 860px; }
+.aim-an-medal small { color: var(--an-muted); }
+/* drill rows: the trend and consistency columns name themselves, like Last and Best */
+.aim-an-drill-trend small, .aim-an-spread small { display: block; color: var(--an-dim); font: 600 11px/1.3 var(--an-head); letter-spacing: 0; text-transform: none; }
+.aim-an-drill.is-up .aim-an-drill-trend small, .aim-an-drill.is-down .aim-an-drill-trend small { color: var(--an-dim); }
+/* session timeline: a died round is hatched as well as red, so the result does not rest on colour alone */
+.aim-an-tl.is-died, .aim-an-tl-key i.is-died { background: repeating-linear-gradient(-45deg, var(--an-red) 0 3px, #8a1c27 3px 6px); }
+.aim-an-tl-key li.aim-an-tl-note { margin-left: auto; color: var(--an-dim); }
+/* tip modal title: sentence case like the card it came from (a long uppercase sentence is hard to read) */
+html[data-aim-local]:not(#es) body .es-tool.aim-an-tipm h3 { text-transform: none !important; }
+/* keyboard: a chart, the round strip and the score chart take focus; arrows move between their points and show the hover card */
+.aim-an-plotbox[tabindex], .aim-an-timeline[tabindex], .aim-an-scorewrap[tabindex] { outline: none; }
+.aim-an-plotbox[tabindex]:focus-visible, .aim-an-timeline[tabindex]:focus-visible, .aim-an-scorewrap[tabindex]:focus-visible { outline: 2px solid var(--an-red); outline-offset: 3px; }
+.aim-an-node.is-active { background: var(--an-red); box-shadow: 0 0 0 2px #fff; }
+.aim-an-tl.is-active { filter: brightness(1.35); outline: 1px solid #fff; outline-offset: 1px; }
+.aim-an-run.is-active { stroke: #fff; stroke-width: 2.4; }
+/* motion: a view fades in on a tab switch; a chart wipes in left to right (the theme's slanted wipe) the first time it is drawn,
+   the round strip grows up; transform / opacity / clip-path only, never on a filter or sort redraw of the same chart */
+@keyframes aim-an-view-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes aim-an-wipe { from { clip-path: polygon(0 0, 0 0, -12% 100%, -12% 100%); } to { clip-path: polygon(0 0, 112% 0, 100% 100%, -12% 100%); } }
+@keyframes aim-an-grow { from { transform: scaleY(0); } to { transform: none; } }
+.aim-an-content.aim-an-view-in > * { animation: aim-an-view-in 0.2s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.aim-an-draw .aim-an-plotbox, .aim-an-scorewrap.aim-an-draw svg { animation: aim-an-wipe 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.aim-an-draw .aim-an-tl { transform-origin: 50% 100%; animation: aim-an-grow 0.3s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.aim-an-cmp-bars i b { transform-origin: 0 50%; }
+.aim-an-draw .aim-an-cmp-bars i b { animation: es-mr-bar 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .aim-an-content.aim-an-view-in > *, .aim-an-draw .aim-an-plotbox, .aim-an-scorewrap.aim-an-draw svg, .aim-an-draw .aim-an-tl, .aim-an-draw .aim-an-cmp-bars i b { animation: none; }
+}
+@media (max-width: 620px) {
+  .aim-an-track-tiles { grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)); }
+  .aim-an-coach { --an-card-h: 252px; }
+}
 `;
   function injectCss() {
     try {
@@ -1288,12 +1340,13 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     if (!f.map || !opts.maps.includes(f.map)) f.map = opts.maps[0];
     const layer = LAYERS.some((l) => l[0] === f.layer) ? f.layer : "deaths";
     const showDeaths = layer !== "fights", showFights = layer !== "deaths";
-    const filters = `<div class="aim-an-filters">${select("map", "Map", opts.maps, f.map, "")}${select("mode", "Mode", opts.modes, f.mode, "All modes")}`
+    const filterBar = `<div class="aim-an-filters">${select("map", "Map", opts.maps, f.map, "")}${select("mode", "Mode", opts.modes, f.mode, "All modes")}`
       + `${select("code", "Drill", opts.codes.slice().sort((a, b) => drillLabel(a).localeCompare(drillLabel(b))), f.code, "All drills", drillLabel)}${select("weapon", "Weapon", opts.weapons, f.weapon, "All weapons")}</div>`
       + `<div class="aim-an-filters aim-an-layers" role="group" aria-label="Layer">`
-      + LAYERS.map(([id, label]) => `<button type="button" data-layer="${id}" aria-pressed="${id === layer}">${label}</button>`).join("")
-      + `<button type="button" class="aim-an-zoom-reset" data-zoom-reset title="Wheel over the map zooms, drag pans, double-click resets">Reset zoom</button></div>`;
-    if (showFights && fightRead === undefined) return filters + `<p class="aim-an-msg">Loading fights…</p>`;
+      + LAYERS.map(([id, label]) => `<button type="button" data-layer="${id}" aria-pressed="${id === layer}">${label}</button>`).join("");
+    // the Reset zoom chip only beside a drawn map (it did nothing next to an empty message)
+    const filters = filterBar + `<button type="button" class="aim-an-zoom-reset" data-zoom-reset title="Wheel over the map zooms, drag pans, double-click resets">Reset zoom</button></div>`, bare = filterBar + `</div>`;
+    if (showFights && fightRead === undefined) return bare + `<p class="aim-an-msg">Loading fights…</p>`;
     const deaths = heatCells(days, rounds, f);
     const fights = showFights ? fightLayer(days, fightRead, f) : null;
     const notes = [];
@@ -1311,7 +1364,12 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     const dKeys = showDeaths ? Object.keys(deaths.cells) : [], fKeys = fights ? Object.keys(fights.cells) : [];
     if (!dKeys.length && !fKeys.length) {
       const what = layer === "deaths" ? "deaths" : layer === "fights" ? "fights with a position" : "deaths or fights with a position";
-      return filters + `<p class="aim-an-msg">No ${what} on ${esc(f.map)} for these filters.</p>` + noteHtml();
+      if (!f.mode && !f.code && !f.weapon) {
+        const msg = layer === "deaths" ? `No deaths on ${esc(f.map)} yet. When you die in a round, the spot shows up here, so you can see where you get caught. Pick Fights to see where your fights start.`
+          : `No ${what} on ${esc(f.map)} yet. Fights against bots are placed where you stood when they began; play a drill with enemies and they show up here.`;
+        return bare + `<p class="aim-an-msg">${msg}</p>` + noteHtml();
+      }
+      return bare + `<p class="aim-an-msg">No ${what} on ${esc(f.map)} for these filters.</p>` + noteHtml();
     }
     const dMax = dKeys.length ? Math.max(...dKeys.map((k) => deaths.cells[k])) : 0, fMax = fKeys.length ? Math.max(...fKeys.map((k) => fights.cells[k])) : 0;
     const all = [...dKeys, ...fKeys];
@@ -1554,7 +1612,8 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     const pick = thumb ? ` data-focus="${m.id}" role="button" tabindex="0" aria-pressed="${selected}" aria-label="Show ${m.label} large"` : "";
     if (!points.length) return `<div class="aim-an-chart" data-metric="${m.id}"${pick}><h4>${m.label}</h4><p class="aim-an-empty">No data in this range${m.id === "killTime" ? " (kill times come from the newest " + RAW_ROUNDS + " rounds of the last 30 days)" : ""}.</p></div>`;
     const first = points[0].value, last = points[points.length - 1].value;
-    const delta = last - first, flat = Math.abs(delta) < 1e-9 || points.length < 2;
+    // flat also when the two numbers read the same once rounded ("57% ↑ 57%" told nothing)
+    const delta = last - first, flat = Math.abs(delta) < 1e-9 || points.length < 2 || fmt(m, first) === fmt(m, last);
     const arrow = flat ? "→" : delta > 0 ? "↑" : "↓";
     const cls = flat || !m.better ? "" : delta * m.better > 0 ? " is-up" : " is-down";
     const W = 260, H = 70, P = 6;
@@ -1582,7 +1641,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     const nodes = points.map((p) => { const t = nodeTip(m, p, unit); return `<span class="aim-an-node" style="left:${pct(xOf(p), W)};top:${pct(yOf(p.value), H)}" data-tip="${esc(t)}" aria-label="${esc(t.replace("\n", ", "))}"></span>`; }).join("");
     const xaxis = `<div class="aim-an-xaxis" aria-hidden="true">` + xTicks(points, range, now, unit).map((t) => `<span class="${t.edge ? "is-" + t.edge : ""}" data-x-edge="${t.edge}" style="left:${pct(P + t.at * (W - 2 * P), W)}">${esc(t.label)}</span>`).join("") + `</div>`;
     return `<div class="aim-an-chart${cls}" data-metric="${m.id}"><h4>${m.label}<span>${fmt(m, first)} <b class="aim-an-arrow">${arrow}</b> ${fmt(m, last)}</span></h4>`
-      + `<div class="aim-an-plot">${yaxis}<div class="aim-an-plotbox">${svg}${nodes}</div><span></span>${xaxis}</div>`
+      + `<div class="aim-an-plot">${yaxis}<div class="aim-an-plotbox" tabindex="0" data-tipnav role="group" aria-label="${esc(m.label)}: ${plural(points.length, "point")}, arrow keys step through them">${svg}${nodes}</div><span></span>${xaxis}</div>`
       + `<p class="aim-an-note">${plural(points.length, unit)} with data · first ${esc(points[0].day)}, latest ${esc(points[points.length - 1].day)}</p></div>`;
   }
   // rounds = the stored rounds (rounds() shape) for the few-days view; leave it out (or []) for day points only.
@@ -1610,9 +1669,10 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     target = target === "head" ? "head" : "body";
     const toggle = `<div class="aim-an-filters" role="group" aria-label="Track against">` + [["body", "Body"], ["head", "Head"]].map(([id, label]) => `<button type="button" data-track="${id}" aria-pressed="${id === target}">${label}</button>`).join("") + `</div>`;
     const everyFight = Array.isArray(engagements) ? engagements : [], sighted = everyFight.filter((e) => e && e.sight === true).length;
-    const sightNote = `<p class="aim-an-note" data-sight-note>Line-of-sight data on ${sighted} of ${everyFight.length} recorded fights. Fights recorded before it existed counted enemies behind walls as seen, so they are not used here.</p>`;
+    // only said when some fights lack it (a new player has it on every fight, and the line was noise)
+    const sightNote = sighted < everyFight.length ? `<p class="aim-an-note" data-sight-note>Line-of-sight data on ${sighted} of ${everyFight.length} recorded fights. Fights recorded before it existed counted enemies behind walls as seen, so they are not used here.</p>` : "";
     const rows = (Array.isArray(engagements) ? engagements : []).filter((e) => e && e.sight === true && e.tracking && num(e.tracking.samples) && e.tracking.samples >= TRACK_MIN_TICKS);
-    if (!rows.length) return toggle + sightNote + `<p class="aim-an-msg">No tracking recorded yet. Fight enemies that move across your view (strafing bots, moving targets) and your crosshair's accuracy on them, and how fast you lock on, show up here. Rounds played before this feature, or before line-of-sight data (enemies behind walls were counted as in view), are not used.</p>`;
+    if (!rows.length) return toggle + sightNote + `<p class="aim-an-msg">No tracking recorded yet. Play a drill with moving enemies (a tracking drill, or strafing bots) and this shows how well your crosshair stays on them and how fast you lock on.</p>`;
     const T = trackingTotals(rows, target), word = target === "head" ? "head" : "body";
     const fix = (v, d = 1) => (num(v) ? String(+v.toFixed(d)) : "–");
     const lagText = !num(T.lagDeg) || Math.abs(T.lagDeg) < 0.1 ? "level" : fix(Math.abs(T.lagDeg)) + "° " + (T.lagDeg > 0 ? "behind" : "ahead");
@@ -1630,10 +1690,10 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     // by day (newest days with data)
     const byDay = new Map();
     for (const e of rows) { if (!e.day) continue; if (!byDay.has(e.day)) byDay.set(e.day, []); byDay.get(e.day).push(e); }
-    const dayBars = barsRowsHtml([...byDay].sort((a, b) => (a[0] < b[0] ? -1 : 1)).slice(-TRACK_DAYS).map(([d, list]) => ({ label: d.slice(5) + " (" + list.length + ")", value: trackingTotals(list, target).onPercent })), "%", "track-day");
+    const dayBars = barsRowsHtml([...byDay].sort((a, b) => (a[0] < b[0] ? -1 : 1)).slice(-TRACK_DAYS).map(([d, list]) => ({ label: shortDate(d) + " (" + list.length + ")", value: trackingTotals(list, target).onPercent })), "%", "track-day");
     return toggle + sightNote + tiles
-      + (weaponBars ? `<h4>On the ${word} by weapon</h4>` + weaponBars : "")
-      + (dayBars ? `<h4>On the ${word} by day</h4>` + dayBars : "")
+      + (weaponBars ? `<h4 class="aim-an-sub">On the ${word} by weapon</h4>` + weaponBars : "")
+      + (dayBars ? `<h4 class="aim-an-sub">On the ${word} by day</h4>` + dayBars : "")
       + `<p class="aim-an-note">${T.fights} fights, ${fix(T.seconds)} s of moving enemies, from your newest ${RAW_ROUNDS} stored rounds. Only moments when the enemy crossed your view count (it turns faster than 4° per second). Time to lock = from the enemy coming into view until your crosshair stays on it for 0.15 s. Numbers in brackets are fights.</p>`;
   }
   function progressHtml(days, engagements, range, now, rounds, focus) {
@@ -1817,10 +1877,10 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
       const tip = `Round ${i + 1}: ${END_WORD[c.end] || c.end}\n${hhmm(c.at)}${num(c.seconds) && c.seconds > 0 ? ", " + Math.round(c.seconds) + " s" : ""}\n${c.accuracy === null ? "No shots fired" : Math.round(c.accuracy) + "% accuracy, " + plural(c.shots, "shot")} · ${plural(c.kills, "kill")}, ${plural(c.deaths, "death")}`;
       return `<span class="aim-an-tl ${END_CLASS[c.end] || "is-other"}" style="height:${h}%" data-tip="${esc(tip)}" data-round="${i}" aria-label="${esc(tip.replace(/\n/g, ", "))}"></span>`;
     }).join("");
-    return `<div class="aim-an-tl-wrap"><div class="aim-an-timeline" data-timeline role="img" aria-label="${plural(cells.length, "round")} this session, coloured by result, as tall as the round's accuracy">${bars}</div>`
-      + `<ul class="aim-an-hit-key aim-an-tl-key"><li><i class="is-cleared"></i>Cleared</li><li><i class="is-time"></i>Time up</li><li><i class="is-died"></i>Died</li><li><i class="is-other"></i>Other</li></ul></div>`;
+    return `<div class="aim-an-tl-wrap"><div class="aim-an-timeline" data-timeline tabindex="0" data-tipnav role="group" aria-label="${plural(cells.length, "round")} this session, coloured by result, as tall as the round's accuracy; arrow keys step through them">${bars}</div>`
+      + `<ul class="aim-an-hit-key aim-an-tl-key"><li><i class="is-cleared"></i>Cleared</li><li><i class="is-time"></i>Time up</li><li><i class="is-died"></i>Died</li><li><i class="is-other"></i>Other</li><li class="aim-an-tl-note">Bar height = accuracy</li></ul></div>`;
   }
-  const verdictList = (title, rows, cls) => `<div class="aim-an-vs ${cls}"><h4>${title}</h4>${rows.length ? `<ul>${rows.map((r) => `<li data-metric="${r.id}">${esc(changeText(r))}</li>`).join("")}</ul>` : `<p>Nothing here.</p>`}</div>`;
+  const verdictList = (title, rows, cls, empty = "Nothing here.") => `<div class="aim-an-vs ${cls}"><h4>${title}</h4>${rows.length ? `<ul>${rows.map((r) => `<li data-metric="${r.id}">${esc(changeText(r))}</li>`).join("")}</ul>` : `<p>${empty}</p>`}</div>`;
   function sessionHtml(data, index, now, runsState, nameOf) {
     const sessions = groupSessions(arr(data && data.rounds).map(roundFacts));
     if (!sessions.length) return `<p class="aim-an-msg">No rounds recorded yet. Play a drill and your session shows up here: what you played, how it went, and how it compares with your earlier sessions. Rounds are kept for 30 days.</p>`;
@@ -1830,15 +1890,15 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     const v = sessionVersus(sessions, idx), t = v.cur;
     const acc = t.shots ? Math.round((t.hits / t.shots) * 100) + "%" : "–", hs = t.hits ? Math.round((t.headshots / t.hits) * 100) + "%" : "–";
     const drills = sessionDrills(s, runsState, nameOf);
-    const tiles = `<div class="aim-an-track-tiles" data-session-tiles>` + tileHtml("Rounds", String(t.rounds), `${t.cleared} cleared, ${t.died} died`) + tileHtml("Play time", playTime(t.seconds), "from first to last shot of each round")
+    const tiles = `<div class="aim-an-track-tiles" data-session-tiles>` + tileHtml("Rounds", String(t.rounds), `${t.cleared} cleared, ${t.died} died`) + tileHtml("Play time", playTime(t.seconds), "time spent in rounds")
       + tileHtml("Accuracy", acc, plural(t.shots, "shot")) + tileHtml("Headshots", hs, "of your hits") + tileHtml("Kills", String(t.kills), `${plural(t.deaths, "death")}`) + tileHtml("Drills", String(drills.length), "different drills") + `</div>`;
     const medals = drills.filter((d) => d.bestMedal);
     const medalLine = medals.length ? `<p class="aim-an-sess-medals" data-session-medals>Best medals: ` + medals.sort((a, b) => MEDAL_RANK[b.bestMedal] - MEDAL_RANK[a.bestMedal]).slice(0, 4).map((d) => `<span class="aim-an-medal is-${d.bestMedal}">${medalSvg(d.bestMedal)}${esc(d.name)}</span>`).join("") + `</p>` : "";
     let versus;
-    if (!v.hasBase) versus = `<p class="aim-an-msg" data-versus-empty>Not enough earlier sessions to compare yet (needs ${MIN_SESSION_ROUNDS_BASE} earlier rounds and ${MIN_BASE_SHOTS} shots). Your numbers will be set against your last ${BASE_SESSIONS} sessions once you have them.</p>`;
+    if (!v.hasBase) versus = `<p class="aim-an-msg" data-versus-empty>${idx === 0 ? "This is your first session, so there is nothing to compare with yet." : "Not enough earlier play to compare with yet."} Come back after another session: from then on this shows what got better and what slipped against your last ${BASE_SESSIONS} sessions (it needs ${MIN_SESSION_ROUNDS_BASE} earlier rounds and ${MIN_BASE_SHOTS} shots).</p>`;
     else {
       const none = !v.improved.length && !v.slipped.length;
-      versus = `<div class="aim-an-versus" data-versus>${verdictList("What improved", v.improved, "is-up")}${verdictList("What slipped", v.slipped, "is-down")}</div>`
+      versus = `<div class="aim-an-versus" data-versus>${verdictList("What improved", v.improved, "is-up", "No clear gain this session.")}${verdictList("What slipped", v.slipped, "is-down", "Nothing slipped.")}</div>`
         + (none ? `<p class="aim-an-note">Everything is within a normal range of your last ${plural(v.before, "session")}.</p>` : `<p class="aim-an-note">Against your last ${plural(v.before, "session")} put together. Small changes are ignored, and a number needs enough shots, kills or ticks behind it.</p>`);
     }
     const rows = sessionDrillChanges(sessions, idx, runsState, nameOf).map((d) => `<li><span class="aim-an-sd-name">${esc(d.name)}</span><span>${plural(d.rounds, "round")}</span><span>${d.accuracy === null ? "–" : Math.round(d.accuracy) + "%"}</span>`
@@ -1897,14 +1957,16 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
   }
   function compareCardHtml(r, range) {
     const bar = (v, cls) => `<i class="${cls}"><b style="width:${r.cur !== null && r.prev !== null && Math.max(r.cur, r.prev) > 0 && v !== null ? Math.max(4, Math.round((v / Math.max(r.cur, r.prev)) * 100)) : 0}%"></b></i>`;
+    const both = r.cur !== null && r.prev !== null;
     // an arrow only for a change that counts (the same threshold as the verdict): a small one is "about the same", so it points sideways
     const arrow = r.verdict === "unknown" ? "" : r.verdict === "same" ? "→" : r.delta > 0 ? "↑" : "↓";
     const verdict = { better: "is-up", worse: "is-down", same: "", unknown: "" }[r.verdict];
     const why = r.cur === null ? `Not enough ${r.noun} in the last ${range} days (needs ${r.min}).` : r.prev === null ? `Not enough ${r.noun} in the ${range} days before.` : "";
-    const delta = r.delta === null ? "" : (r.delta > 0 ? "+" : r.delta < 0 ? "−" : "") + Math.abs(r.delta).toFixed(r.dec) + (r.unit === "%" ? " pts" : r.unit === " s" ? " s" : "");
+    const shown = r.delta === null ? 0 : +Math.abs(r.delta).toFixed(r.dec);
+    const delta = r.delta === null ? "" : shown === 0 ? "no change" : (r.delta > 0 ? "+" : "−") + shown.toFixed(r.dec) + (r.unit === "%" ? " pts" : r.unit === " s" ? " s" : "");
     return `<div class="aim-an-cmp ${verdict}" data-metric="${r.id}" data-verdict="${r.verdict}"><span class="aim-an-cmp-label">${esc(r.label)}</span>`
       + `<b>${esc(fmtCmp(r, r.cur))} <em class="aim-an-arrow">${arrow}</em></b><span class="aim-an-cmp-delta">${esc(delta)}</span>`
-      + `<div class="aim-an-cmp-bars">${bar(r.cur, "is-now")}${bar(r.prev, "is-before")}</div>`
+      + (both ? `<div class="aim-an-cmp-bars" aria-hidden="true">${bar(r.cur, "is-now")}${bar(r.prev, "is-before")}</div>` : "")
       + `<small>${r.prev === null ? esc(why) : `was ${esc(fmtCmp(r, r.prev))} · ${esc(String(r.nCur))} now, ${esc(String(r.nPrev))} before`}</small></div>`;
   }
   function compareHtml(days, rounds, range, now) {
@@ -1913,7 +1975,11 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     const c = periodCompare(days, rounds, range, now);
     if (!c.cur.rounds && !c.prev.rounds) return tabs + `<p class="aim-an-msg">Nothing recorded in the last ${2 * range} days. Play a few rounds and this view sets the last ${range} days against the ${range} before.</p>`;
     const imp = c.rows.filter((r) => r.verdict === "better").length, slip = c.rows.filter((r) => r.verdict === "worse").length;
-    const head = `<p class="aim-an-note" data-cmp-sum>Last ${range} days: ${plural(c.cur.rounds, "round")}, ${plural(c.cur.shots, "shot")}. The ${range} days before: ${plural(c.prev.rounds, "round")}, ${plural(c.prev.shots, "shot")}. ${imp} better, ${slip} worse.</p>`;
+    const head = !c.prev.rounds
+      ? `<p class="aim-an-msg" data-cmp-sum>Last ${range} days: ${plural(c.cur.rounds, "round")}, ${plural(c.cur.shots, "shot")}. Nothing was recorded in the ${range} days before, so there is nothing to set them against yet. Keep playing: ${range === 7 ? "next week" : "in " + range + " days"} this shows what got better and what slipped.</p>`
+      : !c.cur.rounds
+        ? `<p class="aim-an-msg" data-cmp-sum>Nothing recorded in the last ${range} days (${plural(c.prev.rounds, "round")} in the ${range} days before). Play a few rounds to see how you compare with then.</p>`
+        : `<p class="aim-an-note" data-cmp-sum>Last ${range} days: ${plural(c.cur.rounds, "round")}, ${plural(c.cur.shots, "shot")}. The ${range} days before: ${plural(c.prev.rounds, "round")}, ${plural(c.prev.shots, "shot")}. ${imp} better, ${slip} worse.</p>`;
     return tabs + head + `<div class="aim-an-cmp-grid" data-cmp-grid>${c.rows.map((r) => compareCardHtml(r, range)).join("")}</div>`
       + `<p class="aim-an-note">Accuracy, headshot rate and deaths come from your daily totals. Kill time and tracking only count rounds recorded with line-of-sight data and need enough kills or ticks in both periods.${c.timingPrev ? "" : " Rounds older than 30 days are kept only as daily totals, so the earlier period has no kill time or tracking here: pick 7 or 14 days to see them."}</p>`;
   }
@@ -2001,11 +2067,13 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
   function drillRowHtml(m) {
     const medal = m.bestMedal ? `<span class="aim-an-medal is-${m.bestMedal}" title="${MEDAL_WORD[m.bestMedal]} is your best medal">${medalSvg(m.bestMedal)}</span>` : `<span class="aim-an-medal is-none"></span>`;
     const cls = m.trend ? (m.trend.direction === "up" ? " is-up" : m.trend.direction === "down" ? " is-down" : "") : "";
-    const sp = m.spread ? `<span class="aim-an-spread is-${m.spread.label}" title="Scores vary by about ${Math.round(m.spread.pct)}% from run to run">${m.spread.label}</span>` : `<span class="aim-an-spread">–</span>`;
+    const sp = m.spread ? `<span class="aim-an-spread is-${m.spread.label}" title="Scores vary by about ${Math.round(m.spread.pct)}% from run to run">${m.spread.label}<small>consistency</small></span>`
+      : `<span class="aim-an-spread" title="Needs ${DRILL_SPREAD_MIN} finished runs">–<small>consistency</small></span>`;
+    const trendTitle = m.trend ? `Your newest ${m.trend.runs} runs against the ${m.trend.runs} before` : `Needs ${DRILL_TREND_MIN} finished runs`;
     return `<li><div class="aim-an-drill${cls}" role="button" tabindex="0" data-drill-open="${esc(m.code)}" aria-label="${esc(m.name)}: open its history">`
       + `${medal}<span class="aim-an-drill-name">${esc(m.name)}<small>${m.runs ? plural(m.runs, "scored run") : "no scored runs"}${m.rounds ? ", " + plural(m.rounds, "round") + " recorded" : ""}${goalTag(m)}</small></span>`
       + `${sparkSvg(m.spark)}<span class="aim-an-drill-num">${esc(fmtScore(m.last, m.unit))}<small>last</small></span><span class="aim-an-drill-num">${esc(fmtScore(m.best, m.unit))}<small>best</small></span>`
-      + `<span class="aim-an-drill-trend">${esc(trendText(m))}</span>${sp}</div></li>`;
+      + `<span class="aim-an-drill-trend" title="${esc(trendTitle)}">${esc(trendText(m))}<small>trend</small></span>${sp}</div></li>`;
   }
   function drillsHtml(models, sort, top = "") {
     if (!models.length) return `<p class="aim-an-msg">No drills yet. Finish a drill and its score history, medals and trend show up here.</p>`;
@@ -2037,7 +2105,8 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     const bestI = m.best !== null ? runs.reduce((bi, r, i) => (!r.died && r.score === m.best ? i : bi), -1) : -1;
     const dots = runs.map((r, i) => `<circle class="aim-an-run${r.died ? " is-died" : ""}" cx="${x(i).toFixed(1)}" cy="${y(r.score).toFixed(1)}" r="3.2" data-tip="${esc(`${fmtScore(r.score, m.unit)}${r.died ? " (died)" : r.medal ? ", " + MEDAL_WORD[r.medal] : ""}\n${shortDate(r.at)} ${hhmm(r.at)}`)}"/>`).join("");
     const star = bestI >= 0 ? `<circle class="aim-an-best-ring" cx="${x(bestI).toFixed(1)}" cy="${y(runs[bestI].score).toFixed(1)}" r="7"/>` : "";
-    return `<svg class="aim-an-score" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(m.name)}: your last ${runs.length} scores">${grid}${lines}<polyline class="aim-an-line" points="${path}"/>${star}${dots}</svg>`;
+    const dates = `<text class="aim-an-axis" x="${L}" y="${H - 3}">${esc(shortDate(runs[0].at))}</text><text class="aim-an-axis" x="${W - R}" y="${H - 3}" text-anchor="end">${esc(shortDate(runs[runs.length - 1].at))}</text>`;
+    return `<svg class="aim-an-score" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(m.name)}: your last ${runs.length} scores">${grid}${lines}${dates}<polyline class="aim-an-line" points="${path}"/>${star}${dots}</svg>`;
   }
   function drillDetailHtml(m, entry) {
     const back = `<div class="aim-an-filters"><button type="button" data-drill-back>← All drills</button></div>`;
@@ -2051,8 +2120,8 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
       + (m.rounds ? tileHtml("Accuracy", m.accuracy === null ? "–" : Math.round(m.accuracy) + "%", !m.headshotPct ? plural(m.rounds, "round") : Math.round(m.headshotPct) + "% headshots, " + plural(m.rounds, "round")) : "") + `</div>`;
     const chart = scoreChartSvg(entry, m);
     const recent = arr(entry && entry.runs).filter((r) => r && num(r.score)).slice(-8).reverse();
-    const table = recent.length ? `<h4 class="aim-an-sub">Latest runs</h4><ul class="aim-an-sess-drills">` + recent.map((r) => `<li><span class="aim-an-sd-name">${shortDate(r.at)} ${hhmm(r.at)}</span><span>${esc(fmtScore(r.score, m.unit))}</span><span>${r.died ? "Died" : ""}</span><span>${r.medal ? `<span class="aim-an-medal is-${r.medal}">${medalSvg(r.medal)}${MEDAL_WORD[r.medal]}</span>` : ""}</span></li>`).join("") + `</ul>` : "";
-    return back + `<h3 class="aim-an-drill-title">${esc(m.name)}</h3>` + tiles + `<div class="aim-an-medals-row">${medalRow}</div>` + nextLine + goalsHtml(m) + (chart ? `<h4 class="aim-an-sub">Score history</h4><div class="aim-an-scorewrap">${chart}</div>` : "") + table
+    const table = recent.length ? `<h4 class="aim-an-sub">Latest runs</h4><ul class="aim-an-sess-drills aim-an-drill-runs">` + recent.map((r) => `<li><span class="aim-an-sd-name">${shortDate(r.at)} ${hhmm(r.at)}</span><span>${esc(fmtScore(r.score, m.unit))}</span><span>${r.died ? "Died" : ""}</span><span>${r.medal ? `<span class="aim-an-medal is-${r.medal}">${medalSvg(r.medal)}${MEDAL_WORD[r.medal]}</span>` : ""}</span></li>`).join("") + `</ul>` : "";
+    return back + `<h3 class="aim-an-drill-title">${esc(m.name)}</h3>` + tiles + `<div class="aim-an-medals-row">${medalRow}</div>` + nextLine + goalsHtml(m) + (chart ? `<h4 class="aim-an-sub">Score history</h4><div class="aim-an-scorewrap" tabindex="0" data-tipnav role="group" aria-label="Score history: arrow keys step through your runs">${chart}</div>` : "") + table
       + `<p class="aim-an-note">${m.lower ? "Less is better on this drill. " : ""}Dashed lines are your medal scores. A hollow mark is a run that ended in your death. ${m.rounds ? "Accuracy and headshots come from your stored rounds of this drill (the last 30 days)." : ""}</p>`;
   }
 
@@ -2142,10 +2211,12 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     const tiers = m.thresholds ? ["bronze", "silver", "gold"].filter((t) => MEDAL_RANK[t] > (MEDAL_RANK[m.bestMedal] || 0) && !open.some((e) => e.goal.type === "medal" && e.goal.tier === t)) : [];
     const list = evals.length ? `<ul class="aim-an-goals" data-goals>${evals.map(goalBarHtml).join("")}</ul>` : `<p class="aim-an-note" data-goals-empty>No goal for this drill yet.</p>`;
     const medalBtns = tiers.map((t) => `<button type="button" data-goal-medal="${t}">${medalSvg(t)}Reach ${MEDAL_WORD[t]}</button>`).join("");
-    const score = `<form class="aim-an-goal-form" data-goal-form="score"><label>Score goal<input type="number" name="v" step="any" inputmode="decimal" required placeholder="${esc(m.best === null ? "" : fmtScore(m.best, "").trim())}"></label><button type="submit">Set</button></form>`;
+    const score = `<form class="aim-an-goal-form" data-goal-form="score"><label>Score goal<input type="number" name="v" step="any" inputmode="decimal" required placeholder="${esc(goalHint(m))}"></label><button type="submit">Set</button></form>`;
     const body = m.tracked ? `<form class="aim-an-goal-form" data-goal-form="body"><label>On the body, %<input type="number" name="v" min="1" max="100" step="1" inputmode="numeric" required placeholder="70"></label><button type="submit">Set</button></form>` : "";
     return `<h4 class="aim-an-sub">Goals</h4>${list}<div class="aim-an-goal-add" data-goal-add>${medalBtns}${score}${body}</div><p class="aim-an-note" data-goal-msg role="status">A goal counts the finished runs after you set it. Reaching one shows a short message.</p>`;
   }
+  // A score a little beyond your best (5%), rounded like the scores are shown: the score goal's placeholder.
+  const goalHint = (m) => { if (m.best === null || !num(m.best)) return ""; const v = m.best * (m.lower ? 0.95 : 1.05), d = Math.abs(v) >= 100 ? 0 : Math.abs(v) >= 10 ? 1 : 2; return String(+v.toFixed(d)); };
   const goalTag = (m) => { const open = arr(m.goals).filter((e) => !e.met); return open.length ? " · goal " + Math.round(open[0].progress * 100) + "%" : arr(m.goals).length ? " · goal reached" : ""; };
   // The little "goal reached" message, in the style of the other round messages (theme .es-score-toast).
   function goalToast(text) {
@@ -2194,7 +2265,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
   }
   function warmupHtml(plan, nameOf, exists) {
     if (!plan) return "";
-    if (plan.steps.length < 2) return `<section class="aim-an-warm" data-warmup><h4>Suggested warm-up</h4><p class="aim-an-note">A warm-up is built from your most played drills. Play three or more rounds of at least two drills and it shows up here.</p></section>`;
+    if (plan.steps.length < 2) return `<section class="aim-an-warm" data-warmup><h4>Suggested warm-up</h4><p class="aim-an-note">Play three or more rounds of at least two drills and a warm-up shows up here: a short list of the drills you hit best, to play before the ones that count.</p></section>`;
     const why = plan.cold ? `Your first 2 rounds of a session hit ${plan.firstAccuracyPercent}% of your shots, the rounds after them ${plan.middleAccuracyPercent}% (${plan.sessions} sessions). A short warm-up on drills you are good at, before the ones that count, should close that gap.`
       : `Built from your most played drills: the ones you hit the most with, easiest first, so the first rounds of a session are not the ones that count.`;
     const steps = plan.steps.map((s, i) => `<li><i>${i + 1}</i><b>${esc(nameOf(s.code))}</b><em>${plural(s.runs, "run")}, you hit ${s.accuracyPercent}% here</em></li>`).join("");
@@ -2261,6 +2332,15 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
   const sevOf = (f) => (SEV[f && f.severity] ? f.severity : "info");
   const isFinding = (f) => !!f && typeof f === "object";
   const evidenceText = (v) => (v == null ? "–" : typeof v === "object" ? JSON.stringify(v) : String(v));
+  // An evidence key in plain words for the Numbers list: "averageOffsetCm" -> "Average offset (cm)", "minFights" -> "Needs at least: fights".
+  const KEY_UNITS = [[/Percent$/, " (%)"], [/Seconds$/, " (s)"], [/Cm$/, " (cm)"], [/Deg(rees)?$/, " (°)"], [/Metres$/, " (m)"]];
+  function keyLabel(key) {
+    let s = String(key), unit = "";
+    for (const [re, u] of KEY_UNITS) if (re.test(s) && s.replace(re, "")) { s = s.replace(re, ""); unit = u; break; }
+    s = s.replace(/([a-z0-9])([A-Z])/g, "$1 $2").toLowerCase();
+    if (/^min [a-z]/.test(s)) s = "needs at least: " + s.slice(4); else if (/^max [a-z]/.test(s)) s = "at most: " + s.slice(4);
+    return s.charAt(0).toUpperCase() + s.slice(1) + unit;
+  }
   // "stillAccuracyPercent" -> "still accuracy"; a best / worst / weakest prefix becomes the named weapon, range or group (a
   // drill code becomes the drill's title, drillLabel).
   function words(key, e) {
@@ -2579,8 +2659,10 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     const vis = coachVisual(f), t = sentences(body);
     const lead = t.lead ? `<p class="aim-an-lead">${withRefs(t.lead, refs)}</p>` : "";
     const advice = t.advice ? `<p class="aim-an-advice">${withRefs(t.advice, refs)}</p>` : "";
-    const value = (v) => (typeof v === "string" && (refs.drills.includes(v) || refs.maps.includes(v)) ? withRefs(v, refs) : esc(evidenceText(v)));
-    const numbers = ev.length ? `<div class="aim-an-why"><h5>Numbers</h5><dl>${ev.map((k) => `<dt>${esc(k)}</dt><dd>${value(f.evidence[k])}</dd>`).join("")}</dl></div>` : "";
+    const value = (v) => (typeof v === "string" && (refs.drills.includes(v) || refs.maps.includes(v)) ? withRefs(v, refs)
+      : Array.isArray(v) && v.length && v.every((x) => x && typeof x === "object" && !Array.isArray(x)) ? v.map((x) => esc(Object.keys(x).map((a) => keyLabel(a).toLowerCase() + " " + evidenceText(x[a])).join(", "))).join("<br>")
+      : Array.isArray(v) ? esc(v.map(evidenceText).join(", ")) : esc(evidenceText(v)));
+    const numbers = ev.length ? `<div class="aim-an-why"><h5>Numbers</h5><dl>${ev.map((k) => `<dt title="${esc(k)}">${esc(keyLabel(k))}</dt><dd>${value(f.evidence[k])}</dd>`).join("")}</dl></div>` : "";
     return `<header class="es-tool-head aim-an-tipm-head"><span class="aim-an-icon">${coachIcon(f.id)}</span><div class="aim-an-tipm-titles">`
       + `<span class="aim-an-coach-top"><span class="aim-an-sev">${SEV[sev]}</span><span class="aim-an-sample">sample ${num(f.sample) ? esc(f.sample) : "–"}</span></span>`
       + `<h3 id="${TIPM_TITLE}">${esc(labelCodes(f.title, refs))}</h3>${main ? `<p class="aim-an-main">${esc(main)}</p>` : ""}</div>`
@@ -2627,7 +2709,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     body.append(tabs, content, foot);
     box.append(head, body, tip);
     const p = { root: box, head, foot, shade: null, tabs, content, tip, alive: true, inline, tab: null, cache: {}, filter: { map: "", mode: ALL, code: ALL, weapon: ALL, layer: "deaths" },
-      range: DEFAULT_RANGE, sessionIdx: null, drillSort: "recent", drillOpen: null, cmpRange: 7, trackTarget: "body", minis: new Map(), fights: new Map(), bright: readBright(), zoom: { k: 1, tx: 0, ty: 0 }, zoomKey: "", focus: null };
+      range: DEFAULT_RANGE, sessionIdx: null, drawn: new Set(), enter: null, drillSort: "recent", drillOpen: null, cmpRange: 7, trackTarget: "body", minis: new Map(), fights: new Map(), bright: readBright(), zoom: { k: 1, tx: 0, ty: 0 }, zoomKey: "", focus: null };
     for (const [id, label] of VIEWS) {
       const b = document.createElement("button");
       b.type = "button"; b.dataset.view = id; b.textContent = label;
@@ -2660,7 +2742,10 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
       if (nb) { openTip(p, +nb.dataset.coach, nb); return; }
       const fo = closestOf(event.target, "[data-focus]");
       if (fo) { p.focus = fo.dataset.focus; renderProgress(p); return; }
-      if (closestOf(event.target, "[data-zoom-reset]")) setZoom(p, { k: 1, tx: 0, ty: 0 });
+      if (closestOf(event.target, "[data-zoom-reset]")) { setZoom(p, { k: 1, tx: 0, ty: 0 }); return; }
+      // a tap (touch screens have no hover) shows the hover card of what was tapped
+      const tp = closestOf(event.target, "[data-tip]");
+      if (tp) showTip(p, tp, event);
     });
     // the goal forms (score, on the body)
     content.addEventListener("submit", (event) => {
@@ -2692,6 +2777,13 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
       renderHeatmap(p);
     });
     content.addEventListener("keydown", (event) => {
+      // a focused chart, round strip or score chart: arrows, Home and End step through its points and show each one's hover card; Esc hides it
+      const nav = closestOf(event.target, "[data-tipnav]");
+      if (nav && nav === event.target) {
+        const step = { ArrowLeft: -1, ArrowUp: -1, ArrowRight: 1, ArrowDown: 1, Home: -Infinity, End: Infinity }[event.key];
+        if (step !== undefined) { if (event.preventDefault) event.preventDefault(); stepTip(p, nav, step); return; }
+        if (event.key === "Escape") { tipOff(p, nav); return; }
+      }
       if (refKey(event)) return;
       // a focused coach card: Enter and Space open its tip (its Numbers button is a real button and clicks on its own)
       const cc = (event.key === "Enter" || event.key === " ") && !event.repeat && closestOf(event.target, "[data-coach]");
@@ -2708,6 +2800,9 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
       if (t) showTip(p, t, event); else hideTip(p);
     });
     content.addEventListener("mouseleave", () => hideTip(p));
+    // focus by keyboard on a chart shows its newest point at once; leaving it hides the card
+    content.addEventListener("focusin", (event) => { const nav = event.target; if (nav && nav.matches && nav.matches("[data-tipnav]:focus-visible")) stepTip(p, nav, Infinity); });
+    content.addEventListener("focusout", (event) => { const nav = event.target; if (nav && nav.dataset && "tipnav" in nav.dataset) tipOff(p, nav); });
     wireRefs(content);
     // map zoom: wheel around the cursor, drag to pan, double-click resets
     content.addEventListener("wheel", (event) => {
@@ -2936,6 +3031,37 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     } catch {}
   }
   function hideTip(p) { if (p.tip && !p.tip.hidden) p.tip.hidden = true; }
+  // Keyboard steps in a [data-tipnav] box: the next / previous point (step +-1) or the first / last (+-Infinity) gets is-active and its hover card.
+  function stepTip(p, nav, step) {
+    try {
+      const items = [...nav.querySelectorAll("[data-tip]")];
+      if (!items.length) return;
+      const at = items.findIndex((el) => el.classList.contains("is-active"));
+      const i = step === Infinity ? items.length - 1 : step === -Infinity ? 0 : at < 0 ? (step > 0 ? 0 : items.length - 1) : clampNum(at + step, 0, items.length - 1);
+      items.forEach((el, k) => el.classList.toggle("is-active", k === i));
+      const r = items[i].getBoundingClientRect();
+      showTip(p, items[i], { clientX: r.left + r.width / 2, clientY: r.top });
+    } catch {}
+  }
+  function tipOff(p, nav) { hideTip(p); try { for (const el of nav.querySelectorAll(".is-active")) el.classList.remove("is-active"); } catch {} }
+  // After a view is drawn: the entrance on a tab switch (once), and a chart's draw the first time that chart is shown (p.drawn keys), never on a
+  // redraw of the same chart. Classes only; the CSS keeps it to transform / opacity / clip-path and drops it under prefers-reduced-motion.
+  const DRAWS = { progress: (p) => ["progress|" + p.range + "|" + (p.focus || ""), ".aim-an-focus"], session: (p) => ["session|" + p.sessionIdx, ".aim-an-tl-wrap"],
+    drills: (p) => (p.drillOpen ? ["drill|" + p.drillOpen, ".aim-an-scorewrap"] : null), compare: (p) => ["compare|" + p.cmpRange, ".aim-an-cmp-grid"] };
+  function painted(p) {
+    try {
+      const c = p.content;
+      if (p.enter && p.enter === p.tab) {
+        p.enter = null;
+        c.classList.remove("aim-an-view-in"); void c.offsetWidth; c.classList.add("aim-an-view-in");
+        clearTimeout(p.enterTimer); p.enterTimer = setTimeout(() => { try { c.classList.remove("aim-an-view-in"); } catch {} }, 260);
+      }
+      const d = DRAWS[p.tab] && DRAWS[p.tab](p);
+      if (!d || p.drawn.has(d[0])) return;
+      const el = c.querySelector(d[1]);
+      if (el) { p.drawn.add(d[0]); el.classList.add("aim-an-draw"); }
+    } catch {}
+  }
   // The distance slider of a "What this means" visual: moves the dot, the ray and the metres in place.
   function updateAngle(input) {
     try {
@@ -3016,7 +3142,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
   }
   function show(view, p = panel) {
     if (!p || !p.alive) return;
-    if (p.tab !== view) { p.focus = null; try { p.content.scrollTop = 0; } catch {} } // the focus chart lasts until another thumbnail or another Stats tab; a new tab starts at its top
+    if (p.tab !== view) { p.focus = null; p.enter = view; try { p.content.scrollTop = 0; } catch {} } // the focus chart lasts until another thumbnail or another Stats tab; a new tab starts at its top
     p.tab = view;
     hideTip(p);
     if (tipBox && tipBox.p === p) closeTip(false);
@@ -3067,11 +3193,13 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
       if (!current(p, "heatmap")) return;
       const f = p.filter, wantFights = f.layer !== "deaths";
       p.content.innerHTML = heatmapHtml(data.days, data.rounds, f, null, wantFights ? undefined : null, p.bright, zoomFor(p, null)); // also settles f.map
+      painted(p);
       const state = JSON.stringify(f);
       const [mini, fights] = await Promise.all([miniFor(f.map, p), wantFights && f.map ? fightsFor(f, p) : null]);
       // a filter or layer change meanwhile started its own render
       if ((!mini && !wantFights) || !current(p, "heatmap") || JSON.stringify(p.filter) !== state) return;
       p.content.innerHTML = heatmapHtml(data.days, data.rounds, f, mini, fights, p.bright, zoomFor(p, mini));
+      painted(p);
     }).catch(() => { if (current(p, "heatmap")) p.content.innerHTML = `<p class="aim-an-msg">Could not read your records.</p>`; });
   }
   function renderProgress(p = panel) {
@@ -3086,7 +3214,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
         if (!p.cache.progressRounds) p.cache.progressRounds = read("rounds", { limit: RAW_ROUNDS });
         rounds = await p.cache.progressRounds;
       }
-      if (current(p, "progress") && p.range === range) p.content.innerHTML = progressHtml(data.days, data.engagements, range, undefined, rounds, p.focus);
+      if (current(p, "progress") && p.range === range) { p.content.innerHTML = progressHtml(data.days, data.engagements, range, undefined, rounds, p.focus); painted(p); }
     })
       .catch(() => { if (current(p, "progress")) p.content.innerHTML = `<p class="aim-an-msg">Could not read your records.</p>`; });
   }
@@ -3094,7 +3222,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     if (!p) return Promise.resolve();
     hideTip(p);
     return dataFor("tracking", p).then((data) => {
-      if (current(p, "tracking")) p.content.innerHTML = trackingHtml(data.engagements, p.trackTarget);
+      if (current(p, "tracking")) { p.content.innerHTML = trackingHtml(data.engagements, p.trackTarget); painted(p); }
     }).catch(() => { if (current(p, "tracking")) p.content.innerHTML = `<p class="aim-an-msg">Could not read your records.</p>`; });
   }
   function renderCoach(p = panel) {
@@ -3105,6 +3233,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
       hideMapCard();
       p.coachList = data.list.filter(isFinding);
       p.content.innerHTML = coachHtml(data.list, data.failed);
+      painted(p);
     }).catch(() => { if (current(p, "coach")) { p.coachList = []; p.content.innerHTML = coachHtml([], false); } });
   }
 
@@ -3121,6 +3250,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
       if (!current(p, "session")) return;
       const runs = runsNow();
       p.content.innerHTML = sessionHtml(data, p.sessionIdx, Date.now(), runs, (c) => nameFor(c, runs));
+      painted(p);
     }).catch(() => { if (current(p, "session")) p.content.innerHTML = `<p class="aim-an-msg">Could not read your records.</p>`; });
   }
   function renderDrills(p = panel) {
@@ -3143,6 +3273,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
         top = warmupHtml(plan, (c) => nameFor(c, runs), exists);
       }
       p.content.innerHTML = open ? drillDetailHtml(open, runs[open.code]) : drillsHtml(models, p.drillSort, top);
+      painted(p);
       checkGoals();
     }).catch(() => { if (current(p, "drills")) p.content.innerHTML = `<p class="aim-an-msg">Could not read your records.</p>`; });
   }
@@ -3181,7 +3312,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     if (!p) return Promise.resolve();
     hideTip(p);
     return dataFor("compare", p).then((data) => {
-      if (current(p, "compare")) p.content.innerHTML = compareHtml(data.days, data.rounds, p.cmpRange, Date.now());
+      if (current(p, "compare")) { p.content.innerHTML = compareHtml(data.days, data.rounds, p.cmpRange, Date.now()); painted(p); }
     }).catch(() => { if (current(p, "compare")) p.content.innerHTML = `<p class="aim-an-msg">Could not read your records.</p>`; });
   }
   // The export buttons: read everything fresh (the panel's cached reads may be older), build the file and hand it to the browser's download.

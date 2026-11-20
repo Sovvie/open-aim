@@ -648,7 +648,7 @@ test("suggested warm-up: the card on the Drills tab, saved through routines.save
   p.click("[data-warmup-save]", {}); await settle();
   assert.strictEqual(saved.length, 1, "saving again updates the same routine");
   assert.deepStrictEqual(R.warmupRoutine({ steps: [{ code: "x1", runs: 2 }, { code: "y2", runs: 1 }] }, (c) => c.toUpperCase(), (c) => (c === "x1" ? "ball" : "")).steps.map((s) => [s.code, s.name, s.type, s.runs]), [["x1", "X1", "ball", 2], ["y2", "Y2", "", 1]]);
-  assert.ok(R.warmupHtml({ cold: false, steps: [], sessions: null }, (c) => c, false).includes("most played drills"), "no steps: says what is needed");
+  assert.ok(R.warmupHtml({ cold: false, steps: [], sessions: null }, (c) => c, false).includes("at least two drills"), "no steps: says what is needed");
   assert.ok(R.warmupHtml({ cold: true, firstAccuracyPercent: 40, middleAccuracyPercent: 50, sessions: 4, steps: [{ code: "a", runs: 2, accuracyPercent: 50 }, { code: "b", runs: 1, accuracyPercent: 40 }] }, (c) => c, true).includes("Update the routine"));
   assert.strictEqual(R.warmupHtml(null, (c) => c, false), "");
   const q = await openPanel(A, "drills", { win: { __aimRoutines: routines } });
