@@ -133,7 +133,9 @@ function confirmBox(title, text, buttons, { wide = false } = {}) {
         h("h2", {}, title), h("p", { class: "sub" }, text),
         h("div", { class: "foot" }, buttons.map(([label, value, cls]) => h("button", { class: `btn ${cls || ""}`, onclick: () => close(value) }, label)))));
     document.body.append(scrim);
-    scrim.querySelector(".foot .btn:last-child")?.focus();
+    // ui-studio: for a Delete question the keyboard starts on Cancel, so a stray Enter never deletes.
+    const destructive = buttons.some(([label]) => label === "Delete");
+    scrim.querySelector(destructive ? ".foot .btn:first-child" : ".foot .btn:last-child")?.focus();
   });
 }
 // ui-studio: Esc closes the top dialog (same as clicking outside it) or skips the first-run tour.
@@ -471,7 +473,7 @@ async function showLibrary({ fromEditor = false } = {}) {
   if (revision !== screenRevision || S.screen !== 'library') return;
   const tab = (id, label, count) => h("button", {
     class: "lib-tab" + (S.libTab === id ? " on" : ""), role: "tab", "aria-selected": String(S.libTab === id),
-    onclick: () => { if (S.libTab !== id) { S.libTab = id; showLibrary(); } },
+    onclick: () => { if (S.libTab !== id) { S.libTab = id; S.libScroll = 0; showLibrary(); } },
   }, label, count ? h("span", { class: "muted" }, count) : null);
   app.textContent = "";
   app.append(
@@ -497,6 +499,8 @@ async function showLibrary({ fromEditor = false } = {}) {
         S.drills.length ? null : h("p", { class: "empty-note" }, "No drills yet. Your drills also show up first in VALORANT Training in the lobby."),
       ]));
   const lib = app.querySelector("main.library");
+  // ui-studio: coming back from a drill keeps your place in a long list.
+  lib.scrollTop = S.libScroll || 0; // saved by openDrill
   const hasFiles = (e) => e.dataTransfer && [...e.dataTransfer.types].includes("Files");
   let depth = 0;
   lib.addEventListener("dragenter", (e) => { if (hasFiles(e)) { depth++; lib.classList.add("drop"); } });
@@ -696,6 +700,8 @@ let canvas, ctx, stage, hintEl, side, topState, undoBtn, redoBtn;
 async function openDrill(drill, fresh = false) {
   draftSuppressed = false;
   const revision = ++screenRevision;
+  const lib = app.querySelector("main.library");
+  if (lib) S.libScroll = lib.scrollTop; // ui-studio: back to the same place in the drill list later
   S.screen = "editor";
   S.drill = normalize(JSON.parse(JSON.stringify(drill)));
   S.saved = fresh ? "" : JSON.stringify(S.drill);
@@ -705,6 +711,7 @@ async function openDrill(drill, fresh = false) {
   S.map = null; S.img = null; S.view = null;
   rememberEditor();
   buildEditor();
+  renderSide(); // ui-studio: the settings panel is filled at once, not left blank while a map loads
   if (onMap()) await loadPlace();
   if (revision !== screenRevision || S.screen !== 'editor') return;
   fitView();
@@ -843,14 +850,14 @@ function refreshTimeline() {
     onclick: () => { if (S.drill.items.some((i) => i.id === x.id)) { setGroup([x.id]); renderSide(); draw(); } } },
     h("span", { class: "tl-when" }, when(x)),
     h("span", { class: "tl-track" }, x.t === Infinity ? null : h("i", { class: x.exact ? "exact" : "after", style: `left:${pct(x.t)}%;width:${x.exact ? Math.max(0.8, pct(x.tMax) - pct(x.t)) : Math.max(1, (r.end ? pct(r.end) : 100) - pct(x.t))}%` })),
-    h("span", { class: "tl-what" }, h("b", {}, x.name), " ", x.text, x.id === S.sel && x.then.length ? h("small", {}, x.then.join(" ")) : null));
+    h("span", { class: "tl-what" }, h("b", {}, x.name), h("span", {}, x.text), x.id === S.sel && x.then.length ? h("small", {}, x.then.join(" ")) : null));
   tlPanel.textContent = "";
   tlPanel.append(
     h("div", { class: "tl-head" }, h("b", {}, "What happens when"), h("span", {}, "Earliest times, if you run straight there and kill at once"),
       h("button", { class: "btn small icon ghost", "aria-label": "Close timeline", title: "Close", onclick: toggleTimeline }, "\u00d7")),
     ...(r.notes.length ? [h("ul", { class: "tl-notes" }, r.notes.map((t) => h("li", {}, t)))] : []),
     h("ol", { class: "tl-rows" },
-      h("li", { class: "tl-row edge" }, h("span", { class: "tl-when" }, "0 s"), h("span", { class: "tl-track" }), h("span", { class: "tl-what" }, h("b", {}, "Round starts"), "You are at your start", r.canWalk ? "" : " and can't walk (I can walk around is off)", ".")),
+      h("li", { class: "tl-row edge" }, h("span", { class: "tl-when" }, "0 s"), h("span", { class: "tl-track" }), h("span", { class: "tl-what" }, h("b", {}, "Round starts"), h("span", {}, "You are at your start", r.canWalk ? "" : " and can't walk (I can walk around is off)", "."))),
       r.rows.length ? r.rows.map(rowEl) : h("li", { class: "tl-row edge" }, h("span", { class: "tl-when" }), h("span", { class: "tl-track" }), h("span", { class: "tl-what" }, "No bots yet.")),
       ...(r.end ? [h("li", { class: "tl-row edge" }, h("span", { class: "tl-when" }, `${r.end} s`), h("span", { class: "tl-track" }), h("span", { class: "tl-what" }, h("b", {}, "Round ends")))] : [])));
 }
@@ -2009,6 +2016,14 @@ function body(it, at, isSel, isBad) {
     ctx.strokeStyle = "#ffb547"; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(x, y, r + 4, 0, Math.PI * 2); ctx.stroke();
   }
+  if (isSel) {
+    // ui-studio: a white ring with a dark edge, so the selected bot stands out on light map floors too.
+    const rr = r + (it.shoots !== "off" ? 8 : 5);
+    ctx.strokeStyle = "rgba(7,9,12,.85)"; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.arc(x, y, rr, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = "#fff"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(x, y, rr, 0, Math.PI * 2); ctx.stroke();
+  }
   // Faces you
   const w = dirOf(facingOf(it, at));
   const [fx, fy] = turn(w.x, w.z, turns());
@@ -2906,7 +2921,7 @@ function copySelection(cut = false) {
   try { localStorage.setItem(CLIP_KEY, text); } catch {}
   try { navigator.clipboard && navigator.clipboard.writeText(text).catch(() => {}); } catch {}
   toast(`${items.length} ${cut ? "cut" : "copied"}. Ctrl+V pastes here or in another drill.`);
-  if (cut) removeSelected();
+  if (cut) removeSelected(true);
   return true;
 }
 function pasteClip(clip) {
@@ -3044,20 +3059,24 @@ function botSummaryBox(b, d) {
   return h("div", { class: "group bot-summary" }, h("label", {}, "What it will do"), h("ul", {}, lines.map((l) => h("li", {}, l))));
 }
 
-function removeSelected() {
+// quiet === true: no toast (Cut says its own). Deleting is one undo step; the toast says so (ui-studio).
+function removeSelected(quiet) {
   if (S.group.length > 1) {
     const gone = new Set(S.group);
     edit((d) => (d.items = d.items.filter((i) => !gone.has(i.id))));
     setGroup([]);
     renderSide();
+    if (quiet !== true) toast(`Removed ${gone.size} things. Ctrl+Z brings them back.`);
     return;
   }
   const it = selItem();
   if (!it) return;
+  const name = itemName(S.drill, it);
   edit((d) => (d.items = d.items.filter((i) => i.id !== it.id)));
   S.sel = null;
   S.addPoint = false; S.addSpot = false;
   renderSide();
+  if (quiet !== true) toast(`Removed ${name}. Ctrl+Z brings it back.`);
 }
 
 // ---------- the settings panel ----------

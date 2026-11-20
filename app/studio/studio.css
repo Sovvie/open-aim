@@ -413,7 +413,7 @@ textarea.text { height: 64px; padding: 8px 10px; resize: vertical; }
 .tl-track i.after { background: linear-gradient(90deg, var(--red), rgba(255, 70, 85, 0.12)); }
 .tl-row.smoke .tl-track i { background: #a974ff; }
 .tl-what b { font-weight: 800; }
-.tl-what b:not(:last-child)::after { content: " - "; color: var(--muted); font-weight: 400; }
+.tl-what > b:first-child:not(:only-child)::after { content: " - "; color: var(--muted); font-weight: 400; } /* ui-studio: every row gets the dash, not only the selected one */
 .tl-what small { display: block; color: var(--muted); font-size: 11px; margin-top: 2px; }
 .library.drop::after { content: attr(data-drop); position: fixed; inset: 64px 16px 16px; display: flex; align-items: center; justify-content: center; border: 2px dashed var(--red); background: rgba(9, 11, 15, 0.82); color: #fff; font: 800 28px var(--head); font-stretch: 75%; text-transform: uppercase; letter-spacing: 0.05em; pointer-events: none; z-index: 20; }
 @media (max-width: 900px) { .tl-row { grid-template-columns: 66px 1fr; } .tl-track { display: none; } }
@@ -457,3 +457,12 @@ textarea.text { height: 64px; padding: 8px 10px; resize: vertical; }
 .coach .ring { position: absolute; box-shadow: 0 0 0 200vmax rgba(5, 10, 15, 0.55); outline: 2px solid var(--red); outline-offset: -2px; pointer-events: none; }
 /* Toasts in the editor sit above the map hint instead of on top of it. */
 body:has(.editor) .toast { bottom: 76px; }
+/* Timeline open: it takes the hint's place at the bottom instead of overlapping a two-line hint. */
+.stage:has(.timeline:not([hidden])) .hint { display: none; }
+.stage .timeline { bottom: 12px; }
+/* Starter and template names in the same condensed uppercase as the tray and the place tiles. */
+.starter b { font-stretch: 75%; text-transform: uppercase; letter-spacing: 0.03em; font-size: 15px; font-weight: 800; }
+/* Checks box: warnings only (nothing blocking) get an amber edge; "Show" is a real small button, not a tiny teal link. */
+.checks:not(.ok):not(.bad):not(.start) { border-left: 3px solid var(--amber); }
+.checks button.link { margin-left: 2px; padding: 1px 5px; border: 1px solid var(--line); background: var(--panel); color: var(--text); text-decoration: none; font: 700 11px var(--head); font-stretch: 75%; text-transform: uppercase; letter-spacing: 0.06em; }
+.checks button.link:hover { border-color: var(--red); color: #fff; }
