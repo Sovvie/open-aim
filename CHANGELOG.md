@@ -2,7 +2,7 @@
 
 All notable changes to openVaim (formerly AimTrainer). Newest first.
 
-## [Unreleased] - 1.6.0
+## [1.6.0] - 2026-11-20
 
 ### Stats
 - New Session tab (the first Stats tab): pick a session, see rounds, play time, accuracy, headshots, kills and deaths, a strip of its rounds coloured by result, and what improved or slipped against your last 5 sessions.
