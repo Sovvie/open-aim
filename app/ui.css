@@ -244,7 +244,10 @@ html[data-aim-local]:not(#es) body .al-pause-id h1 {
   overflow-wrap: anywhere;
 }
 /* a switch that is on (Pause timer) shows it: the state chip turns red like the theme's active chips */
-html[data-aim-local]:not(#es) body .al-pause-act[aria-checked="true"] .al-pause-timer-state {
+html[data-aim-local]:not(#es) body .al-pause-act[aria-checked="true"] .al-pause-timer-state,
+/* ui-integration: the Pre-aim aids chip ("On", "2 on", "All on") the same red while any aid is on
+   (data-on from tools/patch-drill-source-wording.cjs) */
+html[data-aim-local]:not(#es) body .al-pause-act .al-pause-timer-state[data-on="true"] {
   background: var(--es-red) !important;
   border-color: var(--es-red) !important;
   color: #fff !important;
