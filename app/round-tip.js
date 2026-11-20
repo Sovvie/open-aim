@@ -28,6 +28,8 @@
 .${MARK} h5 { margin: 0 0 4px; font: 800 14px/1.25 var(--es-head, "Bahnschrift", "Segoe UI", sans-serif); color: #fff; }
 .${MARK} p { margin: 0; color: var(--es-muted, #9aa1ae); font-size: 12px; line-height: 1.45; }
 @media ${WIDE} { html[data-aim-local]:not(#es) body .al-result-overlay:has(> .al-pm) .${MARK} { margin: 0; } }
+/* at the bottom of the side report column: a section of that panel (a rule above it, the amber heading keeps it apart) */
+.aim-an-hit-side > .${MARK} { margin: 12px 0 0; padding: 10px 0 0; background: none; box-shadow: none; border-left: 0; border-top: 1px solid var(--es-line-2, #343b4a); }
 `;
   function injectCss() {
     try {
@@ -82,6 +84,14 @@
   const isWide = (overlay) => {
     try { return !!(window.matchMedia && window.matchMedia(WIDE).matches && overlay.querySelector(":scope > .al-pm")); } catch { return false; }
   };
+  // ui-result (20 Nov 2026): on a screen without the Position map, wide windows show the hit report as its own column left of
+  // the result card (analytics-ui.js: a direct child of the overlay with class aim-an-hit-side). The tip then goes at the bottom
+  // of that column instead of into the card, where it made the card taller than a 768 px screen and slid under the sticky
+  // buttons. When the report rewrites its inside (a tab switch), the next page change puts the tip back.
+  const sidePanel = (overlay) => {
+    for (const c of Array.from(overlay.children || [])) if (String(c.className || "").split(/\s+/).includes("aim-an-hit-side")) return c;
+    return null;
+  };
   // Puts the card (created once per overlay) where the current layout wants it; rewrites its html only when it changed.
   function mount(overlay, tip) {
     const html = cardHtml(tip);
@@ -90,7 +100,9 @@
     const actions = overlay.querySelector(".al-run-actions");
     if (!actions || !actions.parentElement) return null;
     if (!card) { card = document.createElement("section"); card.className = MARK; card.setAttribute("aria-label", "Coach tip for this round"); }
-    if (isWide(overlay)) { if (card.parentElement !== actions || actions.lastElementChild !== card) actions.appendChild(card); }
+    const side = sidePanel(overlay);
+    if (side) { if (card.parentElement !== side || side.lastElementChild !== card) side.appendChild(card); }
+    else if (isWide(overlay)) { if (card.parentElement !== actions || actions.lastElementChild !== card) actions.appendChild(card); }
     else if (card.parentElement !== actions.parentElement || card.nextElementSibling !== actions) actions.before(card);
     if (card.dataset.html !== html) { card.innerHTML = html; card.dataset.html = html; }
     return card;
