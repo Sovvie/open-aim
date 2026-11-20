@@ -27,6 +27,9 @@ const EDITS = [
   // pointing at the row's data-setting="esUiMode".
   { from: "{'id':'lowLatency','tab':'video','section':'Smoothness',",
     to: "{'id':'esUiMode','tab':'video','section':'Smoothness','label':'Interface (Enhanced or Performance)','syn':['interface','performance','enhanced','blur','glass','animations','effects','ui mode','look']},{'id':'lowLatency','tab':'video','section':'Smoothness'," },
+  // Weapon skins moved from Visuals to Collection; the Audio note still sent players to the Visuals tab.
+  { from: "'Gunshot and kill sounds come from your weapon skins (Visuals tab).'",
+    to: "'Gunshot and kill sounds come from your weapon skins (Collection, in the top bar).'" },
   // Inside a string: no room for a marker comment; the new text itself shows it is done.
   { from: "Its style follows the Enemy kill sound set; Same as hit sound shows none.",
     to: "Its style follows your kill sound; with \"Same as hit sound\" no icon shows.", bare: true },

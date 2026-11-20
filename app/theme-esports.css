@@ -3833,6 +3833,12 @@ html[data-aim-local]:not(#es) body :is(.hall-root, .hall-portal) .st-rows .st-br
    cards were squeezed below their content and ran into the "Changes save automatically" note. They keep their
    height now and the rail (already overflow: auto) scrolls instead. */
 html[data-aim-local]:not(#es) body .st-view .st-tabbar > .st-tabs { flex-shrink: 0 !important; }
+/* Audio tab section titles (Master, Hit, Kill) used a square mark, a smaller title and a grey sentence-case
+   note; every other tab's sections use the slanted red bar, a 16 px title and an uppercase note. Same look now. */
+html[data-aim-local]:not(#es) body .au-head { align-items: baseline; gap: 4px 10px; margin-bottom: 6px; }
+html[data-aim-local]:not(#es) body .au-head::before { width: 5px; height: 12px; transform: skewX(-14deg); align-self: center; }
+html[data-aim-local]:not(#es) body .au-head b { font: 600 16px/24px var(--es-head); font-stretch: 75%; letter-spacing: normal; }
+html[data-aim-local]:not(#es) body .au-head small { font: 600 12px/18px var(--es-head); font-stretch: 75%; text-transform: uppercase; color: var(--es-muted); }
 /* Crosshair tab on short windows: the pinned lab took a third of a 720 px window; keep more room for the settings. */
 @media (max-height: 760px) {
   html[data-aim-local]:not(#es) body .st-view[data-tab="crosshair"] .st-monitor { height: 140px !important; }
