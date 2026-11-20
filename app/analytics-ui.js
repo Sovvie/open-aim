@@ -2071,7 +2071,7 @@ html[data-aim-local]:not(#es) body .aim-an-hit .aim-an-hit-tabs button { border-
   const DRILL_SORTS = [["recent", "Recent"], ["runs", "Most played"], ["medal", "Medal"], ["trend", "Trend"], ["steady", "Steadiest"], ["name", "A to Z"]];
   const nullLast = (a, b, cmp) => (a === null && b === null ? 0 : a === null ? 1 : b === null ? -1 : cmp(a, b));
   function sortDrills(models, key) {
-    const byName = (a, b) => (a.name.toLowerCase() < b.name.toLowerCase() ? -1 : a.name.toLowerCase() > b.name.toLowerCase() ? 1 : 0);
+    const byName = (a, b) => { const x = plainName(a.name).toLowerCase(), y = plainName(b.name).toLowerCase(); return x < y ? -1 : x > y ? 1 : 0; }; // ui-integration: Easy and Hard of a drill side by side
     const cmp = {
       recent: (a, b) => b.lastAt - a.lastAt || byName(a, b),
       runs: (a, b) => (b.runs + b.rounds) - (a.runs + a.rounds) || byName(a, b),

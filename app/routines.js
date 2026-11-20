@@ -255,6 +255,7 @@
   const tw = () => (typeof window !== "undefined" && window.__aimTargetWorkshop) || null;
   const nameHtml = (n) => (tw() && tw().nameHtml ? tw().nameHtml(String(n ?? "")) : esc(n));
   const plainName = (n) => (tw() && tw().plainName ? tw().plainName(String(n ?? "")) : String(n ?? ""));
+  const tierParts = (n) => (tw() && tw().tierOf ? tw().tierOf(String(n ?? "")) : { tier: null, title: String(n ?? "") });
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   let current = null;           // share code of the drill being played (the game announces every scene it loads)
   const names = new Map();      // share code -> { name, type }
@@ -640,11 +641,14 @@ html[data-aim-local]:not(#es) body .al-result-modal .aim-rt-strip { clip-path: n
   const MAP_ART = (map) => (map && /^[a-z0-9_-]{1,40}$/i.test(map) ? "/aim-maps/" + map + ".cover.webp" : "");
   // One gallery card: art (the map's picture, or a plain tile for map-less Target Workshop drills), name, kind, medal and how often it is in the routine.
   function galleryCardHtml(code, d, entry, inCount, full) {
+    // ui-integration-v1: the EASY / HARD badge sits on the picture (top right, like a Target Workshop card), so the
+    // two-line name is not cut by it.
+    const tp = tierParts(d.name || String(code).slice(0, 7)), tierTag = tp.tier && tw() && tw().tierBadge ? tw().tierBadge(tp.tier).replace('class="es-tier', 'class="es-rt-gtier es-tier') : "";
     const art = MAP_ART(d.map), chip = entry && entry.bestMedal ? '<span class="es-rt-gmedal is-' + entry.bestMedal + '">' + medalIcon(entry.bestMedal) + MEDAL_LABEL[entry.bestMedal] + "</span>" : "";
     return '<button type="button" class="es-rt-gcard' + (inCount ? " is-in" : "") + '" data-rt="add" data-code="' + esc(code) + '" title="' + (full ? "The routine is full (" + MAX_STEPS + " drills)" : "Add " + esc(plainName(d.name))) + '"' + (full ? " disabled" : "") + ">"
       + '<span class="es-rt-gart' + (art || d.type === "ball" ? "" : " is-plain") + '">' + (art ? '<img src="' + esc(art) + '" alt="" loading="lazy" decoding="async">' : d.type === "ball" ? '<canvas class="es-rt-gcanvas" data-thumb="' + esc(code) + '"></canvas>' : "<em>Drill</em>") + chip
-      + (inCount ? '<span class="es-rt-gin">✓ ' + (inCount > 1 ? "×" + inCount : "Added") + "</span>" : '<span class="es-rt-gadd">+ Add</span>') + "</span>"
-      + "<b>" + nameHtml(d.name || String(code).slice(0, 7)) + "</b><small>" + esc(kindOf(d)) + "</small></button>";
+      + (inCount ? '<span class="es-rt-gin">✓ ' + (inCount > 1 ? "×" + inCount : "Added") + "</span>" : '<span class="es-rt-gadd">+ Add</span>') + tierTag + "</span>"
+      + "<b>" + (tierTag ? esc(tp.title) : nameHtml(d.name || String(code).slice(0, 7))) + "</b><small>" + esc(kindOf(d)) + "</small></button>";
   }
   const PICK_TABS = [["bookmarked", "Bookmarked"], ["recent", "Recently played"], ["all", "All drills"]];
   function galleryHtml(book, runs, p, draft) {
@@ -1230,6 +1234,8 @@ html[data-aim-local]:not(#es) body .es-rt-savebar { position: sticky; bottom: -3
 /* the gallery: fits the window, names at most two lines, the search note hides when empty */
 html[data-aim-local]:not(#es) body .es-rt-gal { max-height: clamp(200px, calc(100vh - 400px), 560px); }
 .es-rt-gcard b { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+/* ui-integration: EASY / HARD on the picture's top-right corner */
+html[data-aim-local] .es-rt-gart .es-rt-gtier { position: absolute; right: 6px; top: 6px; margin: 0; }
 .es-rt-picknote:empty { display: none; }
 /* medals table: in a panel, scrolls sideways on a narrow window instead of squeezing, the buttons in their own column */
 .es-rt-tablewrap { overflow-x: auto; padding: 4px 14px 8px; background: var(--es-panel, #10131a); border: 1px solid var(--es-line, #272d39); clip-path: var(--es-cut); }
