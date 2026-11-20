@@ -4048,3 +4048,13 @@ html[data-aim-local]:not(#es) body .al-wk-chip.is-zero { opacity: .62 !important
 }
 /* Bottom search: wide enough for its whole hint ("Search VALORANT Training, target tasks and the Community Workshop"). */
 html[data-aim-local]:not(#es) body .hall-bottombar .hall-search { width: clamp(300px, 38vw, 520px) !important; }
+/* ==== ui-integration (round 3 merge): shared pieces several screens use ==== */
+/* EASY / HARD badge next to a drill name (window.__aimTargetWorkshop.nameHtml): Routines, result screen, Stats,
+   coach and heatmap filters, VALORANT Training cards. Same colours as the Target Workshop card badge (.tw-tier). */
+html[data-aim-local] .es-tier {
+  display: inline-block; vertical-align: .12em; margin-left: 2px; padding: 1px 7px 1px 6px;
+  font: 800 10px/1.4 var(--es-head, "Bahnschrift"); letter-spacing: .1em; text-transform: uppercase; white-space: nowrap;
+  clip-path: polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%); border-radius: 0 !important;
+}
+html[data-aim-local] .es-tier.is-easy { background: #1f3b2e; color: #7ee2a8; }
+html[data-aim-local] .es-tier.is-hard { background: var(--es-red, #ff4655); color: #fff; }

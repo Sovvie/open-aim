@@ -49,6 +49,11 @@
   const MARK = "aim-an-hit";   // the result-screen panel's class
 
   const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  // ui-integration-v1: drill names without the generator's "Easy-" / "Hard-" prefix, with an EASY / HARD badge (shared
+  // helper from target-workshop.js); plain escaped text when it is not loaded (tests). plainName: "Gridshot (Easy)".
+  const twApi = () => (typeof window !== "undefined" && window.__aimTargetWorkshop) || null;
+  const nameHtml = (n) => (twApi() && twApi().nameHtml ? twApi().nameHtml(String(n ?? "")) : esc(n));
+  const plainName = (n) => (twApi() && twApi().plainName ? twApi().plainName(String(n ?? "")) : String(n ?? ""));
   const num = (v) => typeof v === "number" && isFinite(v);
   const pad = (n) => String(n).padStart(2, "0");
   const dayOf = (ms) => { const d = new Date(ms); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); };
@@ -1363,7 +1368,7 @@ html[data-aim-local]:not(#es) body .aim-an-hit .aim-an-hit-tabs button { border-
     const layer = LAYERS.some((l) => l[0] === f.layer) ? f.layer : "deaths";
     const showDeaths = layer !== "fights", showFights = layer !== "deaths";
     const filterBar = `<div class="aim-an-filters">${select("map", "Map", opts.maps, f.map, "")}${select("mode", "Mode", opts.modes, f.mode, "All modes")}`
-      + `${select("code", "Drill", opts.codes.slice().sort((a, b) => drillLabel(a).localeCompare(drillLabel(b))), f.code, "All drills", drillLabel)}${select("weapon", "Weapon", opts.weapons, f.weapon, "All weapons")}</div>`
+      + `${select("code", "Drill", opts.codes.slice().sort((a, b) => plainName(drillLabel(a)).localeCompare(plainName(drillLabel(b)))), f.code, "All drills", (c) => plainName(drillLabel(c)))}${select("weapon", "Weapon", opts.weapons, f.weapon, "All weapons")}</div>`
       + `<div class="aim-an-filters aim-an-layers" role="group" aria-label="Layer">`
       + LAYERS.map(([id, label]) => `<button type="button" data-layer="${id}" aria-pressed="${id === layer}">${label}</button>`).join("");
     // the Reset zoom chip only beside a drawn map (it did nothing next to an empty message)
@@ -1916,7 +1921,7 @@ html[data-aim-local]:not(#es) body .aim-an-hit .aim-an-hit-tabs button { border-
     const tiles = `<div class="aim-an-track-tiles" data-session-tiles>` + tileHtml("Rounds", String(t.rounds), `${t.cleared} cleared, ${t.died} died`) + tileHtml("Play time", playTime(t.seconds), "time spent in rounds")
       + tileHtml("Accuracy", acc, plural(t.shots, "shot")) + tileHtml("Headshots", hs, "of your hits") + tileHtml("Kills", String(t.kills), `${plural(t.deaths, "death")}`) + tileHtml("Drills", String(drills.length), "different drills") + `</div>`;
     const medals = drills.filter((d) => d.bestMedal);
-    const medalLine = medals.length ? `<p class="aim-an-sess-medals" data-session-medals>Best medals: ` + medals.sort((a, b) => MEDAL_RANK[b.bestMedal] - MEDAL_RANK[a.bestMedal]).slice(0, 4).map((d) => `<span class="aim-an-medal is-${d.bestMedal}">${medalSvg(d.bestMedal)}${esc(d.name)}</span>`).join("") + `</p>` : "";
+    const medalLine = medals.length ? `<p class="aim-an-sess-medals" data-session-medals>Best medals: ` + medals.sort((a, b) => MEDAL_RANK[b.bestMedal] - MEDAL_RANK[a.bestMedal]).slice(0, 4).map((d) => `<span class="aim-an-medal is-${d.bestMedal}">${medalSvg(d.bestMedal)}${nameHtml(d.name)}</span>`).join("") + `</p>` : "";
     let versus;
     if (!v.hasBase) versus = `<p class="aim-an-msg" data-versus-empty>${idx === 0 ? "This is your first session, so there is nothing to compare with yet." : "Not enough earlier play to compare with yet."} Come back after another session: from then on this shows what got better and what slipped against your last ${BASE_SESSIONS} sessions (it needs ${MIN_SESSION_ROUNDS_BASE} earlier rounds and ${MIN_BASE_SHOTS} shots).</p>`;
     else {
@@ -1924,7 +1929,7 @@ html[data-aim-local]:not(#es) body .aim-an-hit .aim-an-hit-tabs button { border-
       versus = `<div class="aim-an-versus" data-versus>${verdictList("What improved", v.improved, "is-up", "No clear gain this session.")}${verdictList("What slipped", v.slipped, "is-down", "Nothing slipped.")}</div>`
         + (none ? `<p class="aim-an-note">Everything is within a normal range of your last ${plural(v.before, "session")}.</p>` : `<p class="aim-an-note">Against your last ${plural(v.before, "session")} put together. Small changes are ignored, and a number needs enough shots, kills or ticks behind it.</p>`);
     }
-    const rows = sessionDrillChanges(sessions, idx, runsState, nameOf).map((d) => `<li><span class="aim-an-sd-name">${esc(d.name)}</span><span>${plural(d.rounds, "round")}</span><span>${d.accuracy === null ? "–" : Math.round(d.accuracy) + "%"}</span>`
+    const rows = sessionDrillChanges(sessions, idx, runsState, nameOf).map((d) => `<li><span class="aim-an-sd-name">${nameHtml(d.name)}</span><span>${plural(d.rounds, "round")}</span><span>${d.accuracy === null ? "–" : Math.round(d.accuracy) + "%"}</span>`
       + `<span class="aim-an-sd-score">${d.bestScore === null ? "" : esc(fmtScore(d.bestScore, d.unit))}</span><span>${d.bestMedal ? `<span class="aim-an-medal is-${d.bestMedal}">${medalSvg(d.bestMedal)}${MEDAL_WORD[d.bestMedal]}</span>` : ""}</span>${changeCellHtml(d)}</li>`).join("");
     return chips + tiles + medalLine + `<h4 class="aim-an-sub">Rounds</h4>` + timelineHtml(timelineOf(s)) + `<h4 class="aim-an-sub">Against your earlier sessions</h4>` + versus
       + `<h4 class="aim-an-sub">Drills this session, against the last time you played each</h4><ul class="aim-an-sess-drills aim-an-sd-six" data-session-drills>${rows}</ul>`
@@ -2094,8 +2099,8 @@ html[data-aim-local]:not(#es) body .aim-an-hit .aim-an-hit-tabs button { border-
     const sp = m.spread ? `<span class="aim-an-spread is-${m.spread.label}" title="Scores vary by about ${Math.round(m.spread.pct)}% from run to run">${m.spread.label}<small>consistency</small></span>`
       : `<span class="aim-an-spread" title="Needs ${DRILL_SPREAD_MIN} finished runs">–<small>consistency</small></span>`;
     const trendTitle = m.trend ? `Your newest ${m.trend.runs} runs against the ${m.trend.runs} before` : `Needs ${DRILL_TREND_MIN} finished runs`;
-    return `<li><div class="aim-an-drill${cls}" role="button" tabindex="0" data-drill-open="${esc(m.code)}" aria-label="${esc(m.name)}: open its history">`
-      + `${medal}<span class="aim-an-drill-name">${esc(m.name)}<small>${m.runs ? plural(m.runs, "scored run") : "no scored runs"}${m.rounds ? ", " + plural(m.rounds, "round") + " recorded" : ""}${goalTag(m)}</small></span>`
+    return `<li><div class="aim-an-drill${cls}" role="button" tabindex="0" data-drill-open="${esc(m.code)}" aria-label="${esc(plainName(m.name))}: open its history">`
+      + `${medal}<span class="aim-an-drill-name">${nameHtml(m.name)}<small>${m.runs ? plural(m.runs, "scored run") : "no scored runs"}${m.rounds ? ", " + plural(m.rounds, "round") + " recorded" : ""}${goalTag(m)}</small></span>`
       + `${sparkSvg(m.spark)}<span class="aim-an-drill-num">${esc(fmtScore(m.last, m.unit))}<small>last</small></span><span class="aim-an-drill-num">${esc(fmtScore(m.best, m.unit))}<small>best</small></span>`
       + `<span class="aim-an-drill-trend" title="${esc(trendTitle)}">${esc(trendText(m))}<small>trend</small></span>${sp}</div></li>`;
   }
@@ -2130,7 +2135,7 @@ html[data-aim-local]:not(#es) body .aim-an-hit .aim-an-hit-tabs button { border-
     const dots = runs.map((r, i) => `<circle class="aim-an-run${r.died ? " is-died" : ""}" cx="${x(i).toFixed(1)}" cy="${y(r.score).toFixed(1)}" r="3.2" data-tip="${esc(`${fmtScore(r.score, m.unit)}${r.died ? " (died)" : r.medal ? ", " + MEDAL_WORD[r.medal] : ""}\n${shortDate(r.at)} ${hhmm(r.at)}`)}"/>`).join("");
     const star = bestI >= 0 ? `<circle class="aim-an-best-ring" cx="${x(bestI).toFixed(1)}" cy="${y(runs[bestI].score).toFixed(1)}" r="7"/>` : "";
     const dates = `<text class="aim-an-axis" x="${L}" y="${H - 3}">${esc(shortDate(runs[0].at))}</text><text class="aim-an-axis" x="${W - R}" y="${H - 3}" text-anchor="end">${esc(shortDate(runs[runs.length - 1].at))}</text>`;
-    return `<svg class="aim-an-score" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(m.name)}: your last ${runs.length} scores">${grid}${lines}${dates}<polyline class="aim-an-line" points="${path}"/>${star}${dots}</svg>`;
+    return `<svg class="aim-an-score" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(plainName(m.name))}: your last ${runs.length} scores">${grid}${lines}${dates}<polyline class="aim-an-line" points="${path}"/>${star}${dots}</svg>`;
   }
   function drillDetailHtml(m, entry) {
     const back = `<div class="aim-an-filters"><button type="button" data-drill-back>← All drills</button></div>`;
@@ -2145,7 +2150,7 @@ html[data-aim-local]:not(#es) body .aim-an-hit .aim-an-hit-tabs button { border-
     const chart = scoreChartSvg(entry, m);
     const recent = arr(entry && entry.runs).filter((r) => r && num(r.score)).slice(-8).reverse();
     const table = recent.length ? `<h4 class="aim-an-sub">Latest runs</h4><ul class="aim-an-sess-drills aim-an-drill-runs">` + recent.map((r) => `<li><span class="aim-an-sd-name">${shortDate(r.at)} ${hhmm(r.at)}</span><span>${esc(fmtScore(r.score, m.unit))}</span><span>${r.died ? "Died" : ""}</span><span>${r.medal ? `<span class="aim-an-medal is-${r.medal}">${medalSvg(r.medal)}${MEDAL_WORD[r.medal]}</span>` : ""}</span></li>`).join("") + `</ul>` : "";
-    return back + `<h3 class="aim-an-drill-title">${esc(m.name)}</h3>` + tiles + `<div class="aim-an-medals-row">${medalRow}</div>` + nextLine + goalsHtml(m) + (chart ? `<h4 class="aim-an-sub">Score history</h4><div class="aim-an-scorewrap" tabindex="0" data-tipnav role="group" aria-label="Score history: arrow keys step through your runs">${chart}</div>` : "") + table
+    return back + `<h3 class="aim-an-drill-title">${nameHtml(m.name)}</h3>` + tiles + `<div class="aim-an-medals-row">${medalRow}</div>` + nextLine + goalsHtml(m) + (chart ? `<h4 class="aim-an-sub">Score history</h4><div class="aim-an-scorewrap" tabindex="0" data-tipnav role="group" aria-label="Score history: arrow keys step through your runs">${chart}</div>` : "") + table
       + `<p class="aim-an-note">${m.lower ? "Less is better on this drill. " : ""}Dashed lines are your medal scores. A hollow mark is a run that ended in your death. ${m.rounds ? "Accuracy and headshots come from your stored rounds of this drill (the last 30 days)." : ""}</p>`;
   }
 
@@ -2292,7 +2297,7 @@ html[data-aim-local]:not(#es) body .aim-an-hit .aim-an-hit-tabs button { border-
     if (plan.steps.length < 2) return `<section class="aim-an-warm" data-warmup><h4>Suggested warm-up</h4><p class="aim-an-note">Play three or more rounds of at least two drills and a warm-up shows up here: a short list of the drills you hit best, to play before the ones that count.</p></section>`;
     const why = plan.cold ? `Your first 2 rounds of a session hit ${plan.firstAccuracyPercent}% of your shots, the rounds after them ${plan.middleAccuracyPercent}% (${plan.sessions} sessions). A short warm-up on drills you are good at, before the ones that count, should close that gap.`
       : `Built from your most played drills: the ones you hit the most with, easiest first, so the first rounds of a session are not the ones that count.`;
-    const steps = plan.steps.map((s, i) => `<li><i>${i + 1}</i><b>${esc(nameOf(s.code))}</b><em>${plural(s.runs, "run")}, you hit ${s.accuracyPercent}% here</em></li>`).join("");
+    const steps = plan.steps.map((s, i) => `<li><i>${i + 1}</i><b>${nameHtml(nameOf(s.code))}</b><em>${plural(s.runs, "run")}, you hit ${s.accuracyPercent}% here</em></li>`).join("");
     return `<section class="aim-an-warm${plan.cold ? " is-cold" : ""}" data-warmup><h4>Suggested warm-up</h4><p>${esc(why)}</p><ol>${steps}</ol>`
       + `<div class="aim-an-warm-actions"><button type="button" data-warmup-save>${exists ? "Update the routine" : "Add to Routines"}</button><span class="aim-an-warm-msg" data-warmup-msg role="status">${exists ? "A routine named " + WARM_ROUTINE_NAME + " is in Routines already." : ""}</span></div></section>`;
   }
@@ -2417,8 +2422,8 @@ html[data-aim-local]:not(#es) body .aim-an-hit .aim-an-hit-tabs button { border-
   function refHtml(kind, key, map) {
     const k = esc(key);
     if (kind === "map") return `<span class="aim-an-mapref" tabindex="0" data-map="${k}" aria-label="Map ${k}: show its picture">${k}</span>`;
-    const label = esc(drillLabel(key)), hint = map && MAP_RE.test(map) ? ` data-drill-map="${esc(map)}"` : "";
-    return `<span class="aim-an-mapref aim-an-drillref" tabindex="0" role="link" data-drill="${k}"${hint} aria-label="Drill ${label}: show its card; click or Enter plays it">${label}</span>`;
+    const label = esc(plainName(drillLabel(key))), hint = map && MAP_RE.test(map) ? ` data-drill-map="${esc(map)}"` : "";
+    return `<span class="aim-an-mapref aim-an-drillref" tabindex="0" role="link" data-drill="${k}"${hint} aria-label="Drill ${label}: show its card; click or Enter plays it">${nameHtml(drillLabel(key))}</span>`;
   }
   // The names a finding's text can mention: its map(s) and drill code(s), from the evidence (map, drill, the other group of a
   // by-map / by-drill comparison) and any 16-character share code in the text.
@@ -2442,7 +2447,7 @@ html[data-aim-local]:not(#es) body .aim-an-hit .aim-an-hit-tabs button { border-
   // Plain text (a title, a summary, a note) with drill codes replaced by their labels.
   function labelCodes(text, refs) {
     let t = String(text ?? "");
-    for (const c of refs.drills) t = t.replace(new RegExp(`\\b${c.replace(/[-]/g, "\\-")}\\b`, "g"), drillLabel(c));
+    for (const c of refs.drills) t = t.replace(new RegExp(`\\b${c.replace(/[-]/g, "\\-")}\\b`, "g"), plainName(drillLabel(c)));
     return t;
   }
   // Rule icons (17 Nov 2026): one small line glyph per rule, drawn here (no icon set, no third-party art). 24 x 24, stroked in
@@ -2650,7 +2655,7 @@ html[data-aim-local]:not(#es) body .aim-an-hit .aim-an-hit-tabs button { border-
     const d = drillBook.get(code) || {}, m = d.map || (map && MAP_RE.test(map) ? map : null);
     const meta = [m ? `Map ${m}` : "", d.mode ? `Mode ${d.mode}` : ""].filter(Boolean).join(" · ");
     return (m ? `<img src="${esc(mapCover(m))}" alt="" style="object-position:${MAP_CROP}" loading="lazy" decoding="async">` : "")
-      + `<b>${esc(drillLabel(code))}</b><span class="aim-an-refmeta">${esc(meta || "Drill " + shortCode(code))}</span><span class="aim-an-refmeta">Click or Enter: play this drill</span>`;
+      + `<b>${nameHtml(drillLabel(code))}</b><span class="aim-an-refmeta">${esc(meta || "Drill " + shortCode(code))}</span><span class="aim-an-refmeta">Click or Enter: play this drill</span>`;
   }
   // A trailing parenthetical note ("(Shots you fire on purpose ...)") is fine print, not part of the finding's text.
   function splitNote(text) {

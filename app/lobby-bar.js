@@ -213,21 +213,57 @@
       toggle.title = shownCollapsed ? "Show Discord support" : "Hide";
       link.tabIndex = shownCollapsed ? -1 : 0;
     };
-    document.addEventListener("scroll", (event) => {
-      const scroller = event.target;
-      if (!scroller?.classList?.contains("hall-board-body") && !scroller?.classList?.contains("tw-root")) return;
-      if (scroller.scrollTop < 120) { peek = false; setTucked(false); }
-      else if (!peek && !dock.classList.contains("is-collapsed")) setTucked(true);
-    }, { capture: true, passive: true });
+    // ui-integration-v1: generalised from "scrolled down" to "covers something". After a scroll, resize or page change
+    // settles (debounced, no frame loop), the panel's spot is sampled with elementsFromPoint; when anything under it
+    // is a control (button, link, field, tab, clickable card) or content (text, chart, picture), the panel tucks to
+    // its tab on every screen. A click on the tab while tucked shows it anyway until the next page change.
+    let checkTimer = 0, pageKey = "";
+    const interactive = (node) => {
+      for (let n = node, i = 0; n && n !== document.body && i < 8; n = n.parentElement, i++) {
+        if (n.matches("button, a[href], input, select, textarea, label, summary, canvas, img, svg, video, [role=button], [role=tab], [role=link], [role=checkbox], [role=switch], [tabindex]:not([tabindex='-1'])")) return true;
+        if (getComputedStyle(n).cursor === "pointer") return true;
+      }
+      return false;
+    };
+    const hasText = (node) => [...node.childNodes].some((c) => c.nodeType === 3 && c.data.trim());
+    function covers() {
+      const w = link.offsetWidth, h = link.offsetHeight;
+      if (!w || !h) return false;
+      // The panel's resting place (the dock is translated while tucked): right 22 px, bottom 76 px, tab on its left.
+      const right = innerWidth - 22, bottom = innerHeight - 76, left = right - w, top = bottom - h;
+      for (let ix = 0; ix < 4; ix++) for (let iy = 0; iy < 3; iy++) {
+        const x = left + 4 + (w - 8) * ix / 3, y = top + 4 + (h - 8) * iy / 2;
+        const below = document.elementsFromPoint(x, y).find((el) => !dock.contains(el));
+        if (!below || below === document.body || below === document.documentElement) continue;
+        if (interactive(below) || hasText(below)) return true;
+      }
+      return false;
+    }
+    function checkDock() {
+      checkTimer = 0;
+      if (!dock.isConnected || dock.classList.contains("is-collapsed") || document.pointerLockElement) return;
+      const key = location.pathname + "|" + (document.querySelector(".hall-tabs .hall-tab.is-active, .hall-tabs .hall-tab.active")?.textContent || "");
+      if (key !== pageKey) { pageKey = key; peek = false; }
+      if (peek) return;
+      setTucked(covers());
+    }
+    // At most one pending check (a busy page that changes all the time cannot postpone it forever).
+    const scheduleDockCheck = () => { if (!checkTimer) checkTimer = setTimeout(checkDock, 180); };
+    document.addEventListener("scroll", scheduleDockCheck, { capture: true, passive: true });
+    addEventListener("resize", scheduleDockCheck, { passive: true });
+    dockCheck = scheduleDockCheck;
     toggle.addEventListener("click", () => {
       if (tucked) { peek = true; setTucked(false); return; }
       const collapsed = !dock.classList.contains("is-collapsed");
       setCollapsed(collapsed);
+      if (!collapsed) peek = true; // opened on purpose: stays out until the next page change
       try { localStorage.setItem("es-discord-collapsed", collapsed ? "1" : "0"); } catch {}
     });
     dock.append(toggle, link);
     document.body.appendChild(dock);
+    scheduleDockCheck();
   }
+  let dockCheck = null;
 
   // Quit tab (desktop app only, 17 Nov 2026): a lobby tab (.hall-tab, same look as the others) right after the "Settings"
   // tab in the top nav's tab row (.hall-topnav .hall-tabs). Vue may re-render the row and drop it, so every sync puts it back
@@ -289,6 +325,7 @@
   function syncBar() {
 
     syncDiscordContact();
+    dockCheck?.();
     syncQuitTab();
     syncTabsRow();
     const topnavRight = document.querySelector(".hall-topnav > .hall-topnav-right");

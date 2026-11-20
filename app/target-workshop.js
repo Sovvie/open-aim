@@ -31,7 +31,7 @@
 .tw-body{padding:20px 22px 18px;display:flex;flex-direction:column;min-width:0}
 .tw-name{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
 .tw-name h2{margin:0;font:900 26px/1.05 var(--es-head,"Bahnschrift");letter-spacing:.02em;text-transform:uppercase;color:#fff}
-.tw-fav{all:unset;cursor:pointer;color:#6b7280;padding:2px}.tw-fav:hover{color:#fff}.tw-fav.is-on{color:#ff4655}
+.tw-fav{all:unset;cursor:pointer;color:var(--es-dim,#6b7280);padding:2px}.tw-fav:hover{color:#fff}.tw-fav.is-on{color:#ff4655}
 .tw-fav svg{width:20px;height:20px;display:block}
 .tw-desc{color:#9aa1ae;line-height:1.5;margin:8px 0 12px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .tw-stats{display:flex;gap:26px;margin-bottom:6px}
@@ -40,7 +40,7 @@
 .tw-stats b{font:800 26px/1 var(--es-head,"Bahnschrift");font-variant-numeric:tabular-nums;color:#fff}.tw-stats b.is-none{color:#4b5160}
 .tw-trend{flex:1;min-height:56px;display:flex;align-items:center}
 .tw-trend svg{width:100%;height:64px;overflow:visible}
-.tw-trend p{margin:0;width:100%;text-align:center;color:#6b7280;font-size:12px}
+.tw-trend p{margin:0;width:100%;text-align:center;color:var(--es-dim,#6b7280);font-size:12px}
 .tw-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:10px}
 .tw-root .tw-btn{text-transform:uppercase!important}
 .tw-btn{all:unset;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:8px;font:800 14px var(--es-head,"Bahnschrift");letter-spacing:.08em;text-transform:uppercase;color:#fff;background:#ff4655;padding:11px 30px;clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);transition:filter .15s}
@@ -77,12 +77,12 @@
 .tw-row-top span{color:#d6d9df;font-weight:600;font-size:13px}
 .tw-val{display:flex;align-items:baseline;gap:3px}
 .tw-val input{all:unset;width:58px;text-align:right;font:800 20px var(--es-head,"Bahnschrift");font-variant-numeric:tabular-nums;color:#fff;border-bottom:1px dashed transparent}
-.tw-val input:hover,.tw-val input:focus{border-bottom-color:#6b7280}
+.tw-val input:hover,.tw-val input:focus{border-bottom-color:var(--es-dim,#6b7280)}
 .tw-val small{color:#9aa1ae;font-size:12px;min-width:8px}
 .tw-row input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:18px;margin:8px 0 2px;background:transparent;cursor:pointer}
 .tw-row input[type=range]::-webkit-slider-runnable-track{height:4px;background:linear-gradient(90deg,#ff4655 var(--p,0%),#343b4a var(--p,0%))}
 .tw-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;margin-top:-6px;border-radius:50%;background:#fff;border:3px solid #ff4655}
-.tw-row-foot{display:flex;justify-content:space-between;font-size:11px;color:#6b7280}
+.tw-row-foot{display:flex;justify-content:space-between;font-size:11px;color:var(--es-dim,#6b7280)}
 .tw-row-foot button{all:unset;cursor:pointer;color:#ffd23d}
 .tw-sec{font:700 11px var(--es-head,"Bahnschrift");letter-spacing:.14em;text-transform:uppercase;color:#9aa1ae;margin:22px 0 10px}
 .tw-sec:first-child{margin-top:4px}
@@ -97,7 +97,7 @@
 .tw-hex{display:flex;align-items:center;gap:8px;margin-top:12px;color:#9aa1ae;font-size:12px}
 .tw-hex input[type=color]{all:unset;width:30px;height:30px;cursor:pointer}
 .tw-hex input[type=text]{all:unset;width:80px;padding:6px 8px;border:1px solid #343b4a;color:#fff;font:600 13px Consolas,monospace;text-transform:uppercase}
-.tw-help{color:#6b7280;font-size:12px;line-height:1.5;margin:14px 0 0}
+.tw-help{color:var(--es-dim,#6b7280);font-size:12px;line-height:1.5;margin:14px 0 0}
 .tw-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:16px 26px;border-top:1px solid #272d39}
 .tw-foot span{color:#9aa1ae;font-size:13px}.tw-foot div{display:flex;gap:10px}
 @media (max-width:1300px){.tw-tune{grid-template-columns:1fr 440px}.tw-rows{grid-template-columns:1fr}}
@@ -703,7 +703,14 @@ button.tw-back:focus-visible,.tw-tabs button:focus-visible,.tw-seg button:focus-
     };
   }
 
-  window.__aimTargetWorkshop = { mount, update, dialog, tierOf };
+  // ui-integration-v1: the same plain name + EASY / HARD badge on every screen that lists drills (Routines, result
+  // screen, Stats, coach and heatmap filters, VALORANT Training cards). nameHtml escapes; badge style: .es-tier in
+  // theme-esports.css. plainName is for titles, aria-labels and <option> text: "Gridshot 3×3 (Easy)".
+  const tierWord = (tier) => (tier === "easy" ? "Easy" : "Hard");
+  const tierBadge = (tier) => (tier ? `<span class="es-tier is-${tier}">${tierWord(tier)}</span>` : "");
+  const nameHtml = (name) => { const t = tierOf(name); return esc(t.title) + (t.tier ? " " + tierBadge(t.tier) : ""); };
+  const plainName = (name) => { const t = tierOf(name); return t.tier ? `${t.title} (${tierWord(t.tier)})` : t.title; };
+  window.__aimTargetWorkshop = { mount, update, dialog, tierOf, tierBadge, nameHtml, plainName };
   // The lobby may have mounted the tab before this script ran.
   const late = document.querySelector(".tw-root");
   if (late && window.__aimTWApi) mount(late, window.__aimTWApi);

@@ -250,6 +250,11 @@
   // ================================================================ the game's screens
   const doc = typeof document === "undefined" ? null : document;
   const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  // ui-integration-v1: drill names without the generator's "Easy-" / "Hard-" prefix, with an EASY / HARD badge
+  // (shared helper from target-workshop.js; plain escaped text when it is not loaded, e.g. in the tests).
+  const tw = () => (typeof window !== "undefined" && window.__aimTargetWorkshop) || null;
+  const nameHtml = (n) => (tw() && tw().nameHtml ? tw().nameHtml(String(n ?? "")) : esc(n));
+  const plainName = (n) => (tw() && tw().plainName ? tw().plainName(String(n ?? "")) : String(n ?? ""));
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   let current = null;           // share code of the drill being played (the game announces every scene it loads)
   const names = new Map();      // share code -> { name, type }
@@ -409,7 +414,7 @@ html[data-aim-local]:not(#es) body .al-result-modal .aim-rt-strip { clip-path: n
       const step = r.steps[p.routineDone ? r.steps.length - 1 : p.stepDone ? p.active.step - 1 : p.active.step];
       let line;
       if (p.routineDone) line = `<b>Routine complete:</b> ${esc(r.name)}`;
-      else if (p.counted) line = p.stepDone ? `Step done. <b>Next:</b> ${esc(p.next.name || p.next.code)}` : `Counted for <b>${esc(r.name)}</b>: run ${p.active.counted} of ${step.runs}`;
+      else if (p.counted) line = p.stepDone ? `Step done. <b>Next:</b> ${nameHtml(p.next.name || p.next.code)}` : `Counted for <b>${esc(r.name)}</b>: run ${p.active.counted} of ${step.runs}`;
       else if (p.why && whyText[p.why]) line = `<b>${esc(r.name)}</b>: ${esc(whyText[p.why])}`;
       else line = `<b>${esc(r.name)}</b>`;
       let bar = "";
@@ -630,16 +635,16 @@ html[data-aim-local]:not(#es) body .al-result-modal .aim-rt-strip { clip-path: n
     }
     if (tab === "bookmarked") return (favs || []).filter(known).map((c) => [c, book.get(c)]);
     if (tab === "recent") return (recents || []).filter(known).map((c) => [c, book.get(c)]);
-    return [...book].sort((x, y) => (!x[1].map - !y[1].map) || (x[1].map || "").localeCompare(y[1].map || "") || (x[1].name || "").localeCompare(y[1].name || "")).slice(0, PICK_ALL_MAX);
+    return [...book].sort((x, y) => (!x[1].map - !y[1].map) || (x[1].map || "").localeCompare(y[1].map || "") || plainName(x[1].name).localeCompare(plainName(y[1].name))).slice(0, PICK_ALL_MAX);
   }
   const MAP_ART = (map) => (map && /^[a-z0-9_-]{1,40}$/i.test(map) ? "/aim-maps/" + map + ".cover.webp" : "");
   // One gallery card: art (the map's picture, or a plain tile for map-less Target Workshop drills), name, kind, medal and how often it is in the routine.
   function galleryCardHtml(code, d, entry, inCount, full) {
     const art = MAP_ART(d.map), chip = entry && entry.bestMedal ? '<span class="es-rt-gmedal is-' + entry.bestMedal + '">' + medalIcon(entry.bestMedal) + MEDAL_LABEL[entry.bestMedal] + "</span>" : "";
-    return '<button type="button" class="es-rt-gcard' + (inCount ? " is-in" : "") + '" data-rt="add" data-code="' + esc(code) + '" title="' + (full ? "The routine is full (" + MAX_STEPS + " drills)" : "Add " + esc(d.name)) + '"' + (full ? " disabled" : "") + ">"
+    return '<button type="button" class="es-rt-gcard' + (inCount ? " is-in" : "") + '" data-rt="add" data-code="' + esc(code) + '" title="' + (full ? "The routine is full (" + MAX_STEPS + " drills)" : "Add " + esc(plainName(d.name))) + '"' + (full ? " disabled" : "") + ">"
       + '<span class="es-rt-gart' + (art || d.type === "ball" ? "" : " is-plain") + '">' + (art ? '<img src="' + esc(art) + '" alt="" loading="lazy" decoding="async">' : d.type === "ball" ? '<canvas class="es-rt-gcanvas" data-thumb="' + esc(code) + '"></canvas>' : "<em>Drill</em>") + chip
       + (inCount ? '<span class="es-rt-gin">✓ ' + (inCount > 1 ? "×" + inCount : "Added") + "</span>" : '<span class="es-rt-gadd">+ Add</span>') + "</span>"
-      + "<b>" + esc(d.name || String(code).slice(0, 7)) + "</b><small>" + esc(kindOf(d)) + "</small></button>";
+      + "<b>" + nameHtml(d.name || String(code).slice(0, 7)) + "</b><small>" + esc(kindOf(d)) + "</small></button>";
   }
   const PICK_TABS = [["bookmarked", "Bookmarked"], ["recent", "Recently played"], ["all", "All drills"]];
   function galleryHtml(book, runs, p, draft) {
@@ -702,7 +707,7 @@ html[data-aim-local]:not(#es) body .al-result-modal .aim-rt-strip { clip-path: n
   };
   function stepInfoHtml(st, book, runs) {
     const d = (book && book.get(st.code)) || { name: st.name, map: null, type: st.type, description: "" };
-    return '<div class="es-rt-sinfo"><b class="es-rt-sname">' + esc(label(st.code, { name: st.name }, book)) + "</b><small>" + esc(kindOf(d)) + "</small>"
+    return '<div class="es-rt-sinfo"><b class="es-rt-sname">' + nameHtml(label(st.code, { name: st.name }, book)) + "</b><small>" + esc(kindOf(d)) + "</small>"
       + (d.description ? '<p class="es-rt-sdesc">' + esc(d.description) + "</p>" : "") + '<span class="es-rt-sstat">' + statLine(st.code, runs) + "</span></div>";
   }
   // The settings of a step in the editor: runs, minimum score and medal, and, when the drill has them, the enemy rank and the easy / hard switch.
@@ -732,14 +737,14 @@ html[data-aim-local]:not(#es) body .al-result-modal .aim-rt-strip { clip-path: n
     const st = v.state, act = st.active && st.routines.find((r) => r.id === st.active.routineId), parts = [], unitOf = (c) => (v.runs && v.runs[c]) || null;
     if (act) {
       const step = act.steps[st.active.step], total = act.steps.length, pct = Math.round(((st.active.step + st.active.counted / (step.runs || 1)) / total) * 100);
-      parts.push('<section class="es-rt-card is-active" data-rt-active><h3>Active: ' + esc(act.name) + '</h3><div class="es-rt-now"><span class="es-rt-sthumb is-sm">' + artHtml(step.code, v.book && v.book.get(step.code) || { type: step.type }) + '</span><p>Step ' + (st.active.step + 1) + " of " + total + ": <b>" + esc(label(step.code, { name: step.name }, v.book)) + "</b> (" + esc(stepText(step, unitOf(step.code))) + "), done " + st.active.counted + " of " + step.runs + " " + rankChip(step.rank) + "</p></div>"
+      parts.push('<section class="es-rt-card is-active" data-rt-active><h3>Active: ' + esc(act.name) + '</h3><div class="es-rt-now"><span class="es-rt-sthumb is-sm">' + artHtml(step.code, v.book && v.book.get(step.code) || { type: step.type }) + '</span><p>Step ' + (st.active.step + 1) + " of " + total + ": <b>" + nameHtml(label(step.code, { name: step.name }, v.book)) + "</b> (" + esc(stepText(step, unitOf(step.code))) + "), done " + st.active.counted + " of " + step.runs + " " + rankChip(step.rank) + "</p></div>"
         + '<span class="es-rt-bar" role="progressbar" aria-label="Routine progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '"><i style="width:' + pct + '%"></i></span><div class="es-rt-row"><button type="button" class="es-rt-primary" data-rt="play" data-code="' + esc(step.code) + '" data-type="' + esc(step.type || "") + '" data-rank="' + esc(step.rank || "") + '">Play this step</button><button type="button" data-rt="stop">Stop routine</button></div></section>');
     }
     const cards = st.routines.map((r) => {
       const isAct = act && act.id === r.id, at = isAct ? st.active.step : -1, total = r.steps.length;
       const fold = !isAct && total > LINES_FOLDED + 2 && !(v.expanded && v.expanded.has(r.id)), shown = fold ? r.steps.slice(0, LINES_FOLDED) : r.steps;
       return '<section class="es-rt-card' + (isAct ? " is-active" : "") + (v.flashId === r.id ? " is-flash" : "") + '" data-routine="' + esc(r.id) + '"><h3>' + esc(r.name) + ' <small class="es-rt-count">' + total + (total === 1 ? " drill" : " drills") + "</small></h3><ol class=\"es-rt-lines\">"
-        + shown.map((step, i) => '<li class="' + (i < at ? "is-done" : i === at ? "is-now" : "") + '"><span class="es-rt-sthumb is-sm">' + artHtml(step.code, v.book && v.book.get(step.code) || { type: step.type }) + '</span><span class="es-rt-line"><b>' + esc(label(step.code, { name: step.name }, v.book)) + "</b> " + rankChip(step.rank) + "<small>" + esc(stepText(step, unitOf(step.code))) + "</small></span></li>").join("") + "</ol>"
+        + shown.map((step, i) => '<li class="' + (i < at ? "is-done" : i === at ? "is-now" : "") + '"><span class="es-rt-sthumb is-sm">' + artHtml(step.code, v.book && v.book.get(step.code) || { type: step.type }) + '</span><span class="es-rt-line"><b>' + nameHtml(label(step.code, { name: step.name }, v.book)) + "</b> " + rankChip(step.rank) + "<small>" + esc(stepText(step, unitOf(step.code))) + "</small></span></li>").join("") + "</ol>"
         + (fold ? '<button type="button" class="es-rt-more" data-rt="expand" data-id="' + esc(r.id) + '" aria-expanded="false">Show all ' + total + " drills (" + (total - LINES_FOLDED) + " more)</button>" : "")
         + '<div class="es-rt-row"><button type="button" class="es-rt-primary" data-rt="start" data-id="' + esc(r.id) + '"' + (isAct ? ' title="Start this routine again from its first drill"' : "") + ">" + (isAct ? "Restart" : "Start") + '</button><button type="button" data-rt="edit" data-id="' + esc(r.id) + '">Edit</button>'
         + '<button type="button"' + (v.delId === r.id ? ' class="is-armed"' : "") + ' data-rt="delete" data-id="' + esc(r.id) + '">' + (v.delId === r.id ? "Click again to delete" : "Delete") + "</button></div></section>";
@@ -763,7 +768,7 @@ html[data-aim-local]:not(#es) body .al-result-modal .aim-rt-strip { clip-path: n
       const form = editing ? '<tr class="es-rt-medalform"><td colspan="6"><div class="es-rt-row" data-medal-form="' + esc(code) + '">' + MEDAL_ORDER.map((m) => '<label class="is-' + m + '"><span>' + medalIcon(m) + MEDAL_LABEL[m] + '</span><input type="number" step="any" data-rt-field="medal-' + m + '" value="' + (v.medalDraft && v.medalDraft[m] != null ? esc(v.medalDraft[m]) : th ? esc(th[m]) : "") + '"></label>').join("")
         + '<button type="button" class="es-rt-primary" data-rt="medal-save" data-code="' + esc(code) + '">Save</button>' + (th && th.source === "custom" ? '<button type="button" data-rt="medal-auto" data-code="' + esc(code) + '">Back to automatic</button>' : "") + '<button type="button" data-rt="medal-cancel">Cancel</button></div>'
         + (v.medalError ? '<p class="es-rt-err" role="alert">' + esc(v.medalError) + "</p>" : '<p class="es-rt-note">' + (e.lower ? "Less is better here: gold is the smallest number. " : "") + "Enter performs Save, Esc cancels.</p>") + "</td></tr>" : "";
-      return '<tr data-medal-row="' + esc(code) + '"' + (editing ? ' class="is-editing"' : "") + '><td class="es-rt-tdname">' + esc(label(code, e, book)) + "</td><td>" + e.runs.length + "</td><td>" + (e.best === null ? "–" : fmtNum(e.best) + unit) + "</td><td>" + MEDAL_ORDER.map((m) => medalDot(m, e.medals && e.medals[m])).join("") + "</td>"
+      return '<tr data-medal-row="' + esc(code) + '"' + (editing ? ' class="is-editing"' : "") + '><td class="es-rt-tdname">' + nameHtml(label(code, e, book)) + "</td><td>" + e.runs.length + "</td><td>" + (e.best === null ? "–" : fmtNum(e.best) + unit) + "</td><td>" + MEDAL_ORDER.map((m) => medalDot(m, e.medals && e.medals[m])).join("") + "</td>"
         + "<td>" + ths + (next ? '<small class="es-rt-next">' + esc(MEDAL_LABEL[next.tier]) + " is " + fmtNum(next.gap) + unit + " away</small>" : "") + '</td><td class="es-rt-tdact"><button type="button" data-rt="medal-edit" data-code="' + esc(code) + '" aria-expanded="' + editing + '">Edit</button><button type="button" data-rt="play" data-code="' + esc(code) + '" data-type="' + esc(book && book.get(code) ? book.get(code).type || "" : "") + '">Play</button></td></tr>' + form;
     }).join("");
     return intro + '<div class="es-rt-tablewrap"><table class="es-rt-table"><thead><tr><th>Drill</th><th>Runs</th><th>Best</th><th>Earned</th><th>Medal scores</th><th><span class="es-rt-sr">Actions</span></th></tr></thead><tbody>' + rows + "</tbody></table></div>";
@@ -867,7 +872,7 @@ html[data-aim-local]:not(#es) body .al-result-modal .aim-rt-strip { clip-path: n
   // Starts a step from the page: closes it, says what is starting (gone soon after the drill has started, so it does not sit over the
   // round), and says so when the drill could not be found.
   function playStep(step) {
-    const nm = label(step.code, { name: step.name }, names);
+    const nm = plainName(label(step.code, { name: step.name }, names));
     closePage();
     const t = toast("Starting " + nm + "…", true);
     startStep(step).then((ok) => { if (!ok) toast("Could not start " + nm + ". Open it from the lobby.", false); else if (t) setTimeout(() => t.remove(), 1200); });
@@ -928,7 +933,7 @@ html[data-aim-local]:not(#es) body .al-result-modal .aim-rt-strip { clip-path: n
     }
     if (a === "remove-step" && d) {
       const gone = d.steps.splice(i, 1)[0]; saveDraft(d);
-      if (gone) notify("Removed " + label(gone.code, { name: gone.name }, names) + ".", { undo: () => { const x = loadDraft(); if (x) { x.steps.splice(Math.min(i, x.steps.length), 0, gone); saveDraft(x); } } });
+      if (gone) notify("Removed " + plainName(label(gone.code, { name: gone.name }, names)) + ".", { undo: () => { const x = loadDraft(); if (x) { x.steps.splice(Math.min(i, x.steps.length), 0, gone); saveDraft(x); } } });
       view.focusAfter = '[data-rt="remove-step"][data-i="' + Math.min(i, d.steps.length - 1) + '"]'; view.focusFallback = '[data-rt="picker-open"]'; render(); return;
     }
     if ((a === "up" || a === "down") && d) {
