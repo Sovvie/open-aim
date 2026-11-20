@@ -1962,13 +1962,14 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-tipm h3 { text-transform: non
     if (tp) { prev.ttk = tp.ttk; prev.trackOn = tp.trackOn; prev.trackN = tp.trackN; } else { prev.ttk = []; prev.trackOn = 0; prev.trackN = 0; }
     return { range, cur, prev, rows: compareRows(cur, prev), timingPrev };
   }
-  function compareCardHtml(r, range) {
+  // noPrev: nothing at all was recorded in the period before (the line above the cards already says so), so a card names its own sample instead
+  function compareCardHtml(r, range, noPrev = false) {
     const bar = (v, cls) => `<i class="${cls}"><b style="width:${r.cur !== null && r.prev !== null && Math.max(r.cur, r.prev) > 0 && v !== null ? Math.max(4, Math.round((v / Math.max(r.cur, r.prev)) * 100)) : 0}%"></b></i>`;
     const both = r.cur !== null && r.prev !== null;
     // an arrow only for a change that counts (the same threshold as the verdict): a small one is "about the same", so it points sideways
     const arrow = r.verdict === "unknown" ? "" : r.verdict === "same" ? "→" : r.delta > 0 ? "↑" : "↓";
     const verdict = { better: "is-up", worse: "is-down", same: "", unknown: "" }[r.verdict];
-    const why = r.cur === null ? `Not enough ${r.noun} in the last ${range} days (needs ${r.min}).` : r.prev === null ? `Not enough ${r.noun} in the ${range} days before.` : "";
+    const why = r.cur === null ? `Not enough ${r.noun} in the last ${range} days (needs ${r.min}).` : noPrev ? `From ${r.nCur} ${r.noun}.` : r.prev === null ? `Not enough ${r.noun} in the ${range} days before.` : "";
     const shown = r.delta === null ? 0 : +Math.abs(r.delta).toFixed(r.dec);
     const delta = r.delta === null ? "" : shown === 0 ? "no change" : (r.delta > 0 ? "+" : "−") + shown.toFixed(r.dec) + (r.unit === "%" ? " pts" : r.unit === " s" ? " s" : "");
     return `<div class="aim-an-cmp ${verdict}" data-metric="${r.id}" data-verdict="${r.verdict}"><span class="aim-an-cmp-label">${esc(r.label)}</span>`
@@ -1987,7 +1988,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-tipm h3 { text-transform: non
       : !c.cur.rounds
         ? `<p class="aim-an-msg" data-cmp-sum>Nothing recorded in the last ${range} days (${plural(c.prev.rounds, "round")} in the ${range} days before). Play a few rounds to see how you compare with then.</p>`
         : `<p class="aim-an-note" data-cmp-sum>Last ${range} days: ${plural(c.cur.rounds, "round")}, ${plural(c.cur.shots, "shot")}. The ${range} days before: ${plural(c.prev.rounds, "round")}, ${plural(c.prev.shots, "shot")}. ${imp} better, ${slip} worse.</p>`;
-    return tabs + head + `<div class="aim-an-cmp-grid" data-cmp-grid>${c.rows.map((r) => compareCardHtml(r, range)).join("")}</div>`
+    return tabs + head + `<div class="aim-an-cmp-grid" data-cmp-grid>${c.rows.map((r) => compareCardHtml(r, range, !c.prev.rounds)).join("")}</div>`
       + `<p class="aim-an-note">Accuracy, headshot rate and deaths come from your daily totals. Kill time and tracking only count rounds recorded with line-of-sight data and need enough kills or ticks in both periods.${c.timingPrev ? "" : " Rounds older than 30 days are kept only as daily totals, so the earlier period has no kill time or tracking here: pick 7 or 14 days to see them."}</p>`;
   }
 
