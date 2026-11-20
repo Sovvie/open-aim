@@ -187,6 +187,7 @@
   const STRAFE_GROUP_MIN = 20;    // strafe-map / strafe-drill: classified kills needed for each map or drill compared
   const STRAFE_GAP_POINTS = 20;   // ... and the strafe-kill-rate gap (percentage points) that counts
   const SESSION_GAP_MS = 30 * 60 * 1000, SHAPE_ROUNDS_MIN = 6, SHAPE_SESSIONS_MIN = 3, WARM_ROUNDS = 2, FADE_ROUNDS = 2, SHAPE_SHOTS_MIN = 150, SHAPE_GAP_POINTS = 6; // session shape (warmup, fade)
+  const WARMUP_STEPS = 3, WARMUP_POOL = 5, WARMUP_DRILL_ROUNDS_MIN = 3, WARMUP_SHOTS_MIN = 60, WARMUP_DIED_SHARE = 0.3; // the suggested warm-up (warmupPlan)
   const ROUND_SHOTS_MIN = 20;     // consistency: shots a round needs to count
   const CONSIST_MIN = 10;         // consistency: rounds (from drills played 3 times or more) needed
   const DRILL_ROUNDS_MIN = 3;     // consistency: rounds of one drill needed to measure its spread
@@ -1238,31 +1239,61 @@
     for (const d of r.deaths) if (num(d.tick)) m = Math.max(m, d.tick);
     return r.at + Math.min(3600, m * dt) * 1000;
   }
-  function sessionShape(ctx) {
-    const list = ctx.rounds.filter((r) => num(r.at)).sort((a, b) => a.at - b.at), groups = [];
+  // The pooled accuracy of the first, middle and last rounds of the long sessions of a list of expanded rounds, or null when there are not enough of them.
+  function shapeOf(rounds, weapon) {
+    const list = rounds.filter((r) => num(r.at)).sort((a, b) => a.at - b.at), groups = [];
     for (const r of list) {
       const g = groups[groups.length - 1];
       if (g && r.at - g.end < SESSION_GAP_MS) { g.rounds.push(r); g.end = Math.max(g.end, roundEndMs(r)); } else groups.push({ rounds: [r], end: roundEndMs(r) });
     }
     const sessions = groups.filter((g) => g.rounds.length >= SHAPE_ROUNDS_MIN);
-    if (sessions.length < SHAPE_SESSIONS_MIN) return [];
+    if (sessions.length < SHAPE_SESSIONS_MIN) return null;
     const early = { shots: 0, hits: 0 }, mid = { shots: 0, hits: 0 }, late = { shots: 0, hits: 0 };
     for (const g of sessions) g.rounds.forEach((r, i) => {
-      const shots = r.shots.filter((s) => !ctx.f.weapon || s.weapon === ctx.f.weapon), t = i < WARM_ROUNDS ? early : i >= g.rounds.length - FADE_ROUNDS ? late : mid;
+      const shots = r.shots.filter((s) => !weapon || s.weapon === weapon), t = i < WARM_ROUNDS ? early : i >= g.rounds.length - FADE_ROUNDS ? late : mid;
       t.shots += shots.length; t.hits += shots.filter(isHit).length;
     });
-    if (early.shots < SHAPE_SHOTS_MIN || mid.shots < SHAPE_SHOTS_MIN || late.shots < SHAPE_SHOTS_MIN) return [];
-    const eA = rate(early.hits, early.shots), mA = rate(mid.hits, mid.shots), lA = rate(late.hits, late.shots);
-    const base = { sessions: sessions.length, firstRounds: WARM_ROUNDS, lastRounds: FADE_ROUNDS, middleAccuracyPercent: pct(mA) };
+    if (early.shots < SHAPE_SHOTS_MIN || mid.shots < SHAPE_SHOTS_MIN || late.shots < SHAPE_SHOTS_MIN) return null;
+    return { sessions: sessions.length, early, mid, late, eA: rate(early.hits, early.shots), mA: rate(mid.hits, mid.shots), lA: rate(late.hits, late.shots) };
+  }
+  // A warm-up to play before the drills you want to score on (21 Nov 2026), from the "warmup" rule's numbers and your most played drills.
+  // { cold: the first rounds of your sessions are SHAPE_GAP_POINTS or more below the rest, gapPoints, firstAccuracyPercent, middleAccuracyPercent, sessions (null without enough sessions),
+  //   steps: [{ code, runs, rounds, accuracyPercent }] (at most WARMUP_STEPS drills; the ones you hit the most with come first), reason: "" | "few-rounds" }
+  // A drill is a candidate with WARMUP_DRILL_ROUNDS_MIN or more rounds, WARMUP_SHOTS_MIN shots, and fewer than WARMUP_DIED_SHARE of them ending in a death (a drill that kills you is no warm-up).
+  // Of the WARMUP_POOL most played candidates, the ones with the highest accuracy are taken and played in that order. The first step is played twice (the rule's WARM_ROUNDS), the others once.
+  function warmupPlan(rounds, opts = {}) {
+    const list = (Array.isArray(rounds) ? rounds : []).filter((r) => r && num(r.at) && Array.isArray(r.shots));
+    const sh = shapeOf(list.map((r) => ({ ...r, deaths: Array.isArray(r.deaths) ? r.deaths : [] })), opts.weapon || "");
+    const gap = sh ? Math.round((sh.mA - sh.eA) * 100) : null;
+    const by = new Map();
+    for (const r of list) {
+      if (r.code == null) continue;
+      const k = String(r.code);
+      if (!by.has(k)) by.set(k, { code: k, rounds: 0, shots: 0, hits: 0, died: 0 });
+      const d = by.get(k);
+      d.rounds++; d.shots += r.shots.length; d.hits += r.shots.filter(isHit).length; if (r.end === "died") d.died++;
+    }
+    const pool = [...by.values()].filter((d) => d.rounds >= WARMUP_DRILL_ROUNDS_MIN && d.shots >= WARMUP_SHOTS_MIN && d.died / d.rounds < WARMUP_DIED_SHARE)
+      .sort((a, b) => b.rounds - a.rounds || (a.code < b.code ? -1 : 1)).slice(0, WARMUP_POOL);
+    const steps = pool.sort((a, b) => rate(b.hits, b.shots) - rate(a.hits, a.shots) || b.rounds - a.rounds).slice(0, WARMUP_STEPS)
+      .map((d, i) => ({ code: d.code, runs: i === 0 ? WARM_ROUNDS : 1, rounds: d.rounds, accuracyPercent: pct(rate(d.hits, d.shots)) }));
+    return { cold: gap !== null && gap >= SHAPE_GAP_POINTS, gapPoints: gap, firstAccuracyPercent: sh ? pct(sh.eA) : null, middleAccuracyPercent: sh ? pct(sh.mA) : null, sessions: sh ? sh.sessions : null,
+      steps: steps.length >= 2 ? steps : [], reason: steps.length >= 2 ? "" : "few-rounds" };
+  }
+  function sessionShape(ctx) {
+    const sh = shapeOf(ctx.rounds, ctx.f.weapon);
+    if (!sh) return [];
+    const { sessions, early, mid, late, eA, mA, lA } = sh;
+    const base = { sessions, firstRounds: WARM_ROUNDS, lastRounds: FADE_ROUNDS, middleAccuracyPercent: pct(mA) };
     const out = [], warmGap = Math.round((mA - eA) * 100), fadeGap = Math.round((mA - lA) * 100);
     if (warmGap >= SHAPE_GAP_POINTS) out.push({
       id: "warmup", severity: "tip", sample: early.shots + mid.shots, title: "You start sessions cold",
-      detail: "Across " + sessions.length + " sessions, the first " + WARM_ROUNDS + " rounds hit " + pct(eA) + "% of your shots and the rounds after them " + pct(mA) + "%. Play one or two easy drills before the ones you want to score on, so the early rounds are not the ones that count.",
+      detail: "Across " + sessions + " sessions, the first " + WARM_ROUNDS + " rounds hit " + pct(eA) + "% of your shots and the rounds after them " + pct(mA) + "%. Play one or two easy drills before the ones you want to score on, so the early rounds are not the ones that count.",
       evidence: { ...base, firstRoundsAccuracyPercent: pct(eA), gapPoints: warmGap },
     });
     if (fadeGap >= SHAPE_GAP_POINTS) out.push({
       id: "fade", severity: "tip", sample: late.shots + mid.shots, title: "Your aim fades late in a session",
-      detail: "Across " + sessions.length + " sessions, the last " + FADE_ROUNDS + " rounds hit " + pct(lA) + "% of your shots against " + pct(mA) + "% in the rounds before them. Take a short break, or stop, when your accuracy has fallen for a few rounds in a row.",
+      detail: "Across " + sessions + " sessions, the last " + FADE_ROUNDS + " rounds hit " + pct(lA) + "% of your shots against " + pct(mA) + "% in the rounds before them. Take a short break, or stop, when your accuracy has fallen for a few rounds in a row.",
       evidence: { ...base, lastRoundsAccuracyPercent: pct(lA), gapPoints: fadeGap },
     });
     return out;
@@ -1454,7 +1485,7 @@
   }
 
   window.__aimCoach = {
-    insights, roundTip,
+    insights, roundTip, warmupPlan,
     // The short card line of a finding, and the rule ids that have one (every id insights() and roundTip() return).
     summaryOf, summaryIds: Object.keys(SUMMARY),
     // Every minimum sample and cut-off, for screens and tests.
@@ -1464,7 +1495,7 @@
       TRACK_ENG_MIN, TRACK_SAMPLES_MIN, TRACK_BODY_LOW, TRACK_LAG_DEG, TRACK_LOCK_SLOW_S, TRACK_LOCK_MIN, DRILL_ROUNDS_MIN, STEADY_SD, STREAKY_SD, TREND_SHOTS_MIN, TREND_HITS_MIN, TREND_FLAT_POINTS,
       RANGE_NEAR_M, RANGE_FAR_M, RANGE_SHOTS_MIN, RANGE_GAP_POINTS, SIDE_BAND_M, SIDE_MIN, STILL_MPS, MOVE_SHOTS_MIN, MOVE_GAP_POINTS, CROUCH_ON, CROUCH_OFF,
       POSTURE_SHOTS_MIN, POSTURE_GAP_POINTS, SENS_RECENT_ROUNDS, SENS_ROUNDS_MIN, SENS_SAME, SENS_LOW, SENS_HIGH, ACCEL_SHARE,
-      SESSION_GAP_MS, SHAPE_ROUNDS_MIN, SHAPE_SESSIONS_MIN, WARM_ROUNDS, FADE_ROUNDS, SHAPE_SHOTS_MIN, SHAPE_GAP_POINTS,
+      SESSION_GAP_MS, SHAPE_ROUNDS_MIN, SHAPE_SESSIONS_MIN, WARM_ROUNDS, FADE_ROUNDS, SHAPE_SHOTS_MIN, SHAPE_GAP_POINTS, WARMUP_STEPS, WARMUP_POOL, WARMUP_DRILL_ROUNDS_MIN, WARMUP_SHOTS_MIN, WARMUP_DIED_SHARE,
       ROUND_TIP_BASE_MIN, ROUND_TIP_Z, ROUND_TIP_OUTLIER_SHARE, ROUND_TIP_PERSIST_BASE, ROUND_TIP_HITS_MIN, ROUND_TIP_MISS_MIN, ROUND_TIP_FLOOR_ACC, ROUND_TIP_FLOOR_HEAD, ROUND_TIP_FLOOR_SIDE_M, ROUND_TIP_FLOOR_VERT_M },
   };
 })();
