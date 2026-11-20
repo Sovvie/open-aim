@@ -36,11 +36,15 @@ function makeWorld({ desktop = true, setting = "on" } = {}) {
   button.click = () => { game.ourResumes++; gameResume(); };
 
   const htmlClasses = new Set();
+  const htmlAttrs = new Map(), htmlStyle = new Map();
   const document = {
     documentElement: { classList: {
       toggle(c, on) { if (on === undefined ? !htmlClasses.has(c) : on) htmlClasses.add(c); else htmlClasses.delete(c); },
       contains: (c) => htmlClasses.has(c),
-    }, appendChild() {} },
+    }, appendChild() {},
+    hasAttribute: (a) => htmlAttrs.has(a),
+    toggleAttribute(a, on) { if (on) htmlAttrs.set(a, ""); else htmlAttrs.delete(a); },
+    style: { getPropertyValue: (p) => htmlStyle.get(p) || "", setProperty: (p, v) => htmlStyle.set(p, v), removeProperty: (p) => htmlStyle.delete(p) } },
     head: { appendChild() {} },
     createElement: () => ({}),
     get pointerLockElement() { return game.lockedEl; },
@@ -157,7 +161,7 @@ function makeWorld({ desktop = true, setting = "on" } = {}) {
   advance(2000);
   // "menu on screen" = the game shows it and the script has not hidden it (html.aim-esc-resuming)
   const menuVisible = () => game.phase === "paused" && !htmlClasses.has("aim-esc-resuming");
-  return { game, advance, pressEsc, clickResume, dispatch, gameResume, storage, menuVisible, hidden: () => htmlClasses.has("aim-esc-resuming"), get now() { return now; } };
+  return { game, advance, pressEsc, clickResume, dispatch, gameResume, storage, htmlAttrs, htmlStyle, window, menuVisible, hidden: () => htmlClasses.has("aim-esc-resuming"), get now() { return now; } };
 }
 
 let pass = 0, fail = 0;
@@ -335,6 +339,21 @@ const state = (g) => `phase=${g.phase} locked=${!!g.lockedEl} resumes=${g.resume
   // release while locked: the fake browser treats it as Esc again
   if (w.game.lockedEl) { w.game.escapeAt = w.now; w.game.lockedEl = null; w.dispatch("pointerlockchange", {}); if (w.game.phase === "running") { w.game.phase = "paused"; w.game.pauses++; } }
   check("16 model: lock taken while Esc is down -> freed by it -> menu back", w.game.phase === "paused" && w.game.pauses === 2, state(w.game));
+}
+
+// 17. Key chips (20 Nov 2026): <html> carries one attribute per shortcut that is on (the CSS shows Esc on Resume and the
+// Restart key on Play again), and the Restart key's label as --aim-restart-key; turning a shortcut off removes its chip.
+{
+  const w = makeWorld();
+  const M = w.window.__aimMenuShortcuts, K = M.keyLabel;
+  check("17a key labels", K("KeyT") === "T" && K("Digit5") === "5" && K("Numpad3") === "Num 3" && K("F5") === "F5" && K("ShiftLeft") === "Shift", [K("KeyT"), K("ShiftLeft")].join());
+  check("17b both chips on by default, restart label T", w.htmlAttrs.has("data-aim-esc-resume") && w.htmlAttrs.has("data-aim-restart-chip") && w.htmlStyle.get("--aim-restart-key") === '"T"', JSON.stringify([...w.htmlStyle]));
+  w.storage["aim-pause-esc-close-v1"] = "off"; w.storage["aim-eliminated-restart-v1"] = "off";
+  w.storage["al-keybinds-v1"] = JSON.stringify({ restart: ["KeyR", null] });
+  M.syncChips(); // the page watcher runs it on the next page change
+  check("17c off: no chips", !w.htmlAttrs.has("data-aim-esc-resume") && !w.htmlAttrs.has("data-aim-restart-chip") && !w.htmlStyle.has("--aim-restart-key"), JSON.stringify([...w.htmlAttrs]));
+  w.storage["aim-eliminated-restart-v1"] = "on"; M.syncChips();
+  check("17d a rebound Restart key shows its own label", w.htmlStyle.get("--aim-restart-key") === '"R"', JSON.stringify([...w.htmlStyle]));
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

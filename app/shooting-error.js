@@ -124,9 +124,12 @@
   }
 
   // Shown during rounds only (the round view is .al-aimlab-root), and reset for each round.
+  // ui-result (20 Nov 2026): not on the result screen either. The graph sits above every layer (top right), so it covered
+  // the top of the game's "N left" bots card there; and as Play again keeps the round view, leaving the result screen is
+  // what starts the next round's empty graph.
   let inRound = false;
   function sync() {
-    const round = !!document.querySelector(".al-aimlab-root");
+    const round = !!document.querySelector(".al-aimlab-root") && !document.querySelector(".al-result-overlay");
     if (round !== inRound) { inRound = round; shotCount = 0; nextSlot = 0; shownMode = ""; }
     const currentMode = round ? mode() : "off";
     if (currentMode !== "off" && !canvas) createCanvas();
