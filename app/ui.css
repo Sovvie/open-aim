@@ -273,3 +273,15 @@ html[data-aim-local][data-aim-esc-resume]:not(#es) body .al-pause-act.is-primary
   border: 1px solid rgba(255, 255, 255, 0.35);
 }
 html[data-aim-local][data-aim-esc-resume]:not(#es) body .al-pause-act.is-primary { position: relative !important; }
+
+/* ---------- ui-result review (20 Nov 2026): result card (screens without the Position map) ----------
+   The drill name is an uppercase condensed heading: at the base 1.5 line height a name that wraps to two lines took
+   ~100px. Short windows (768px and less) also get tighter padding, so the card, the stat strip and the buttons fit
+   without scrolling at 1280x720 and 1366x768 more often. */
+html[data-aim-local]:not(#es) body .al-result-overlay:not(:has(> .al-pm)) .al-result-head h2 { line-height: 1.12 !important; }
+@media (max-height: 800px) {
+  html[data-aim-local]:not(#es) body .al-result-overlay:not(:has(> .al-pm)) .al-result-head { padding-block: 18px !important; }
+  html[data-aim-local]:not(#es) body .al-result-overlay:not(:has(> .al-pm)) .al-run-hero { padding-block: 20px 18px !important; }
+  html[data-aim-local]:not(#es) body .al-result-overlay:not(:has(> .al-pm)) .al-run-strip > div { padding-block: 12px !important; }
+  html[data-aim-local]:not(#es) body .al-result-overlay:not(:has(> .al-pm)) .al-run-actions { padding-block: 12px !important; }
+}
