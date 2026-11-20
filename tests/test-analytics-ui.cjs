@@ -1482,10 +1482,14 @@ test("hit report: ONE list of the five zones, every row shown even at 0; no Hits
 });
 
 // ---- no-shot result screen: side placement and entrance (17 Nov 2026) ----
-// A fake matchMedia for the theme's result-board range (min-width 1180px, min-height 680px); flip() fires "change".
+// A fake matchMedia for the side-column ranges (20 Nov 2026: min-width 1280px, or 1360px with a bots card; min-height 680px);
+// both queries answer the same flag. flip() fires "change". asked = the queries the panel used.
 function fakeMq(wide) {
+  const asked = [];
   const mq = { matches: wide, listeners: [], addEventListener(t, f) { if (t === "change") this.listeners.push(f); }, flip(v) { this.matches = v; for (const f of this.listeners) f({ matches: v }); } };
-  return { mq, matchMedia: (q) => { assert.strictEqual(q, "(min-width: 1180px) and (min-height: 680px)"); return mq; } };
+  return { mq, asked, matchMedia: (q) => {
+    assert.ok(["(min-width: 1280px) and (min-height: 680px)", "(min-width: 1360px) and (min-height: 680px)"].includes(q), q);
+    asked.push(q); return mq; } };
 }
 // The Eliminated screen without the Position map: the game's "N left" card (.al-bots-card.is-side) on the right of the card.
 function noMapOverlay(document) {
@@ -1495,10 +1499,11 @@ function noMapOverlay(document) {
 }
 const hasClass = (el, c) => el.className.split(/\s+/).includes(c);
 test("no-shot screen, wide window: the hit panel floats in its own column LEFT of the result card (overlay child, side class + grid rule), never inside the card", async () => {
-  const { mq, matchMedia } = fakeMq(true);
+  const { mq, asked, matchMedia } = fakeMq(true);
   const { ui, document } = load({ analytics: stub({ rounds: [diedRound([])] }), win: { matchMedia } });
   const { overlay, body, bots } = noMapOverlay(document);
   ui.syncResult(); await settle();
+  assert.ok(asked.includes("(min-width: 1360px) and (min-height: 680px)"), "with a bots card the side column needs the wider range");
   const panel = overlay.querySelector(".aim-an-hit");
   assert.ok(panel && panel.parentElement === overlay, "a direct child of the overlay");
   assert.ok(hasClass(panel, "aim-an-hit-side"), "side placement class");
@@ -1508,7 +1513,8 @@ test("no-shot screen, wide window: the hit panel floats in its own column LEFT o
   const wide = css.slice(css.indexOf("@media (min-width: 1180px) and (min-height: 680px)"));
   assert.ok(/\.al-result-overlay:has\(> \.aim-an-hit-side\) > \.aim-an-hit-side \{ grid-column: 1; grid-row: 1; \}/.test(wide), "panel in the first (left) column");
   assert.ok(/\.al-result-overlay:has\(> \.aim-an-hit-side\) > \.al-result-modal \{ grid-column: 2;/.test(wide) && /> \.al-bots-card \{ grid-column: 3;/.test(wide), "card in the middle, bots card on the right");
-  assert.ok(/:has\(> \.aim-an-hit-side\) \{\s*grid-template-columns: minmax\(0, 1fr\) auto minmax\(0, 1fr\)/.test(wide), "equal outer columns: the result card stays centred, the report sits on its left and the bots card on its right");
+  assert.ok(/:has\(> \.aim-an-hit-side\) \{\s*--aim-an-side: 260px;\s*grid-template-columns: minmax\(var\(--aim-an-side\), 1fr\) minmax\(0, 880px\) minmax\(var\(--aim-an-side\), 1fr\)/.test(wide), "equal outer columns with a floor: the result card stays centred and shrinks first, the report sits on its left and the bots card on its right");
+  assert.ok(/:has\(> \.aim-an-hit-side\):has\(> \.al-bots-card\) \{ --aim-an-side: 300px; \}/.test(wide), "with the 300px bots card both outer columns are at least 300px, so it is never pushed off screen");
   assert.ok(/> \.al-result-modal \{ justify-self: center; \}/.test(wide) && /> \.aim-an-hit\.aim-an-hit-side \{[^}]*justify-self: end;/.test(wide), "card centred, report attached to its left edge");
   assert.ok(/> \.aim-an-hit\.aim-an-hit-side \{[^}]*max-height: 92vh;[^}]*overflow: hidden auto;/.test(wide), "never cut off: scrolls inside itself like the bots card");
   assert.ok(wide.indexOf("aim-an-hit-side") < wide.indexOf("\n}\n"), "the side rules only apply inside the wide media range");
