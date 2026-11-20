@@ -183,7 +183,7 @@ test("panel: opens with seven tabs, Esc-style close removes it", async () => {
   ui.open("heatmap"); await settle();
   const tabs = document.body.querySelector(".aim-an-tabs");
   assert.deepStrictEqual(tabs.children.map((b) => b.textContent), ["Session", "Drills", "Progress", "Compare", "Heatmap", "Tracking", "Coach"]);
-  assert.strictEqual(tabs.children[4].getAttribute("aria-pressed"), "true");
+  assert.strictEqual(tabs.children[4].getAttribute("aria-selected"), "true");
   ui.close();
   assert.strictEqual(document.body.querySelector(".aim-an-shade"), null);
 });

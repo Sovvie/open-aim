@@ -391,7 +391,7 @@ const richStub = () => stub({
 test("panel: the Session tab is the default, reads the rounds once, and the session chips switch the session without a new read", async () => {
   const A = richStub(), p = await openPanel(A, undefined);
   assert.ok(p.content().innerHTML.includes("data-session-tiles"), "session is the first view");
-  assert.strictEqual(p.host.querySelector(".aim-an-tabs").children[0].getAttribute("aria-pressed"), "true");
+  assert.strictEqual(p.host.querySelector(".aim-an-tabs").children[0].getAttribute("aria-selected"), "true");
   assert.strictEqual(A.calls.filter((c) => c[0] === "rounds").length, 1);
   p.click("[data-session]", { session: "0" }); await settle();
   assert.ok(p.content().innerHTML.includes("data-versus-empty"), "the first session has nothing before it");

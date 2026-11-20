@@ -172,7 +172,7 @@
   clip-path: var(--an-slant); font: 700 15px var(--an-head); font-stretch: 75%; letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer;
   transition: background-color 0.15s, color 0.15s; }
 .es-tool.aim-an-panel .aim-an-tabs button:hover { background: var(--an-raised); color: var(--an-text); }
-.es-tool.aim-an-panel .aim-an-tabs button[aria-pressed="true"] { background: var(--an-red); color: #fff; }
+.es-tool.aim-an-panel .aim-an-tabs button[aria-selected="true"] { background: var(--an-red); color: #fff; }
 .es-tool.aim-an-panel .aim-an-tabs button:focus-visible { clip-path: none; }
 /* range picker and heatmap layers: the game's chip buttons (.es-review-chips) */
 .aim-an-filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 12px; margin: 0 0 12px; }
@@ -559,7 +559,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
 /* tiles: six fit one row from about 800px of view width */
 .aim-an-track-tiles { grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); }
 /* the heatmap is never taller than the view, so its legend shows without scrolling */
-.aim-an-map { width: min(100%, 560px, calc(var(--an-view-h, 620px) - 200px)); min-width: min(100%, 260px); }
+.aim-an-map { width: min(100%, 560px, calc((var(--an-view-h, 620px) - 200px) / var(--an-aspect, 1))); min-width: min(100%, 220px); }
 /* bars (tracking by weapon and by day, the coach's visuals): label, bar and value stay together on wide screens */
 .es-tool.aim-an-panel .aim-an-content > .aim-an-bars { max-width: 640px; }
 /* drill detail: white title like the other titles, a progress bar that does not read as a divider, a run list as wide as the chart */
@@ -1413,7 +1413,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-tipm h3 { text-transform: non
       rects.push(`<rect class="aim-an-fight" ${geo} fill-opacity="${shade(n, fMax)}" ${label(k, n, "fight")} ${tip(k, "fights")}/>`);
     }
     const mapLabel = layer === "deaths" ? "Death heatmap" : layer === "fights" ? "Fight heatmap" : "Death and fight heatmap";
-    let svg;
+    let svg, aspect = 1; // height / width of the drawing: the plain grid is as tall as the cells need, and the view keeps it whole
     const z = zoom && num(zoom.k) && zoom.k > 1 ? zoom : null;
     const g = (inner) => `<g class="aim-an-zoom" transform="${z ? zoomTransform(z) : "translate(0 0) scale(1)"}">${inner}</g>`;
     if (useMini) {
@@ -1425,6 +1425,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-tipm h3 { text-transform: non
       const lines = [];
       for (let x = Math.ceil(x0 / 5) * 5; x <= x1; x += 5) lines.push(`<line class="aim-an-gridline" x1="${x}" y1="${z0}" x2="${x}" y2="${z1}"/>`);
       for (let z = Math.ceil(z0 / 5) * 5; z <= z1; z += 5) lines.push(`<line class="aim-an-gridline" x1="${x0}" y1="${z}" x2="${x1}" y2="${z}"/>`);
+      aspect = (z1 - z0) / Math.max(1, x1 - x0);
       svg = `<svg viewBox="${x0} ${z0} ${x1 - x0} ${z1 - z0}" role="img" aria-label="${mapLabel} on ${esc(f.map)} (plain grid)">${g(lines.join("") + rects.join(""))}</svg>`;
       notes.unshift("No map picture for this map: plain grid, 5 m lines, seen from above.");
     }
@@ -1432,7 +1433,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-tipm h3 { text-transform: non
       + (fKeys.length ? `<div class="aim-an-legend is-fight${outline ? " is-outline" : ""}"><span>1</span><i></i><span>${fMax} fights per 1 m cell · ${fights.total} in all${outline ? " (outlined)" : ""}</span></div>` : "");
     const lvl = clampBright(bright);
     const slider = useMini ? `<label class="aim-an-bright">Brighten map<input type="range" min="0" max="100" step="5" value="${lvl}" data-bright aria-label="Brighten map"><output>${lvl}%</output></label>` : "";
-    return filters + slider + `<div class="aim-an-map${useMini ? " has-pic" : ""}${z ? " is-zoomed" : ""}">${svg}</div>${legends}` + noteHtml();
+    return filters + slider + `<div class="aim-an-map${useMini ? " has-pic" : ""}${z ? " is-zoomed" : ""}"${aspect !== 1 ? ` style="--an-aspect:${aspect.toFixed(3)}"` : ""}>${svg}</div>${legends}` + noteHtml();
   }
 
   // The hover card's text for one cell (lines joined by "\n"). A value line is "<Name> <count>\t<share>": the hover card draws it
@@ -2682,7 +2683,8 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-tipm h3 { text-transform: non
   let inlinePanel = null; // the panel mounted in the page
   function close() { if (tipBox && tipBox.p === panel) closeTip(false); if (panel) { panel.alive = false; try { panel.shade.remove(); } catch {} } panel = null; }
   const VIEWS = [["session", "Session"], ["drills", "Drills"], ["progress", "Progress"], ["compare", "Compare"], ["heatmap", "Heatmap"], ["tracking", "Tracking"], ["coach", "Coach"]];
-  const DEFAULT_VIEW = "session";
+  const DEFAULT_VIEW = "session", VIEW_KEY = "aim-an-stats-view-v1";
+  const savedView = () => { try { const v = localStorage.getItem(VIEW_KEY); return VIEWS.some((x) => x[0] === v) ? v : null; } catch { return null; } };
   const closestOf = (target, sel) => (target && target.closest ? target.closest(sel) : null);
   function buildStats(inline) {
     const box = document.createElement("section");
@@ -2713,9 +2715,20 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-tipm h3 { text-transform: non
     for (const [id, label] of VIEWS) {
       const b = document.createElement("button");
       b.type = "button"; b.dataset.view = id; b.textContent = label;
+      b.setAttribute("role", "tab");
       b.addEventListener("click", () => show(id, p));
       tabs.appendChild(b);
     }
+    // the view tabs like the other tab rows of the game (role tab, aria-selected): Left / Right / Home / End move between them and open the view
+    tabs.addEventListener("keydown", (event) => {
+      const list = [...tabs.children], at = list.findIndex((b) => b.dataset.view === p.tab);
+      const to = { ArrowLeft: at - 1, ArrowRight: at + 1, Home: 0, End: list.length - 1 }[event.key];
+      if (to === undefined || at < 0) return;
+      if (event.preventDefault) event.preventDefault();
+      const b = list[(to + list.length) % list.length];
+      show(b.dataset.view, p);
+      try { b.focus(); } catch {}
+    });
     content.addEventListener("click", (event) => {
       const b = closestOf(event.target, "[data-range]");
       if (b) { p.range = RANGES.includes(+b.dataset.range) ? +b.dataset.range : DEFAULT_RANGE; renderProgress(p); return; }
@@ -3109,7 +3122,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-tipm h3 { text-transform: non
     const p = buildStats(true);
     host.appendChild(p.root);
     inlinePanel = p;
-    show(VIEWS.some((v) => v[0] === view) ? view : DEFAULT_VIEW, p);
+    show(VIEWS.some((v) => v[0] === view) ? view : savedView() || DEFAULT_VIEW, p);
     return p;
   }
   // Drops the inline panel's cached reads and redraws its tab (new rounds may have been played since).
@@ -3146,7 +3159,8 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-tipm h3 { text-transform: non
     p.tab = view;
     hideTip(p);
     if (tipBox && tipBox.p === p) closeTip(false);
-    for (const b of p.tabs.children) b.setAttribute("aria-pressed", String(b.dataset.view === view));
+    for (const b of p.tabs.children) { b.setAttribute("aria-selected", String(b.dataset.view === view)); b.setAttribute("tabindex", b.dataset.view === view ? "0" : "-1"); }
+    if (p.inline) { try { localStorage.setItem(VIEW_KEY, view); } catch {} } // the Training history page opens on the tab you left it on
     p.content.innerHTML = `<p class="aim-an-msg">Loading…</p>`;
     if (view === "session") renderSession(p); else if (view === "drills") renderDrills(p); else if (view === "compare") renderCompare(p); else if (view === "heatmap") renderHeatmap(p); else if (view === "progress") renderProgress(p); else if (view === "tracking") renderTracking(p); else renderCoach(p);
   }
