@@ -1062,7 +1062,7 @@ html[data-aim-local]:not(#es) body .es-discord-dock .es-discord-toggle:focus-vis
 html[data-aim-local]:not(#es) body input[type="file"].hall-scene-import-file { visibility: hidden !important; }
 
 /* ui-motion: scrollbars. One thin dark scrollbar everywhere (some areas were thin, the rest full width with arrows). */
-:where(html[data-aim-local] body *) { scrollbar-width: thin; } /* zero specificity: rules that hide a scrollbar still win */
+:where(html[data-aim-local], html[data-aim-local] body *) { scrollbar-width: thin; } /* zero specificity: rules that hide a scrollbar still win */
 
 /* ui-motion: cursors. Sliders, dropdowns and switch boxes showed the arrow; disabled controls never show the hand. */
 :where(html[data-aim-local] body) :where(input[type="range"], input[type="checkbox"], input[type="radio"], input[type="color"], select, summary, label:has(> input[type="checkbox"], > input[type="radio"])):where(:not(:disabled)) { cursor: pointer; }
