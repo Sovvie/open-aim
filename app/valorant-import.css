@@ -37,10 +37,15 @@ html[data-aim-local]:not(#es) body .valorant-import li { display: list-item !imp
 .valorant-import button:disabled { opacity: 0.45; cursor: not-allowed; }
 .valorant-import-hide { display: flex; gap: 8px; align-items: center; margin: 16px 0 0; font-size: 13px; color: var(--es-muted); cursor: pointer; }
 .valorant-import-hide input { accent-color: var(--es-red); }
-/* "Import VALORANT settings" next to the Settings search */
+/* "Import from VALORANT" under the Settings search: one line, never wider than the rail */
 html[data-aim-local]:not(#es) body .valorant-import-button {
   flex-shrink: 0;
-  padding: 0 16px !important;
+  min-height: 34px;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding: 0 14px !important;
   color: var(--es-text) !important;
   background: var(--es-raised) !important;
   border: 1px solid var(--es-line) !important;

@@ -3823,12 +3823,16 @@ html.es-on-settings[data-aim-local]:not(#es) body .es-discord-dock { display: no
 html[data-aim-local]:not(#es) body .kb-head p > :is(span, b, kbd) + :is(span, b, kbd) { margin-left: 0.3em; }
 /* Hints were cut to one line with "..." whenever the window is narrower than the text (1280 px cut
    "Default 1: the crosshair moves as fast as when unscoped"); now up to two lines. */
-html[data-aim-local]:not(#es) body :is(.hall-root, .hall-portal) .st-rows .st-brief .hall-field-text small {
+html[data-aim-local]:not(#es) body :is(.hall-root, .hall-portal) .st-rows .st-brief :is(.hall-field-text small, .al-number-field .al-number-hint) {
   display: -webkit-box !important;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   white-space: normal !important;
 }
+/* Short windows (1024 x 640, more so with the desktop app's Import button under the search): the category
+   cards were squeezed below their content and ran into the "Changes save automatically" note. They keep their
+   height now and the rail (already overflow: auto) scrolls instead. */
+html[data-aim-local]:not(#es) body .st-view .st-tabbar > .st-tabs { flex-shrink: 0 !important; }
 /* Crosshair tab on short windows: the pinned lab took a third of a 720 px window; keep more room for the settings. */
 @media (max-height: 760px) {
   html[data-aim-local]:not(#es) body .st-view[data-tab="crosshair"] .st-monitor { height: 140px !important; }

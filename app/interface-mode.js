@@ -47,6 +47,7 @@
     const row = document.createElement("div");
     row.className = "hall-field hall-choice es-ui-mode";
     row.dataset.setting = "esUiMode";
+    row.dataset.focus = "esUiMode"; // the settings search's entry for this row (tools/patch-settings-wording.cjs)
     for (const a of scoped) row.setAttribute(a, "");
     row.innerHTML =
       '<span class="hall-field-text"><span class="hall-field-head"><b>Interface</b>' +

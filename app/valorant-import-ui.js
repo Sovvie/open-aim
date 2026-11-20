@@ -162,7 +162,9 @@
     for (const settings of document.querySelectorAll(".sd-searchrow, .st-searchrow")) {
       if (settings.querySelector(".valorant-import-button")) continue;
       const button = document.createElement("button"); button.type = "button"; button.className = "hall-dialog-btn valorant-import-button";
-      button.textContent = "Import VALORANT settings"; button.onclick = open; settings.appendChild(button);
+      // Short label so it stays on one line in the narrow settings rail (it wrapped to two and pushed the categories down).
+      button.textContent = "Import from VALORANT"; button.title = "Import your sensitivity, crosshair, key binds and display settings from VALORANT's own files";
+      button.onclick = open; settings.appendChild(button);
     }
     // Not over the startup screen, a drill's loading screen or a round.
     if (!startupDone && document.querySelector(".hall-root") &&
