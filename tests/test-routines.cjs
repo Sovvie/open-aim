@@ -195,8 +195,8 @@ test("draft: + Routine adds a step (starting a draft when there is none), keeps 
   assert.ok(store.get("aim-rt-draft-v1"));
   R.saveDraft(null); assert.strictEqual(R.draft(), null); assert.strictEqual(store.has("aim-rt-draft-v1"), false);
   store.set("aim-rt-draft-v1", "{oops"); assert.strictEqual(R.draft(), null);
-  for (let i = 0; i < 25; i++) R.addToDraft(A);
-  assert.strictEqual(R.draft().steps.length, 20, "at most 20 steps");
+  for (let i = 0; i < 35; i++) R.addToDraft(A);
+  assert.strictEqual(R.draft().steps.length, 30, "at most 30 steps");
 });
 test("picker: bookmarked (the game's bookmarks), recently played and all drills; a search looks through every drill", () => {
   const { R, store } = boot();
@@ -229,7 +229,11 @@ test("picker: the gallery shows a card per drill with the map picture, kind, med
   assert.ok(panel.includes("data-rt-pick") && panel.includes('data-rt-q') && panel.includes('data-rt="picker-close"') && panel.includes("Done (2)"));
   assert.ok(panel.includes('data-tab="bookmarked"') && panel.includes('aria-selected="true" class="is-on" data-rt="picker-tab" data-tab="bookmarked"') && panel.includes("<small>1</small>"), "the tabs with their counts");
   const searching = R.ui.pickerHtml(BOOK, runs, { ...p, tab: "bookmarked", query: "bind" }, draft);
-  assert.ok(searching.includes("Results for") && !searching.includes('class="is-on"'), "while searching no list is selected");
+  assert.ok(/match(es)? “bind” in all drills/.test(searching) && !searching.includes('class="is-on"'), "while searching no list is selected; the note says how many drills match");
+  // a full routine: the cards cannot be pressed and the note says why
+  const fullDraft = { id: null, name: "", steps: Array.from({ length: 30 }, () => ({ code: A, name: "", type: "ball", runs: 1, minScore: "", minMedal: "" })) };
+  const fullPanel = R.ui.pickerHtml(BOOK, runs, { ...p, tab: "all" }, fullDraft);
+  assert.ok(fullPanel.includes("The routine is full") && /data-rt="add" data-code="[a-z]+" title="The routine is full \(30 drills\)" disabled/.test(fullPanel), "a full routine disables the cards");
 });
 test("page: with no draft the right side explains how to build one; with a draft it is the editor (name, search, a row per step, Save)", () => {
   const { R } = boot();
@@ -243,7 +247,7 @@ test("page: with no draft the right side explains how to build one; with a draft
   assert.ok(open.includes("data-rt-pick") && open.includes('value="asc"') && open.includes("es-rt-gcard"), "the picker drops open with the gallery");
   assert.strictEqual(ed.split("data-step=").length - 1, 2);
   assert.ok(ed.includes("Ascent A Main attack"), "a step with no stored name shows the drill's name from the book");
-  assert.ok(ed.includes('data-rt="up" data-i="0" aria-label="Move up" disabled') && ed.includes('data-rt="save"') && ed.includes('data-rt="discard"'));
+  assert.ok(ed.includes('data-rt="up" data-i="0" aria-label="Move up" title="Move up" disabled') &&ed.includes('data-rt="save"') && ed.includes('data-rt="discard"'));
   assert.ok(ed.includes('value="silver" selected') && ed.includes('value="70"'));
   assert.ok(R.ui.pageHtml(view({ draft, error: "Give the routine a name" })).includes('role="alert"'));
   assert.ok(R.ui.pageHtml(view({ draft: { id: "rt-1", name: "x", steps: [] } })).includes("Edit routine"));

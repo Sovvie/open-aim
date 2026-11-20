@@ -35,7 +35,7 @@
   const WINDOW = 20;           // the newest runs the thresholds are taken from
   const KEEP_RUNS = 40;        // runs kept per drill
   const SILVER_Q = 0.8;        // silver = this quantile of your recent runs (bronze = the median, gold = the best)
-  const MAX_ROUTINES = 30, MAX_STEPS = 20, MAX_RUNS_PER_STEP = 99, MAX_DONE = 30, MAX_LOG = 200;
+  const MAX_ROUTINES = 30, MAX_STEPS = 30, MAX_RUNS_PER_STEP = 99, MAX_DONE = 30, MAX_LOG = 200;
   const SETTLE_MS = 1500;      // the result screen counts its score up; it is read this long after the screen was first seen
   const LOWER_UNITS = /^(s|sec|secs|second|seconds|ms|min|mins)$/i; // a score in time: less is better
   const CODE_RE = /^[a-z0-9-]{1,64}$/i;
@@ -484,6 +484,7 @@ html[data-aim-local]:not(#es) body .aim-rt-btn:hover { background: var(--es-red-
   api.draft = loadDraft; api.saveDraft = saveDraft; api.addToDraft = addToDraft;
 
   const MEDAL_ORDER = MEDALS;
+  const LINES_FOLDED = 8; // a saved routine longer than this (plus 2) lists its first drills and a "Show all" button
   const fmtNum = (v) => (num(v) ? String(+(+v).toFixed(2)) : "–");
   const label = (code, entry, book) => (entry && entry.name) || (book && book.get(code) && book.get(code).name) || String(code).slice(0, 7);
   const kindOf = (d) => (d && d.map ? d.map : d && d.type === "ball" ? "Target Workshop" : "Training");
@@ -526,7 +527,7 @@ html[data-aim-local]:not(#es) body .aim-rt-btn:hover { background: var(--es-red-
     for (const sp of doc.spawners || []) {
       const a = actors.get(sp.actorTemplateId), r = radiusOf(a), pos = sp.position || {}, size = sp.size || {};
       const path = a && (a.behaviors || []).find((b) => b.kind === "path" && Array.isArray(b.waypoints) && b.waypoints.length);
-      const strafe = a && (a.behaviors || []).find((b) => b.kind === "strafe");
+      const strafe = a && (a.behaviors || []).find((b) => b.kind === "strafe" || b.kind === "sway"); // side-to-side movers get the arrow
       if (path) {
         const pts = path.waypoints.map(at).filter(Boolean);
         if (pts.length > 1) out.lines.push(pts.map((p) => [p.x, p.y]));
@@ -568,6 +569,9 @@ html[data-aim-local]:not(#es) body .aim-rt-btn:hover { background: var(--es-red-
     const sh = Math.max(h, w * 9 / 16), sw = sh * 16 / 9, m = thumbModel(doc, sw, sh);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.fillStyle = dark ? "#0c0f14" : "#e9ecf0"; ctx.fillRect(0, 0, w, h);
+    // the crosshair first: a target straight ahead (many drills start with one there) is drawn over it, not hidden by it
+    const arm = Math.max(3, Math.min(6, w / 18)); // a small thumbnail gets a small crosshair
+    ctx.strokeStyle = dark ? "#fff" : "#111"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(w / 2 - arm, h / 2); ctx.lineTo(w / 2 + arm, h / 2); ctx.moveTo(w / 2, h / 2 - arm); ctx.lineTo(w / 2, h / 2 + arm); ctx.stroke();
     ctx.save(); ctx.translate(-(sw - w) / 2, -(sh - h) / 2);
     const ink = dark ? "#8b94a3" : "#6b7280";
     ctx.lineWidth = 1.2; ctx.strokeStyle = ink; ctx.setLineDash([3, 3]);
@@ -576,9 +580,8 @@ html[data-aim-local]:not(#es) body .aim-rt-btn:hover { background: var(--es-red-
     ctx.setLineDash([]); ctx.lineWidth = 1.6;
     for (const a of m.arrows) { ctx.beginPath(); ctx.moveTo(a.x - a.len, a.y); ctx.lineTo(a.x + a.len, a.y); ctx.stroke(); }
     ctx.fillStyle = "#ff4655";
-    for (const b of m.balls) if (b.live) { ctx.beginPath(); ctx.arc(b.x, b.y, Math.max(2.5, b.r), 0, 7); ctx.fill(); }
+    for (const b of m.balls) if (b.live) { ctx.beginPath(); ctx.arc(b.x, b.y, Math.max(3, b.r), 0, 7); ctx.fill(); }
     ctx.restore();
-    ctx.strokeStyle = dark ? "#fff" : "#111"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(w / 2 - 6, h / 2); ctx.lineTo(w / 2 + 6, h / 2); ctx.moveTo(w / 2, h / 2 - 6); ctx.lineTo(w / 2, h / 2 + 6); ctx.stroke();
     return true;
   }
   // Paints every unpainted thumbnail canvas inside root (the gallery cards of Target Workshop drills).
@@ -596,7 +599,7 @@ html[data-aim-local]:not(#es) body .aim-rt-btn:hover { background: var(--es-red-
   // from the analytics rounds and the runs kept here) and ALL drills. A search looks through ALL of them whichever list is showing.
   const FAV_KEY = "aim-offline-favorites-v1";
   const readFavs = () => { try { const v = JSON.parse(localStorage.getItem(FAV_KEY)); return (Array.isArray(v) ? v : []).map((x) => String(x).replace(/^ws-/, "")).filter((c) => /^[a-f0-9]{16}$/.test(c)); } catch { return []; } };
-  const PICK_ALL_MAX = 150, PICK_SEARCH_MAX = 60;
+  const PICK_ALL_MAX = 600, PICK_SEARCH_MAX = 600; // every drill (the tab's count is the whole library); images load lazily
   // The drills of the picker as [code, drill][] for a list ("bookmarked" | "recent" | "all") and a search (every word in the name, the map or the kind).
   function pickerList(book, tab, query, favs, recents) {
     const q = String(query || "").toLowerCase().split(/\s+/).filter(Boolean);
@@ -616,9 +619,9 @@ html[data-aim-local]:not(#es) body .aim-rt-btn:hover { background: var(--es-red-
   }
   const MAP_ART = (map) => (map && /^[a-z0-9_-]{1,40}$/i.test(map) ? "/aim-maps/" + map + ".cover.webp" : "");
   // One gallery card: art (the map's picture, or a plain tile for map-less Target Workshop drills), name, kind, medal and how often it is in the routine.
-  function galleryCardHtml(code, d, entry, inCount) {
+  function galleryCardHtml(code, d, entry, inCount, full) {
     const art = MAP_ART(d.map), chip = entry && entry.bestMedal ? '<span class="es-rt-gmedal is-' + entry.bestMedal + '">' + medalIcon(entry.bestMedal) + MEDAL_LABEL[entry.bestMedal] + "</span>" : "";
-    return '<button type="button" class="es-rt-gcard' + (inCount ? " is-in" : "") + '" data-rt="add" data-code="' + esc(code) + '" title="Add ' + esc(d.name) + '">'
+    return '<button type="button" class="es-rt-gcard' + (inCount ? " is-in" : "") + '" data-rt="add" data-code="' + esc(code) + '" title="' + (full ? "The routine is full (" + MAX_STEPS + " drills)" : "Add " + esc(d.name)) + '"' + (full ? " disabled" : "") + ">"
       + '<span class="es-rt-gart' + (art || d.type === "ball" ? "" : " is-plain") + '">' + (art ? '<img src="' + esc(art) + '" alt="" loading="lazy" decoding="async">' : d.type === "ball" ? '<canvas class="es-rt-gcanvas" data-thumb="' + esc(code) + '"></canvas>' : "<em>Drill</em>") + chip
       + (inCount ? '<span class="es-rt-gin">✓ ' + (inCount > 1 ? "×" + inCount : "Added") + "</span>" : '<span class="es-rt-gadd">+ Add</span>') + "</span>"
       + "<b>" + esc(d.name || String(code).slice(0, 7)) + "</b><small>" + esc(kindOf(d)) + "</small></button>";
@@ -631,16 +634,25 @@ html[data-aim-local]:not(#es) body .aim-rt-btn:hover { background: var(--es-red-
       const q = String(p.query || "").trim();
       return '<p class="es-rt-empty">' + (q ? "No drill matches that." : p.tab === "bookmarked" ? "No bookmarks yet. Press the bookmark on any drill card in the lobby and it shows up here." : p.tab === "recent" ? "Nothing played yet. Finish a drill and it shows up here." : "No drills found.") + "</p>";
     }
-    return list.map(([code, d]) => galleryCardHtml(code, d, (runs || {})[code], counts[code] || 0)).join("");
+    const full = ((draft && draft.steps) || []).length >= MAX_STEPS;
+    return list.map(([code, d]) => galleryCardHtml(code, d, (runs || {})[code], counts[code] || 0, full)).join("");
+  }
+  // The line over the gallery: how many drills a search found, or that the routine is full.
+  function pickNoteHtml(book, p, draft) {
+    const q = String(p.query || "").trim(), n = (draft && draft.steps.length) || 0;
+    if (n >= MAX_STEPS) return "The routine is full: a routine holds up to " + MAX_STEPS + " drills. Remove one to add another.";
+    if (!q) return "";
+    const found = pickerList(book, p.tab, q, p.favs, p.recents).length;
+    return (found === 1 ? "1 drill matches" : found + " drills match") + " “" + esc(q) + "” in all drills";
   }
   function pickerHtml(book, runs, p, draft) {
     const n = (draft && draft.steps.length) || 0, q = String(p.query || "").trim();
     const count = (id) => (id === "bookmarked" ? pickerList(book, "bookmarked", "", p.favs, p.recents).length : id === "recent" ? pickerList(book, "recent", "", p.favs, p.recents).length : book.size);
-    return '<div class="es-rt-pick" data-rt-pick role="dialog" aria-label="Add a drill"><div class="es-rt-pick-bar">'
-      + '<input type="search" data-rt-q placeholder="Search every drill by name or map…" value="' + esc(p.query || "") + '" autocomplete="off">'
+    return '<div class="es-rt-pick' + (p.anim ? " is-enter" : "") + '" data-rt-pick role="dialog" aria-label="Add a drill"><div class="es-rt-pick-bar">'
+      + '<input type="search" data-rt-q placeholder="Search every drill by name or map…" aria-label="Search drills" title="Type to search · ↓ to the cards · Esc closes" value="' + esc(p.query || "") + '" autocomplete="off">'
       + '<div class="es-rt-chips" role="tablist">' + PICK_TABS.map(([id, t]) => '<button type="button" role="tab" aria-selected="' + (!q && p.tab === id) + '" class="' + (!q && p.tab === id ? "is-on" : "") + '" data-rt="picker-tab" data-tab="' + id + '">' + t + " <small>" + count(id) + "</small></button>").join("") + "</div>"
       + '<button type="button" class="es-rt-primary" data-rt="picker-close">Done' + (n ? " (" + n + ")" : "") + "</button></div>"
-      + (q ? '<p class="es-rt-note">Results for “' + esc(q) + "” in all drills</p>" : "")
+      + '<p class="es-rt-note es-rt-picknote" data-rt-picknote aria-live="polite">' + pickNoteHtml(book, p, draft) + "</p>"
       + '<div class="es-rt-gal" data-rt-gal>' + galleryHtml(book, runs, p, draft) + "</div></div>";
   }
   // ---- the enemy rank of a step: the lobby card's own control (big badge, two arrows, pips, name) over the thumbnail ----
@@ -691,30 +703,34 @@ html[data-aim-local]:not(#es) body .aim-rt-btn:hover { background: var(--es-red-
     p = p || { open: false, tab: "bookmarked", query: "", favs: [], recents: [] };
     const steps = draft.steps.map((st, i) => '<li class="es-rt-step" data-step="' + i + '"><span class="es-rt-n">' + (i + 1) + '</span><span class="es-rt-sthumb">' + artHtml(st.code, book && book.get(st.code) || { type: st.type }) + rankHeroHtml(st, i, rankInfo.cards[st.code], rankInfo.ranks) + "</span>"
       + stepInfoHtml(st, book, runs) + stepControlsHtml(st, i)
-      + '<span class="es-rt-mv"><button type="button" data-rt="up" data-i="' + i + '" aria-label="Move up"' + (i === 0 ? " disabled" : "") + '>↑</button><button type="button" data-rt="down" data-i="' + i + '" aria-label="Move down"' + (i === draft.steps.length - 1 ? " disabled" : "") + '>↓</button><button type="button" data-rt="remove-step" data-i="' + i + '" aria-label="Remove">✕</button></span></li>').join("");
-    return '<section class="es-rt-editor" data-rt-editor><h2>' + (draft.id ? "Edit routine" : "New routine") + "</h2>"
+      + '<span class="es-rt-mv"><button type="button" data-rt="up" data-i="' + i + '" aria-label="Move up" title="Move up"' + (i === 0 ? " disabled" : "") + '>↑</button><button type="button" data-rt="down" data-i="' + i + '" aria-label="Move down" title="Move down"' + (i === draft.steps.length - 1 ? " disabled" : "") + '>↓</button><button type="button" class="es-rt-x" data-rt="remove-step" data-i="' + i + '" aria-label="Remove" title="Remove this drill from the routine">✕</button></span></li>').join("");
+    const n = draft.steps.length, full = n >= MAX_STEPS;
+    return '<section class="es-rt-editor" data-rt-editor><h2>' + (draft.id ? "Edit routine" : "New routine") + (n ? ' <small class="es-rt-count">' + n + (n === 1 ? " drill" : " drills") + (full ? " · full" : "") + "</small>" : "") + "</h2>"
       + (error ? '<p class="es-rt-err" role="alert">' + esc(error) + "</p>" : "")
       + '<label class="es-rt-name">Name<input type="text" maxlength="60" data-rt-field="name" value="' + esc(draft.name) + '" placeholder="Morning warm-up"></label>'
-      + '<div class="es-rt-find"><button type="button" class="es-rt-primary es-rt-pickbtn" data-rt="picker-open" aria-expanded="' + !!p.open + '">Add a drill ▾</button>' + (p.open ? pickerHtml(book, runs, p, draft) : "") + "</div>"
-      + (draft.steps.length ? '<ol class="es-rt-steps">' + steps + "</ol>" : '<p class="es-rt-empty">No drills yet. Press <b>Add a drill</b>, or the <b>+</b> on any drill card in the lobby.</p>')
+      + '<div class="es-rt-find"><button type="button" class="' + (n ? "" : "es-rt-primary ") + 'es-rt-pickbtn" data-rt="picker-open" aria-expanded="' + !!p.open + '" aria-haspopup="dialog">' + (p.open ? "Close the gallery ▴" : "+ Add a drill ▾") + "</button>" + (p.open ? pickerHtml(book, runs, p, draft) : "") + "</div>"
+      + (n ? '<ol class="es-rt-steps">' + steps + "</ol>" : '<p class="es-rt-empty es-rt-empty-box">No drills yet. Press <b>Add a drill</b>, or the <b>+</b> on any drill card in the lobby.</p>')
       + '<p class="es-rt-note">A run counts for a step when it is that drill, you did not die, and it reaches the minimum score and medal if you set one. When the runs are done the next drill starts.</p>'
-      + '<div class="es-rt-row"><button type="button" class="es-rt-primary" data-rt="save">Save routine</button><button type="button" data-rt="discard">Discard</button></div></section>';
+      + '<div class="es-rt-row es-rt-savebar"><button type="button" class="' + (n ? "es-rt-primary" : "") + '" data-rt="save">Save routine</button><button type="button" data-rt="discard">' + (draft.id ? "Cancel" : "Discard") + "</button></div></section>";
   }
   function routinesTabHtml(v) {
     const st = v.state, act = st.active && st.routines.find((r) => r.id === st.active.routineId), parts = [], unitOf = (c) => (v.runs && v.runs[c]) || null;
     if (act) {
       const step = act.steps[st.active.step], total = act.steps.length, pct = Math.round(((st.active.step + st.active.counted / (step.runs || 1)) / total) * 100);
       parts.push('<section class="es-rt-card is-active" data-rt-active><h3>Active: ' + esc(act.name) + '</h3><div class="es-rt-now"><span class="es-rt-sthumb is-sm">' + artHtml(step.code, v.book && v.book.get(step.code) || { type: step.type }) + '</span><p>Step ' + (st.active.step + 1) + " of " + total + ": <b>" + esc(label(step.code, { name: step.name }, v.book)) + "</b> (" + esc(stepText(step, unitOf(step.code))) + "), done " + st.active.counted + " of " + step.runs + " " + rankChip(step.rank) + "</p></div>"
-        + '<span class="es-rt-bar"><i style="width:' + pct + '%"></i></span><div class="es-rt-row"><button type="button" class="es-rt-primary" data-rt="play" data-code="' + esc(step.code) + '" data-type="' + esc(step.type || "") + '" data-rank="' + esc(step.rank || "") + '">Play this step</button><button type="button" data-rt="stop">Stop routine</button></div></section>');
+        + '<span class="es-rt-bar" role="progressbar" aria-label="Routine progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '"><i style="width:' + pct + '%"></i></span><div class="es-rt-row"><button type="button" class="es-rt-primary" data-rt="play" data-code="' + esc(step.code) + '" data-type="' + esc(step.type || "") + '" data-rank="' + esc(step.rank || "") + '">Play this step</button><button type="button" data-rt="stop">Stop routine</button></div></section>');
     }
     const cards = st.routines.map((r) => {
-      const isAct = act && act.id === r.id, at = isAct ? st.active.step : -1;
-      return '<section class="es-rt-card' + (isAct ? " is-active" : "") + '" data-routine="' + esc(r.id) + '"><h3>' + esc(r.name) + "</h3><ol class=\"es-rt-lines\">"
-        + r.steps.map((step, i) => '<li class="' + (i < at ? "is-done" : i === at ? "is-now" : "") + '"><span class="es-rt-sthumb is-sm">' + artHtml(step.code, v.book && v.book.get(step.code) || { type: step.type }) + '</span><span class="es-rt-line"><b>' + esc(label(step.code, { name: step.name }, v.book)) + "</b> " + rankChip(step.rank) + "<small>" + esc(stepText(step, unitOf(step.code))) + "</small></span></li>").join("") + "</ol>"
-        + '<div class="es-rt-row"><button type="button" class="es-rt-primary" data-rt="start" data-id="' + esc(r.id) + '">' + (isAct ? "Restart" : "Start") + '</button><button type="button" data-rt="edit" data-id="' + esc(r.id) + '">Edit</button>'
-        + '<button type="button" data-rt="delete" data-id="' + esc(r.id) + '">' + (v.delId === r.id ? "Click again to delete" : "Delete") + "</button></div></section>";
+      const isAct = act && act.id === r.id, at = isAct ? st.active.step : -1, total = r.steps.length;
+      const fold = !isAct && total > LINES_FOLDED + 2 && !(v.expanded && v.expanded.has(r.id)), shown = fold ? r.steps.slice(0, LINES_FOLDED) : r.steps;
+      return '<section class="es-rt-card' + (isAct ? " is-active" : "") + (v.flashId === r.id ? " is-flash" : "") + '" data-routine="' + esc(r.id) + '"><h3>' + esc(r.name) + ' <small class="es-rt-count">' + total + (total === 1 ? " drill" : " drills") + "</small></h3><ol class=\"es-rt-lines\">"
+        + shown.map((step, i) => '<li class="' + (i < at ? "is-done" : i === at ? "is-now" : "") + '"><span class="es-rt-sthumb is-sm">' + artHtml(step.code, v.book && v.book.get(step.code) || { type: step.type }) + '</span><span class="es-rt-line"><b>' + esc(label(step.code, { name: step.name }, v.book)) + "</b> " + rankChip(step.rank) + "<small>" + esc(stepText(step, unitOf(step.code))) + "</small></span></li>").join("") + "</ol>"
+        + (fold ? '<button type="button" class="es-rt-more" data-rt="expand" data-id="' + esc(r.id) + '" aria-expanded="false">Show all ' + total + " drills (" + (total - LINES_FOLDED) + " more)</button>" : "")
+        + '<div class="es-rt-row"><button type="button" class="es-rt-primary" data-rt="start" data-id="' + esc(r.id) + '"' + (isAct ? ' title="Start this routine again from its first drill"' : "") + ">" + (isAct ? "Restart" : "Start") + '</button><button type="button" data-rt="edit" data-id="' + esc(r.id) + '">Edit</button>'
+        + '<button type="button"' + (v.delId === r.id ? ' class="is-armed"' : "") + ' data-rt="delete" data-id="' + esc(r.id) + '">' + (v.delId === r.id ? "Click again to delete" : "Delete") + "</button></div></section>";
     }).join("");
-    const left = parts.join("") + (cards || (v.draft ? "" : '<p class="es-rt-empty">No routines yet.</p>'))
+    const notice = v.notice ? '<div class="es-rt-notice' + (v.notice.bad ? " is-bad" : "") + '" role="status"><span>' + esc(v.notice.text) + "</span>" + (v.notice.undo ? '<button type="button" data-rt="undo">Undo</button>' : "") + "</div>" : "";
+    const left = notice + parts.join("") + (cards || (v.draft ? "" : '<section class="es-rt-card es-rt-none"><h3>No routines yet</h3><p>Your saved routines show up here, with a <b>Start</b> button.</p></section>'))
       + (st.done.length ? "<h3>Completed</h3><ul class=\"es-rt-done\">" + st.done.slice(-6).reverse().map((d) => "<li>" + esc(d.name) + "<small>" + esc(new Date(d.at).toLocaleDateString()) + "</small></li>").join("") + "</ul>" : "");
     const right = v.draft ? editorHtml(v.draft, v.book, v.runs, v.picker, v.error)
       : '<section class="es-rt-intro"><h2>Build a routine</h2><p>A routine plays drills one after another and moves on by itself.</p><ol><li>Add drills: pick them from your bookmarks, recently played or the gallery, or press <b>+</b> on any drill card in the lobby.</li><li>Say how many runs each needs, or a score or medal to reach.</li><li>Press <b>Start</b>. After each run you get a <b>Next drill</b> button.</li></ol><div class="es-rt-row"><button type="button" class="es-rt-primary" data-rt="new">New routine</button></div></section>';
@@ -724,28 +740,33 @@ html[data-aim-local]:not(#es) body .aim-rt-btn:hover { background: var(--es-red-
     const runs = v.runs || {}, book = v.book;
     const codes = Object.keys(runs).filter((c) => runs[c] && Array.isArray(runs[c].runs) && runs[c].runs.length).sort((a, b) => runs[b].runs[runs[b].runs.length - 1].at - runs[a].runs[runs[a].runs.length - 1].at);
     const intro = '<p class="es-rt-note">Medals compare each run with your own recent runs of the same drill: <b>bronze</b> is your typical run, <b>silver</b> a good one, <b>gold</b> at least your best of the last ' + WINDOW + ". They start after " + MIN_RUNS + " runs of a drill. Set your own numbers with Edit.</p>";
-    if (!codes.length) return intro + '<p class="es-rt-empty">No runs recorded yet. Finish a drill and its medals show up here.</p>';
+    if (!codes.length) return intro + '<section class="es-rt-card es-rt-none"><h3>No medals yet</h3><p class="es-rt-empty">No runs recorded yet. Finish a drill and its medals show up here.</p></section>';
     const rows = codes.map((code) => {
       const e = runs[code], th = thresholds(e), unit = e.unit ? " " + esc(e.unit) : "", ok = e.runs.filter((r) => !r.died), next = th && ok.length ? nextMedal(ok[ok.length - 1].score, th, e.lower) : null;
       const ths = th ? MEDAL_ORDER.map((m) => '<span class="es-rt-medal is-' + m + '">' + medalIcon(m) + fmtNum(th[m]) + "</span>").join("") + (th.source === "custom" ? " <small>(yours)</small>" : "") : "<small>after " + MIN_RUNS + " runs (" + ok.length + " done)</small>";
-      const form = v.medalEdit === code ? '<tr><td colspan="5"><div class="es-rt-row" data-medal-form="' + esc(code) + '">' + MEDAL_ORDER.map((m) => '<label>' + MEDAL_LABEL[m] + '<input type="number" step="any" data-rt-field="medal-' + m + '" value="' + (th ? esc(th[m]) : "") + '"></label>').join("")
-        + '<button type="button" class="es-rt-primary" data-rt="medal-save" data-code="' + esc(code) + '">Save</button><button type="button" data-rt="medal-auto" data-code="' + esc(code) + '">Back to automatic</button><button type="button" data-rt="medal-cancel">Cancel</button></div></td></tr>' : "";
-      return '<tr data-medal-row="' + esc(code) + '"><td>' + esc(label(code, e, book)) + "</td><td>" + e.runs.length + "</td><td>" + (e.best === null ? "–" : fmtNum(e.best) + unit) + "</td><td>" + MEDAL_ORDER.map((m) => medalDot(m, e.medals && e.medals[m])).join("") + "</td>"
-        + "<td>" + ths + (next ? "<br><small>" + esc(MEDAL_LABEL[next.tier]) + " is " + fmtNum(next.gap) + unit + " away</small>" : "") + ' <button type="button" data-rt="medal-edit" data-code="' + esc(code) + '">Edit</button> <button type="button" data-rt="play" data-code="' + esc(code) + '" data-type="' + esc(book && book.get(code) ? book.get(code).type || "" : "") + '">Play</button></td></tr>' + form;
+      const editing = v.medalEdit === code;
+      const form = editing ? '<tr class="es-rt-medalform"><td colspan="6"><div class="es-rt-row" data-medal-form="' + esc(code) + '">' + MEDAL_ORDER.map((m) => '<label class="is-' + m + '"><span>' + medalIcon(m) + MEDAL_LABEL[m] + '</span><input type="number" step="any" data-rt-field="medal-' + m + '" value="' + (th ? esc(th[m]) : "") + '"></label>').join("")
+        + '<button type="button" class="es-rt-primary" data-rt="medal-save" data-code="' + esc(code) + '">Save</button>' + (th && th.source === "custom" ? '<button type="button" data-rt="medal-auto" data-code="' + esc(code) + '">Back to automatic</button>' : "") + '<button type="button" data-rt="medal-cancel">Cancel</button></div>'
+        + (v.medalError ? '<p class="es-rt-err" role="alert">' + esc(v.medalError) + "</p>" : '<p class="es-rt-note">' + (e.lower ? "Less is better here: gold is the smallest number. " : "") + "Enter performs Save, Esc cancels.</p>") + "</td></tr>" : "";
+      return '<tr data-medal-row="' + esc(code) + '"' + (editing ? ' class="is-editing"' : "") + '><td class="es-rt-tdname">' + esc(label(code, e, book)) + "</td><td>" + e.runs.length + "</td><td>" + (e.best === null ? "–" : fmtNum(e.best) + unit) + "</td><td>" + MEDAL_ORDER.map((m) => medalDot(m, e.medals && e.medals[m])).join("") + "</td>"
+        + "<td>" + ths + (next ? '<small class="es-rt-next">' + esc(MEDAL_LABEL[next.tier]) + " is " + fmtNum(next.gap) + unit + " away</small>" : "") + '</td><td class="es-rt-tdact"><button type="button" data-rt="medal-edit" data-code="' + esc(code) + '" aria-expanded="' + editing + '">Edit</button><button type="button" data-rt="play" data-code="' + esc(code) + '" data-type="' + esc(book && book.get(code) ? book.get(code).type || "" : "") + '">Play</button></td></tr>' + form;
     }).join("");
-    return intro + '<table class="es-rt-table"><thead><tr><th>Drill</th><th>Runs</th><th>Best</th><th>Earned</th><th>Medal scores</th></tr></thead><tbody>' + rows + "</tbody></table>";
+    return intro + '<div class="es-rt-tablewrap"><table class="es-rt-table"><thead><tr><th>Drill</th><th>Runs</th><th>Best</th><th>Earned</th><th>Medal scores</th><th><span class="es-rt-sr">Actions</span></th></tr></thead><tbody>' + rows + "</tbody></table></div>";
   }
   // The whole page. v = { tab, state, runs, book, draft, delId, medalEdit, query, error }.
   function pageHtml(v) {
     return '<div class="es-rt-head"><span class="es-rt-kicker">Training</span><h1>Routines</h1><p>Chain drills into a playlist, and earn medals against your own best.</p>'
       + '<div class="es-rt-tabs" role="tablist">' + [["routines", "My routines"], ["medals", "Medals"]].map(([id, t]) => '<button type="button" role="tab" aria-selected="' + (v.tab === id) + '" class="' + (v.tab === id ? "is-on" : "") + '" data-rt="tab" data-tab="' + id + '">' + t + "</button>").join("") + "</div></div>"
-      + '<div class="es-rt-body">' + (v.tab === "medals" ? medalsTabHtml(v) : routinesTabHtml(v)) + "</div>";
+      + '<div class="es-rt-body' + (v.animBody ? " is-enter" : "") + '" role="tabpanel">' + (v.tab === "medals" ? medalsTabHtml(v) : routinesTabHtml(v)) + "</div>";
   }
   api.ui = { medalIcon, rankStep, rankHeroHtml, thumbModel, pageHtml, routinesTabHtml, medalsTabHtml, editorHtml, pickerHtml, galleryHtml, galleryCardHtml, pickerList, readFavs };
 
   // ---- page glue ----
-  const view = { tab: "routines", delId: null, medalEdit: null, error: null, picker: { open: false, tab: "bookmarked", query: "", recents: [] } };
-  let page = null, tabButton = null, deactivated = null;
+  const TAB_KEY = "aim-rt-tab-v1"; // the page's last tab (My routines / Medals)
+  const view = { tab: (() => { try { return localStorage.getItem(TAB_KEY) === "medals" ? "medals" : "routines"; } catch { return "routines"; } })(),
+    delId: null, medalEdit: null, medalError: null, error: null, notice: null, flashId: null, animBody: false, focusAfter: null, expanded: new Set(),
+    picker: { open: false, tab: "bookmarked", query: "", recents: [], anim: false } };
+  let page = null, tabButton = null, deactivated = null, armTimer = 0, noticeTimer = 0, undoFn = null;
   const currentView = () => ({ ...view, state: loadRoutines(), runs: loadRuns(), book: names, draft: loadDraft(), picker: { ...view.picker, favs: readFavs() } });
   // Rank and difficulty answers for every drill on screen; when new ones arrive the page is drawn again once.
   function wantInfo() {
@@ -762,18 +783,73 @@ html[data-aim-local]:not(#es) body .aim-rt-btn:hover { background: var(--es-red-
     for (const c of Object.keys(runs)) { const e = runs[c]; if (e && e.runs && e.runs.length) last.set(c, Math.max(last.get(c) || 0, e.runs[e.runs.length - 1].at || 0)); }
     return [...last].sort((x, y) => y[1] - x[1]).map((x) => x[0]);
   }
+  // A selector that finds "the same control" again after the page is drawn anew (the page is plain HTML, redrawn on every change).
+  function focusKey(el) {
+    if (!el || !page || !page.contains(el) || !el.dataset) return null;
+    const d = el.dataset;
+    if ("rtQ" in d) return "[data-rt-q]";
+    if (d.rtField) return '[data-rt-field="' + d.rtField + '"]' + (d.i != null ? '[data-i="' + d.i + '"]' : "");
+    if (!d.rt) return null;
+    let s = '[data-rt="' + d.rt + '"]';
+    for (const k of ["i", "code", "id", "tab", "dir"]) if (d[k] != null && /^[\w-]{1,64}$/.test(d[k])) s += "[data-" + k + '="' + d[k] + '"]';
+    return s;
+  }
+  // The page's band between the lobby's top bar and its bottom bar (they grow on narrow windows, so they are measured).
+  function fit() {
+    if (!page) return;
+    const nav = doc.querySelector(".hall-topnav"), bar = doc.querySelector(".hall-bottombar");
+    const top = nav && nav.getBoundingClientRect().height ? Math.max(0, Math.round(nav.getBoundingClientRect().bottom)) : 64;
+    const barTop = bar && bar.getBoundingClientRect().height ? bar.getBoundingClientRect().top : innerHeight - 48;
+    page.style.top = top + "px"; page.style.bottom = Math.max(0, Math.round(innerHeight - barTop)) + "px";
+  }
   function render() {
     if (!page) return;
-    const focus = doc.activeElement, keep = focus && focus.dataset && "rtQ" in focus.dataset;
+    const focus = doc.activeElement, want = view.focusAfter || focusKey(focus), fallback = view.focusFallback;
     const gal = page.querySelector("[data-rt-gal]"), galTop = gal ? gal.scrollTop : 0, pageTop = page.scrollTop;
+    const opening = view.picker.anim;
     page.innerHTML = pageHtml(currentView());
+    // one-shot entrance flags: drawn once, never replayed by the next redraw
+    view.animBody = false; view.picker.anim = false; view.flashId = null; view.focusAfter = null; view.focusFallback = null;
     page.scrollTop = pageTop;
     const gal2 = page.querySelector("[data-rt-gal]");
     if (gal2) gal2.scrollTop = galTop;
+    fit();
     paintThumbs(page);
     wantInfo();
-    if (keep) { const q = page.querySelector("[data-rt-q]"); if (q) { q.focus(); try { q.setSelectionRange(q.value.length, q.value.length); } catch {} } }
+    if (want) {
+      let el = page.querySelector(want);
+      if ((!el || el.disabled) && fallback) el = page.querySelector(fallback);
+      if (el && !el.disabled) {
+        try { el.focus({ preventScroll: true }); } catch {}
+        if ("rtQ" in el.dataset) try { el.setSelectionRange(el.value.length, el.value.length); } catch {}
+      }
+    }
+    if (opening) { const pick = page.querySelector("[data-rt-pick]"); if (pick && pick.scrollIntoView) try { pick.scrollIntoView({ block: "nearest" }); } catch {} }
   }
+  // A line at the top of the page after an action (saved, deleted...), with Undo when the action can be taken back. It goes away by itself.
+  function notify(text, opts = {}) {
+    clearTimeout(noticeTimer);
+    undoFn = opts.undo || null;
+    view.notice = { text, undo: !!opts.undo, bad: !!opts.bad };
+    noticeTimer = setTimeout(() => { view.notice = null; undoFn = null; if (page) render(); }, opts.undo ? 8000 : 4000);
+  }
+  // The game's own toast (theme .es-score-toast), for what happens after the page has closed (a drill starting).
+  function toast(text, good) {
+    try {
+      doc.querySelector(".es-score-toast.es-rt-toast")?.remove();
+      const t = doc.createElement("div");
+      t.className = "es-score-toast es-rt-toast" + (good ? " is-good" : ""); t.setAttribute("role", "status"); t.textContent = text;
+      doc.body.append(t); setTimeout(() => t.remove(), 4500);
+    } catch {}
+  }
+  // Starts a step from the page: closes it, says what is starting, and says so when the drill could not be found.
+  function playStep(step) {
+    const nm = label(step.code, { name: step.name }, names);
+    closePage();
+    toast("Starting " + nm + "…", true);
+    startStep(step).then((ok) => { if (!ok) toast("Could not start " + nm + ". Open it from the lobby.", false); });
+  }
+  const disarm = () => { clearTimeout(armTimer); view.delId = null; };
   function onField(el) {
     const field = el.dataset.rtField, d = loadDraft();
     if (field.startsWith("medal-") || !d) return;
@@ -783,44 +859,124 @@ html[data-aim-local]:not(#es) body .aim-rt-btn:hover { background: var(--es-red-
   }
   function action(el) {
     const a = el.dataset.rt, i = +el.dataset.i, d = loadDraft();
-    if (a === "tab") { view.tab = el.dataset.tab === "medals" ? "medals" : "routines"; view.medalEdit = null; render(); return; }
-    if (a === "play") { closePage(); startStep({ code: el.dataset.code, type: el.dataset.type || "", rank: el.dataset.rank || "" }); return; }
-    if (a === "rank-step" && d) { const st = d.steps[i]; if (st) { st.rank = rankStep(st, rankInfo.cards[st.code], rankInfo.ranks, +el.dataset.dir); saveDraft(d); render(); } return; }
-    if (a === "swap-diff" && d) { const st = d.steps[i], sib = st && siblings.get(st.code); if (sib) { st.code = sib.code; st.name = sib.name || st.name; st.rank = st.rank; saveDraft(d); ensureInfo([sib.code]).then(() => render()); render(); } return; }
-    if (a === "new") { saveDraft({ id: null, name: "", steps: [] }); view.picker.query = ""; view.picker.open = false; view.error = null; render(); return; }
-    if (a === "discard") { saveDraft(null); view.picker.open = false; view.error = null; render(); return; }
+    if (a !== "delete") disarm();
+    if (a === "tab") {
+      const t = el.dataset.tab === "medals" ? "medals" : "routines";
+      if (t !== view.tab) { view.tab = t; view.medalEdit = null; view.medalError = null; view.animBody = true; try { localStorage.setItem(TAB_KEY, t); } catch {} render(); page.scrollTop = 0; }
+      return;
+    }
+    if (a === "play") { playStep({ code: el.dataset.code, name: "", type: el.dataset.type || "", rank: el.dataset.rank || "" }); return; }
+    if (a === "rank-step" && d) { const st = d.steps[i]; if (st) { st.rank = rankStep(st, rankInfo.cards[st.code], rankInfo.ranks, +el.dataset.dir); saveDraft(d); view.focusFallback = '[data-rt="rank-step"][data-i="' + i + '"][data-dir="' + -el.dataset.dir + '"]'; render(); } return; }
+    if (a === "swap-diff" && d) { const st = d.steps[i], sib = st && siblings.get(st.code); if (sib) { st.code = sib.code; st.name = sib.name || st.name; saveDraft(d); view.focusAfter = '[data-rt-field="runs"][data-i="' + i + '"]'; ensureInfo([sib.code]).then(() => render()); render(); } return; }
+    if (a === "new") { saveDraft({ id: null, name: "", steps: [] }); view.picker.query = ""; view.picker.open = false; view.error = null; view.animBody = true; view.focusAfter = '[data-rt-field="name"]'; render(); return; }
+    if (a === "discard" && d) {
+      const old = d; saveDraft(null); view.picker.open = false; view.error = null;
+      if (old.steps.length || old.name) notify(old.id ? "Changes dropped." : "Draft discarded.", { undo: () => saveDraft(old) });
+      view.focusAfter = '[data-rt="new"]'; render(); return;
+    }
+    if (a === "undo") { const fn = undoFn; clearTimeout(noticeTimer); view.notice = null; undoFn = null; if (fn) fn(); render(); return; }
+    if (a === "expand") { view.expanded.add(el.dataset.id); view.focusAfter = '[data-rt="start"][data-id="' + el.dataset.id + '"]'; render(); return; }
     if (a === "picker-open") {
       if (view.picker.open) { view.picker.open = false; render(); return; }
       loadRecents().then((recents) => {
         const favs = readFavs();
-        view.picker = { open: true, query: "", recents, tab: favs.length ? "bookmarked" : recents.length ? "recent" : "all" };
+        view.picker = { open: true, query: "", recents, anim: true, tab: favs.length ? "bookmarked" : recents.length ? "recent" : "all" };
+        view.focusAfter = "[data-rt-q]";
         render();
-        const q = page && page.querySelector("[data-rt-q]"); if (q) q.focus();
       });
       return;
     }
-    if (a === "picker-close") { view.picker.open = false; render(); return; }
-    if (a === "picker-tab") { view.picker.tab = ["bookmarked", "recent", "all"].includes(el.dataset.tab) ? el.dataset.tab : "all"; view.picker.query = ""; render(); return; }
-    if (a === "edit") { const r = loadRoutines().routines.find((x) => x.id === el.dataset.id); if (r) { saveDraft({ id: r.id, name: r.name, steps: r.steps.map(rawStep) }); view.delId = null; view.error = null; render(); } return; }
-    if (a === "add") { addToDraft(el.dataset.code); view.error = null; render(); return; }
-    if (a === "remove-step" && d) { d.steps.splice(i, 1); saveDraft(d); render(); return; }
-    if ((a === "up" || a === "down") && d) { const j = a === "up" ? i - 1 : i + 1; if (j >= 0 && j < d.steps.length) { [d.steps[i], d.steps[j]] = [d.steps[j], d.steps[i]]; saveDraft(d); render(); } return; }
+    if (a === "picker-close") { view.picker.open = false; view.focusAfter = '[data-rt="picker-open"]'; render(); return; }
+    if (a === "picker-tab") { view.picker.tab = ["bookmarked", "recent", "all"].includes(el.dataset.tab) ? el.dataset.tab : "all"; view.picker.query = ""; const g = page.querySelector("[data-rt-gal]"); if (g) g.scrollTop = 0; render(); return; }
+    if (a === "edit") {
+      const r = loadRoutines().routines.find((x) => x.id === el.dataset.id);
+      if (r) {
+        const old = d && (d.steps.length || d.name) && d.id !== r.id ? d : null;
+        saveDraft({ id: r.id, name: r.name, steps: r.steps.map(rawStep) }); view.error = null; view.picker.open = false; view.animBody = true;
+        if (old) notify("Editing " + r.name + ". The routine you were building was put aside.", { undo: () => saveDraft(old) });
+        view.focusAfter = '[data-rt-field="name"]'; render();
+      }
+      return;
+    }
+    if (a === "add") {
+      const before = d ? d.steps.length : 0;
+      if (addToDraft(el.dataset.code) === before) { notify("The routine is full: a routine holds up to " + MAX_STEPS + " drills.", { bad: true }); }
+      view.error = null; view.focusFallback = '[data-rt="picker-close"]'; render(); return;
+    }
+    if (a === "remove-step" && d) {
+      const gone = d.steps.splice(i, 1)[0]; saveDraft(d);
+      if (gone) notify("Removed " + label(gone.code, { name: gone.name }, names) + ".", { undo: () => { const x = loadDraft(); if (x) { x.steps.splice(Math.min(i, x.steps.length), 0, gone); saveDraft(x); } } });
+      view.focusAfter = '[data-rt="remove-step"][data-i="' + Math.min(i, d.steps.length - 1) + '"]'; view.focusFallback = '[data-rt="picker-open"]'; render(); return;
+    }
+    if ((a === "up" || a === "down") && d) {
+      const j = a === "up" ? i - 1 : i + 1;
+      if (j >= 0 && j < d.steps.length) {
+        [d.steps[i], d.steps[j]] = [d.steps[j], d.steps[i]]; saveDraft(d);
+        view.focusAfter = '[data-rt="' + a + '"][data-i="' + j + '"]'; view.focusFallback = '[data-rt="' + (a === "up" ? "down" : "up") + '"][data-i="' + j + '"]';
+        render();
+        const row = page.querySelector('[data-step="' + j + '"]'); if (row && row.scrollIntoView) try { row.scrollIntoView({ block: "nearest" }); } catch {}
+      }
+      return;
+    }
     if (a === "save" && d) {
       const saved = api.saveRoutine({ ...d, steps: d.steps.map((x) => ({ ...x, minScore: x.minScore === "" ? null : x.minScore, minMedal: x.minMedal || null })) });
-      if (saved) { saveDraft(null); view.error = null; } else view.error = "Give the routine a name and add at least one drill.";
+      if (saved) { saveDraft(null); view.error = null; view.picker.open = false; view.flashId = saved.id; notify("Saved " + saved.name + "."); view.focusAfter = '[data-rt="start"][data-id="' + saved.id + '"]'; }
+      else { view.error = !String(d.name || "").trim() ? "Give the routine a name." : !d.steps.length ? "Add at least one drill." : loadRoutines().routines.length >= MAX_ROUTINES ? "You have " + MAX_ROUTINES + " routines, the most there can be. Delete one first." : "Give the routine a name and add at least one drill."; view.focusAfter = !String(d.name || "").trim() ? '[data-rt-field="name"]' : null; }
       render();
       return;
     }
-    if (a === "start") { const r = loadRoutines().routines.find((x) => x.id === el.dataset.id); if (r && api.start(r.id)) { closePage(); startStep(r.steps[0]); } return; }
-    if (a === "stop") { api.stop(); render(); return; }
-    if (a === "delete") { if (view.delId === el.dataset.id) { api.deleteRoutine(el.dataset.id); view.delId = null; } else view.delId = el.dataset.id; render(); return; }
-    if (a === "medal-edit") { view.medalEdit = el.dataset.code; render(); return; }
-    if (a === "medal-cancel") { view.medalEdit = null; render(); return; }
-    if (a === "medal-auto") { api.setCustom(el.dataset.code, null); view.medalEdit = null; render(); return; }
-    if (a === "medal-save") {
-      const form = page.querySelector('[data-medal-form="' + el.dataset.code + '"]'), val = (m) => { const x = form && form.querySelector('[data-rt-field="medal-' + m + '"]'); return x ? x.value : ""; };
-      if (api.setCustom(el.dataset.code, { bronze: val("bronze"), silver: val("silver"), gold: val("gold") })) { view.medalEdit = null; render(); }
+    if (a === "start") { const r = loadRoutines().routines.find((x) => x.id === el.dataset.id); if (r && api.start(r.id)) playStep(r.steps[0]); return; }
+    if (a === "stop") {
+      const s = loadRoutines(), prev = s.active, r = prev && s.routines.find((x) => x.id === prev.routineId);
+      api.stop();
+      if (prev) notify("Stopped " + (r ? r.name : "the routine") + ".", { undo: () => { const x = loadRoutines(); if (x.routines.some((y) => y.id === prev.routineId)) { x.active = prev; saveRoutines(x); } } });
+      render(); return;
     }
+    if (a === "delete") {
+      const id = el.dataset.id;
+      if (view.delId !== id) { disarm(); view.delId = id; armTimer = setTimeout(() => { view.delId = null; if (page) render(); }, 4000); render(); return; }
+      disarm();
+      const s = loadRoutines(), at = s.routines.findIndex((x) => x.id === id), r = s.routines[at], wasActive = s.active && s.active.routineId === id ? s.active : null;
+      api.deleteRoutine(id);
+      if (r) notify("Deleted " + r.name + ".", { undo: () => { const x = loadRoutines(); if (!x.routines.some((y) => y.id === r.id) && x.routines.length < MAX_ROUTINES) { x.routines.splice(Math.min(at, x.routines.length), 0, r); if (wasActive && !x.active) x.active = wasActive; saveRoutines(x); } } });
+      view.focusAfter = '[data-rt="undo"]'; render(); return;
+    }
+    if (a === "medal-edit") { view.medalEdit = view.medalEdit === el.dataset.code ? null : el.dataset.code; view.medalError = null; view.focusAfter = '[data-rt-field="medal-bronze"]'; render(); return; }
+    if (a === "medal-cancel") { const c = view.medalEdit; view.medalEdit = null; view.medalError = null; view.focusAfter = '[data-rt="medal-edit"][data-code="' + c + '"]'; render(); return; }
+    if (a === "medal-auto") { api.setCustom(el.dataset.code, null); view.medalEdit = null; view.medalError = null; notify("Medal scores are automatic again."); view.focusAfter = '[data-rt="medal-edit"][data-code="' + el.dataset.code + '"]'; render(); return; }
+    if (a === "medal-save") {
+      const code = el.dataset.code, form = page.querySelector('[data-medal-form="' + code + '"]'), val = (m) => { const x = form && form.querySelector('[data-rt-field="medal-' + m + '"]'); return x ? x.value : ""; };
+      const th = { bronze: val("bronze"), silver: val("silver"), gold: val("gold") }, e = loadRuns()[code], sign = e && e.lower ? -1 : 1;
+      if (![th.bronze, th.silver, th.gold].every((x) => x !== "" && isFinite(Number(x)))) view.medalError = "Enter a number for each medal.";
+      else if (!(sign * th.bronze <= sign * th.silver && sign * th.silver <= sign * th.gold)) view.medalError = e && e.lower ? "Less is better here: gold needs the smallest number, bronze the largest." : "Bronze needs the lowest score, gold the highest.";
+      else if (api.setCustom(code, th)) { view.medalEdit = null; view.medalError = null; notify("Medal scores saved."); view.focusAfter = '[data-rt="medal-edit"][data-code="' + code + '"]'; }
+      else view.medalError = "Could not save. Check the numbers.";
+      render();
+    }
+  }
+  // Keyboard in the drill gallery: arrows move between cards (by rows and columns as laid out), ↓ from the search goes to the first card,
+  // ↑ from the first row goes back to the search; Enter / Space add the card (it is a button).
+  function onKey(e) {
+    const t = e.target;
+    if (!t || !t.dataset) return;
+    if (e.key === "Enter" && t.dataset.rtField === "name") { e.preventDefault(); const b = page.querySelector('[data-rt="save"]'); if (b) action(b); return; }
+    if (e.key === "Enter" && /^medal-/.test(t.dataset.rtField || "")) { e.preventDefault(); const b = page.querySelector('[data-rt="medal-save"]'); if (b) action(b); return; }
+    if (!/^Arrow(Up|Down|Left|Right)$|^Home$|^End$/.test(e.key)) return;
+    const gal = page.querySelector("[data-rt-gal]");
+    if (!gal) return;
+    const cards = [...gal.querySelectorAll(".es-rt-gcard:not(:disabled)")];
+    if ("rtQ" in t.dataset) { if (e.key === "ArrowDown" && cards.length) { e.preventDefault(); cards[0].focus(); } return; }
+    const at = cards.indexOf(t);
+    if (at < 0) return;
+    e.preventDefault();
+    const top0 = cards[0].offsetTop, cols = Math.max(1, cards.findIndex((c) => c.offsetTop !== top0) === -1 ? cards.length : cards.findIndex((c) => c.offsetTop !== top0));
+    let to = at;
+    if (e.key === "ArrowLeft") to = at - 1; else if (e.key === "ArrowRight") to = at + 1;
+    else if (e.key === "ArrowUp") to = at - cols; else if (e.key === "ArrowDown") to = Math.min(cards.length - 1, at + cols);
+    else if (e.key === "Home") to = 0; else if (e.key === "End") to = cards.length - 1;
+    if (to < 0) { const q = page.querySelector("[data-rt-q]"); if (q) q.focus(); return; }
+    const c = cards[Math.min(cards.length - 1, to)];
+    c.focus(); if (c.scrollIntoView) try { c.scrollIntoView({ block: "nearest" }); } catch {}
   }
   async function openPage() {
     if (!doc) return;
@@ -831,16 +987,18 @@ html[data-aim-local]:not(#es) body .aim-rt-btn:hover { background: var(--es-red-
     page = doc.createElement("section");
     page.className = "es-rt";
     page.setAttribute("aria-label", "Routines");
-    page.addEventListener("click", (e) => { const t = e.target && e.target.closest ? e.target.closest("[data-rt]") : null; if (t && page.contains(t)) action(t); });
+    page.addEventListener("click", (e) => { const t = e.target && e.target.closest ? e.target.closest("[data-rt]") : null; if (t && page.contains(t) && !t.disabled) action(t); });
+    page.addEventListener("keydown", onKey);
     page.addEventListener("input", (e) => {
       const t = e.target;
       if (t && t.dataset && "rtQ" in t.dataset) {
         view.picker.query = t.value;
         const gal = page.querySelector("[data-rt-gal]"), cv = currentView();
-        if (gal) { gal.innerHTML = galleryHtml(names, cv.runs, cv.picker, cv.draft); paintThumbs(gal); }
-        const note = page.querySelector(".es-rt-pick > .es-rt-note");
-        if (!note || !String(t.value).trim()) render();
-        else note.textContent = "Results for “" + t.value.trim() + "” in all drills";
+        if (gal) { gal.innerHTML = galleryHtml(names, cv.runs, cv.picker, cv.draft); gal.scrollTop = 0; paintThumbs(gal); }
+        const note = page.querySelector("[data-rt-picknote]");
+        if (note) note.innerHTML = pickNoteHtml(names, cv.picker, cv.draft);
+        // the list tabs show no selection while searching
+        for (const b of page.querySelectorAll('[data-rt="picker-tab"]')) { const on = !String(t.value).trim() && b.dataset.tab === view.picker.tab; b.classList.toggle("is-on", on); b.setAttribute("aria-selected", String(on)); }
         return;
       }
       if (t && t.dataset && "rtField" in t.dataset) onField(t);
@@ -857,6 +1015,7 @@ html[data-aim-local]:not(#es) body .aim-rt-btn:hover { background: var(--es-red-
   function closePage() {
     if (!page) return;
     page.remove(); page = null;
+    view.picker.open = false; view.notice = null; view.medalEdit = null; view.medalError = null; view.error = null; undoFn = null; disarm(); clearTimeout(noticeTimer);
     tabButton?.classList.remove("is-active");
     for (const b of deactivated || []) if (b.isConnected) b.classList.add("is-active");
     deactivated = null;
@@ -998,6 +1157,76 @@ html[data-aim-local]:not(#es) body .es-rt-seg button:not(.is-on):hover { backgro
 .es-rt-lines li { display: flex; gap: 10px; align-items: center; } .es-rt-line { display: grid; gap: 2px; min-width: 0; } .es-rt-line b { font-size: 13px; color: var(--es-text, #f4f5f7); font-weight: 700; } .es-rt-line small { margin: 0; }
 .es-rt-card ol li.is-done .es-rt-line b { color: var(--es-dim, #6b7280); }
 .es-rt-now { display: flex; gap: 12px; align-items: center; }
+
+/* ---- UI review, round 3 (ui-routines): focus you can see, motion that plays once, feedback, long lists, fit ---- */
+/* motion: the page rises in once when it opens; a tab's content and the gallery drop in once (one-shot classes, never replayed by a redraw) */
+html[data-aim-local]:not(#es) body .es-rt { animation: es-rt-in .2s ease-out; }
+@keyframes es-rt-in { from { opacity: 0; transform: translateY(8px); } }
+@keyframes es-rt-drop { from { opacity: 0; transform: translateY(-6px); } }
+@keyframes es-rt-flash { from { opacity: .2; } to { opacity: 0; } }
+.es-rt-body.is-enter { animation: es-rt-in .18s ease-out; }
+html[data-aim-local]:not(#es) body .es-rt-pick.is-enter { animation: es-rt-drop .16s ease-out; }
+html[data-aim-local]:not(#es) body .es-rt-card { position: relative; }
+.es-rt-card.is-flash::after { content: ""; position: absolute; inset: 0; background: var(--es-red, #ff4655); opacity: 0; pointer-events: none; animation: es-rt-flash .8s ease-out; }
+@media (prefers-reduced-motion: reduce) { html[data-aim-local]:not(#es) body :is(.es-rt, .es-rt-body.is-enter, .es-rt-pick.is-enter, .es-rt-card.is-flash::after) { animation: none !important; } }
+/* focus: the slanted / cut buttons clip an outside outline away, so the ring sits inside them */
+html[data-aim-local]:not(#es) body .es-rt :is(button, a):focus-visible { outline: 2px solid #fff !important; outline-offset: -4px !important; }
+html[data-aim-local]:not(#es) body .es-rt .es-rt-gcard:focus-visible { outline-offset: -3px !important; background: var(--es-raised-2, #1e232d) !important; border-bottom-color: var(--es-red, #ff4655) !important; }
+html[data-aim-local]:not(#es) body .es-rt .es-rt-gcard:focus-visible .es-rt-gadd { background: var(--es-red, #ff4655); }
+html[data-aim-local]:not(#es) body .es-rt .es-rt-gcard:disabled { opacity: .45; }
+/* press feedback on every button of the page */
+html[data-aim-local]:not(#es) body .es-rt button:not(:disabled):active { transform: translateY(1px); }
+/* secondary buttons outside .es-rt-row: Add a drill (once there are drills), Show all, Undo */
+html[data-aim-local]:not(#es) body .es-rt :is(.es-rt-pickbtn:not(.es-rt-primary), .es-rt-notice button) { height: 34px; padding: 0 20px !important; border: 0 !important; background: var(--es-raised-2, #1e232d) !important; color: var(--es-soft, #d6d9df) !important; clip-path: var(--es-slant) !important;
+  font-size: 13px !important; font-weight: 800 !important; font-stretch: 75% !important; text-transform: uppercase !important; letter-spacing: .08em; }
+html[data-aim-local]:not(#es) body .es-rt :is(.es-rt-pickbtn:not(.es-rt-primary), .es-rt-notice button):hover { background: #2a303c !important; color: #fff !important; }
+html[data-aim-local]:not(#es) body .es-rt .es-rt-more { justify-self: start; height: 30px; padding: 0 12px !important; border: 0 !important; background: transparent !important; color: var(--es-muted, #9aa1ae) !important; font-size: 12px !important; font-weight: 700 !important; letter-spacing: .08em; text-transform: uppercase !important; }
+html[data-aim-local]:not(#es) body .es-rt .es-rt-more:hover { color: #fff !important; background: var(--es-raised, #171b23) !important; }
+/* a destructive button waiting for its second click */
+html[data-aim-local]:not(#es) body .es-rt .es-rt-row button.is-armed { background: var(--es-red-wash, rgba(255,70,85,.18)) !important; color: #ffb3b9 !important; }
+html[data-aim-local]:not(#es) body .es-rt .es-rt-mv button.es-rt-x:hover:not(:disabled) { background: var(--es-red, #ff4655) !important; color: #fff !important; }
+/* the line after an action (saved / deleted / removed), with Undo */
+.es-rt-notice { display: flex; align-items: center; gap: 12px; min-height: 46px; padding: 6px 8px 6px 14px; box-sizing: border-box; background: var(--es-panel, #10131a); border: 1px solid var(--es-line, #272d39); border-left: 4px solid var(--es-red, #ff4655); font: 700 13px/1.3 var(--es-head); color: var(--es-text, #f4f5f7); }
+.es-rt-notice > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.es-rt-notice.is-bad { border-left-color: #ffb020; }
+/* empty states as panels, the name field a readable width, counts next to titles */
+.es-rt-none p { color: var(--es-muted, #9aa1ae) !important; }
+.es-rt-empty-box { padding: 18px 14px; border: 1px dashed var(--es-line-2, #343b4a); text-align: center; }
+.es-rt-name { max-width: 520px; }
+html[data-aim-local]:not(#es) body .es-rt :is(h2, h3) small.es-rt-count { font: 700 11px/1 var(--es-head); letter-spacing: .1em; text-transform: uppercase; color: var(--es-muted, #9aa1ae); vertical-align: middle; }
+.es-rt-card h3 { overflow-wrap: anywhere; }
+.es-rt-head > p { margin-bottom: 16px; }
+/* the editor's Save / Discard stay in reach while a long routine scrolls */
+html[data-aim-local]:not(#es) body .es-rt-savebar { position: sticky; bottom: -36px; /* the page's bottom padding: flush with the visible edge */ z-index: 4; margin: 0 -18px -16px; padding: 12px 18px 16px; background: var(--es-panel, #10131a); border-top: 1px solid var(--es-line, #272d39); }
+/* the gallery: fits the window, names at most two lines, the search note hides when empty */
+html[data-aim-local]:not(#es) body .es-rt-gal { max-height: clamp(200px, calc(100vh - 400px), 560px); }
+.es-rt-gcard b { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.es-rt-picknote:empty { display: none; }
+/* medals table: in a panel, scrolls sideways on a narrow window instead of squeezing, the buttons in their own column */
+.es-rt-tablewrap { overflow-x: auto; padding: 4px 14px 8px; background: var(--es-panel, #10131a); border: 1px solid var(--es-line, #272d39); clip-path: var(--es-cut); }
+.es-rt-tablewrap .es-rt-table { min-width: 760px; }
+.es-rt-table td:first-child { font-weight: 700; color: var(--es-text, #f4f5f7); }
+.es-rt-table tbody tr:not(.es-rt-medalform):hover td { background: rgba(255,255,255,.02); }
+.es-rt-table tr.is-editing td, .es-rt-table tr.es-rt-medalform td { background: var(--es-raised, #171b23); }
+.es-rt-table tr.es-rt-medalform td { border-top: 0; padding: 4px 8px 12px; }
+.es-rt-table .es-rt-tdact { white-space: nowrap; text-align: right; }
+html[data-aim-local]:not(#es) body .es-rt-table .es-rt-tdact button { margin-left: 6px; }
+.es-rt-table small.es-rt-next { display: block; margin: 6px 0 0; }
+.es-rt-medalform label { width: 120px; } .es-rt-medalform label > span { display: inline-flex; align-items: center; gap: 5px; }
+.es-rt-medalform .es-rt-badge { width: 16px; height: 18px; flex: none; }
+.es-rt-medalform .es-rt-note, .es-rt-medalform .es-rt-err { margin-top: 8px !important; }
+.es-rt-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* medal badges large enough to tell the three apart (gem shape and pips) */
+.es-rt-medal .es-rt-badge { width: 22px; height: 25px; } .es-rt-chip .es-rt-badge { width: 20px; height: 22px; } .es-rt-gmedal .es-rt-badge { width: 18px; height: 20px; }
+/* lobby cards: the + sits in the right-hand column under the bookmark and rename buttons (it covered the rank arrow); the medal chip
+   goes in the card's footer line (VALORANT Training) or the picture's free bottom-left corner (Target Workshop) instead of over the tags */
+html[data-aim-local]:not(#es) body .es-rt-addcard:not(.tw-btn) { top: 74px; right: 20px; width: 26px; height: 26px; }
+html[data-aim-local]:not(#es) body .es-rt-addcard:not(.tw-btn):focus-visible { outline: 2px solid #fff !important; outline-offset: -4px !important; }
+html[data-aim-local]:not(#es) body .es-rt-chip.is-inline { position: static; margin-left: auto; padding: 3px 12px 3px 8px; flex: none; }
+html[data-aim-local]:not(#es) body .tw-pv > .es-rt-chip { top: auto; left: 12px; bottom: 12px; }
+.es-rt-tabn { display: inline-grid; place-items: center; min-width: 18px; height: 18px; margin-left: 7px; padding: 0 5px; box-sizing: border-box; background: #fff; color: var(--es-red, #ff4655); font: 800 11px/1 var(--es-head); clip-path: var(--es-slant-sm); vertical-align: 1px; }
+.hall-tab:not(.is-active) .es-rt-tabn { background: var(--es-red, #ff4655); color: #fff; }
+@media (max-width: 900px) { html[data-aim-local]:not(#es) body .es-rt { padding: 18px 16px 36px; } }
 `;
   function injectPageCss() {
     try {
@@ -1021,6 +1250,17 @@ html[data-aim-local]:not(#es) body .es-rt-seg button:not(.is-on):hover { backgro
     tabButton.addEventListener("click", (e) => { e.stopPropagation(); page ? closePage() : openPage(); });
     nav.insertBefore(tabButton, col || null);
     nav.addEventListener("click", (e) => { if (e.target.closest && e.target.closest(".hall-tab") && !e.target.closest(".es-rt-tab")) closePage(); }, true);
+    tabCount = -1; markTab();
+  }
+  // The top-bar tab shows how many drills the routine being built holds, so a drill added from a lobby card visibly went somewhere.
+  let tabCount = -1;
+  function markTab() {
+    if (!tabButton) return;
+    const d = loadDraft(), n = d ? d.steps.length : 0;
+    if (n === tabCount) return;
+    tabCount = n;
+    tabButton.innerHTML = "Routines" + (n ? '<span class="es-rt-tabn" aria-label="' + n + ' drills in the routine being built">' + n + "</span>" : "");
+    tabButton.title = n ? "Routines: " + n + (n === 1 ? " drill" : " drills") + " in the routine you are building (not saved yet)" : "Routines";
   }
   const chipFor = (entry) => (entry && entry.bestMedal ? '<span class="es-rt-chip is-' + entry.bestMedal + '" title="Best medal on this drill">' + medalIcon(entry.bestMedal) + MEDAL_LABEL[entry.bestMedal] + "</span>" : "");
   function decorateCards() {
@@ -1034,15 +1274,20 @@ html[data-aim-local]:not(#es) body .es-rt-seg button:not(.is-on):hover { backgro
         btn.addEventListener("click", async (e) => {
           e.preventDefault(); e.stopPropagation();
           await loadNames();
-          const n = addToDraft(code);
-          btn.textContent = small ? "✓" : "Added (" + n + ")"; btn.classList.add("is-added"); btn.title = "Added: " + n + (n === 1 ? " drill" : " drills") + " in the routine you are building";
-          setTimeout(() => { btn.textContent = small ? "+" : "+ Routine"; btn.classList.remove("is-added"); }, 1600);
+          const before = (loadDraft() || { steps: [] }).steps.length, n = addToDraft(code), full = n === before;
+          btn.textContent = full ? (small ? "!" : "Routine full") : small ? "✓" : "Added (" + n + ")"; btn.classList.add("is-added");
+          btn.title = full ? "The routine you are building is full (" + MAX_STEPS + " drills). Open Routines to save it or remove a drill." : "Added: " + n + (n === 1 ? " drill" : " drills") + " in the routine you are building. Open Routines to save it.";
+          clearTimeout(btn._rtReset);
+          btn._rtReset = setTimeout(() => { btn.textContent = small ? "+" : "+ Routine"; btn.classList.remove("is-added"); btn.title = "Add this drill to the routine you are building"; }, 1600);
         });
         if (before && before.parentElement === host) host.insertBefore(btn, before); else host.appendChild(btn);
       }
+      // the chip's place: the footer line of a VALORANT Training card, the picture of a Target Workshop card, else the card's corner
+      const foot = card.querySelector(".al-wk-foot"), pv = card.querySelector(".tw-pv"), spot = foot || pv || card;
       const chip = card.querySelector(".es-rt-chip"), html = chipFor(runs[code]);
-      if (!html) { if (chip) chip.remove(); } else if (!chip) { const wrap = doc.createElement("div"); wrap.innerHTML = html; card.style.position = card.style.position || "relative"; card.appendChild(wrap.firstChild); }
-      else if (!chip.classList.contains("is-" + runs[code].bestMedal)) { chip.remove(); const wrap = doc.createElement("div"); wrap.innerHTML = html; card.appendChild(wrap.firstChild); }
+      const put = () => { const wrap = doc.createElement("div"); wrap.innerHTML = html; const el = wrap.firstChild; if (foot) el.classList.add("is-inline"); else if (spot === card) card.style.position = card.style.position || "relative"; spot.appendChild(el); };
+      if (!html) { if (chip) chip.remove(); } else if (!chip) put();
+      else if (!chip.classList.contains("is-" + runs[code].bestMedal) || chip.parentElement !== spot) { chip.remove(); put(); }
     };
     for (const card of doc.querySelectorAll(".tw-card[data-code]")) { const actions = card.querySelector(".tw-actions"); if (actions) mark(card, card.dataset.code, actions, actions.querySelector('[data-act="play"]')); }
     for (const card of doc.querySelectorAll('[data-role="workshop-card"][data-share-code]')) mark(card, card.dataset.shareCode, card, null);
@@ -1058,10 +1303,12 @@ html[data-aim-local]:not(#es) body .es-rt-seg button:not(.is-on):hover { backgro
   if (doc) {
     addEventListener("keydown", (e) => {
       if (e.key !== "Escape" || !page) return;
-      if (view.picker.open) { view.picker.open = false; render(); return; }
+      if (view.picker.open) { view.picker.open = false; view.focusAfter = '[data-rt="picker-open"]'; render(); return; }
+      if (view.medalEdit) { const c = view.medalEdit; view.medalEdit = null; view.medalError = null; view.focusAfter = '[data-rt="medal-edit"][data-code="' + c + '"]'; render(); return; }
       if (!(e.target && /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName))) closePage();
     });
-    window.addEventListener("aim-routines-change", () => { if (page) return; });
+    window.addEventListener("aim-routines-change", () => { try { markTab(); } catch {} });
+    window.addEventListener("resize", () => { if (page) fit(); });
     let queuedCheck = false;
     window.__aimWatchPage?.(() => { if (queuedCheck) return; queuedCheck = true; requestAnimationFrame(() => { queuedCheck = false; check(); }); }, { subtree: true, childList: true });
     loadNames().then(check);
