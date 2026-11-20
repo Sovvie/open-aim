@@ -2,6 +2,32 @@
 
 All notable changes to openVaim (formerly AimTrainer). Newest first.
 
+## [Unreleased] - 1.6.0
+
+### Stats
+- New Session tab (the first Stats tab): pick a session, see rounds, play time, accuracy, headshots, kills and deaths, a strip of its rounds coloured by result, and what improved or slipped against your last 5 sessions.
+- New Drills tab: every drill with a sparkline, last and best score, medal, trend and consistency; click one for its history.
+- New Compare tab: the last 7, 14 or 30 days against the period before.
+- Export your stats as CSV or JSON from any Stats tab.
+- Hit report: a heat glow under the hits and a "How you fire" block (first shots vs follow-ups, taps vs sprays).
+- Two new coach tips: cold starts and fading late in a session.
+
+### Target Workshop
+- 22 new drills, each with an Easy and a Hard version: flick grids, target switching, micro and long-range precision, blink and pop-up reaction, strafing at walk, run and sprint speed, counter-strafe stops, a jumping ball, zig-zag bounce, burst control, and vertical, depth and orbit tracking.
+
+### VALORANT Workshop
+- 30 new drills on 8 maps (Sunset, Ascent, Haven, Bind, Corrode, Split, Lotus, Summit): wide-swing duels, jiggle-peek bait, crossfire with trade timing, clearing a site angle by angle, post-plant defence with sound-triggered swings, spray transfer, Operator and Marshal duels, flash timing and more. Easy bots are Bronze; Hard bots are Diamond or better.
+- Switch difficulty now also works for Target Workshop drills.
+
+### Studio
+- Templates for common situations (hold an angle, jiggle peek, wide swing, off-angles, trade fight, retake, post-plant crossfire).
+- Arrow keys nudge, Ctrl+C / X / V / A / D copy, cut, paste, select all and duplicate, and a Line up row for aligning a selection.
+- About 12 new checks in the warnings box, and a "What it will do" summary on every bot.
+- Export a drill to a file and import it again; press ? for the shortcut list.
+
+### Speed
+- The first window opens about a second sooner, big map files are streamed instead of loaded whole, and the stats recorder does less work per tick.
+
 ## [1.5.0] - 2026-11-19
 
 ### Stats and coach

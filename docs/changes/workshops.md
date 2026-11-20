@@ -7,7 +7,7 @@
 - Reaction: Blink (a ball that flashes on and off), Pop-up (a ball that shrinks away, an expired ball costs points).
 - Moving: Strafe at walk, run and full-sprint speed (the game's real speeds 2.97, 5.4 and 6.75 m/s), Counter-strafe stops, a Jumping ball, Zig-zag bounce, and Burst control (a slowly drifting ball that takes several Phantom hits).
 - Tracking: Vertical, Depth (the ball runs toward and away from you) and Orbit.
-- The drills are easy/hard pairs by file name, so the game knows them as siblings. Note: the Switch difficulty button does not find ball drills yet (see below).
+- The drills are easy/hard pairs by file name, so the game knows them as siblings. The Switch difficulty button works for them too (fixed in `app/sibling-switch.js` after this workstream).
 - Sizes in the descriptions are given in degrees of view, the same unit the Tune screen shows.
 
 ## Technical
