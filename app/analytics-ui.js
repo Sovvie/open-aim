@@ -391,6 +391,105 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
 .es-tool.aim-an-panel.aim-an-inline { width: auto; max-width: none; max-height: none; overflow: visible; margin: 18px 0 0; animation: none; box-shadow: none;
   backdrop-filter: none; background: rgba(14, 17, 23, 0.72); }
 .aim-an-stats-host[hidden] { display: none !important; }
+/* Session, Drills, Compare and the export strip (20 Nov 2026). Same cards, same left bar, same fixed view height as the other tabs. */
+.aim-an-sub { margin: 18px 0 8px; font: 700 12px/1.2 var(--an-head); letter-spacing: 0.1em; text-transform: uppercase; color: var(--an-muted); }
+.aim-an-filters + .aim-an-track-tiles, .aim-an-filters + .aim-an-note { margin-top: 0; }
+.aim-an-timeline { display: flex; align-items: flex-end; gap: 3px; height: 96px; padding: 6px; background: var(--an-panel); border: 1px solid var(--an-line-2); border-left: 3px solid var(--an-red); }
+.aim-an-tl { flex: 1 1 0; min-width: 4px; max-width: 30px; background: var(--an-info); cursor: default; transition: filter 0.12s; }
+.aim-an-tl:hover { filter: brightness(1.3); }
+.aim-an-tl.is-cleared, .aim-an-tl-key i.is-cleared { background: var(--an-good); }
+.aim-an-tl.is-time, .aim-an-tl-key i.is-time { background: var(--an-tip); }
+.aim-an-tl.is-died, .aim-an-tl-key i.is-died { background: var(--an-red); }
+.aim-an-tl-key i.is-other { background: var(--an-info); }
+.aim-an-tl-key i { display: inline-block; width: 10px; height: 10px; }
+.aim-an-versus { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }
+.aim-an-vs { min-width: 0; padding: 10px 12px; background: var(--an-raised); border: 1px solid var(--an-line); border-left: 3px solid var(--an-line-2); }
+.aim-an-vs.is-up { border-left-color: var(--an-good); }
+.aim-an-vs.is-down { border-left-color: var(--an-red); }
+.aim-an-vs h4 { margin: 0 0 6px; font: 800 italic 14px/1 var(--an-head); font-stretch: 75%; letter-spacing: 0.08em; text-transform: uppercase; color: #fff; }
+.aim-an-vs ul { margin: 0; padding: 0 0 0 16px; color: var(--an-soft); font-size: 13px; line-height: 1.55; }
+.aim-an-vs p { margin: 0; color: var(--an-dim); font-size: 12px; }
+.aim-an-sess-drills { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.aim-an-sess-drills li { display: grid; grid-template-columns: minmax(0, 1fr) 96px 64px 120px; gap: 8px; align-items: center; padding: 6px 10px; background: var(--an-raised); border: 1px solid var(--an-line); border-left: 3px solid var(--an-line-2);
+  color: var(--an-soft); font: 600 13px/1.3 var(--an-head); font-variant-numeric: tabular-nums; }
+.aim-an-sd-name { overflow: hidden; color: #fff; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.aim-an-medal { display: inline-flex; align-items: center; gap: 5px; margin-right: 10px; color: var(--an-soft); font: 700 12px/1 var(--an-head); }
+.aim-an-medal svg { display: block; width: 16px; height: 18px; flex: none; }
+.aim-an-medal small { color: var(--an-dim); }
+.aim-an-medal.is-none { width: 16px; height: 18px; margin: 0; }
+.aim-an-sess-medals { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 0; margin: 0 0 4px; color: var(--an-muted); font: 700 11px/1.2 var(--an-head); letter-spacing: 0.1em; text-transform: uppercase; }
+.aim-an-sess-medals .aim-an-medal { margin-left: 10px; margin-right: 0; letter-spacing: 0; text-transform: none; }
+/* Drills */
+.aim-an-drills { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.aim-an-drill { display: grid; grid-template-columns: 20px minmax(0, 1fr) 96px 72px 72px 64px 64px; gap: 10px; align-items: center; padding: 7px 10px; background: var(--an-raised); border: 1px solid var(--an-line); border-left: 3px solid var(--an-line-2);
+  color: var(--an-soft); font: 700 13px/1.2 var(--an-head); cursor: pointer; transition: border-color 0.15s, background-color 0.15s; }
+.aim-an-drill:hover { background: var(--an-raised-2); border-left-color: var(--an-red); }
+.aim-an-drill:focus-visible { outline: 2px solid var(--an-red); outline-offset: 2px; }
+.aim-an-drill.is-up { border-left-color: var(--an-good); }
+.aim-an-drill.is-down { border-left-color: var(--an-red); }
+.aim-an-drill-name { min-width: 0; overflow: hidden; color: #fff; text-overflow: ellipsis; white-space: nowrap; }
+.aim-an-drill-name small, .aim-an-drill-num small { display: block; color: var(--an-dim); font: 600 11px/1.3 var(--an-head); }
+.aim-an-drill-num { color: #fff; text-align: right; font-variant-numeric: tabular-nums; }
+.aim-an-drill-trend { text-align: right; font-variant-numeric: tabular-nums; }
+.aim-an-drill.is-up .aim-an-drill-trend { color: var(--an-good); }
+.aim-an-drill.is-down .aim-an-drill-trend { color: var(--an-red-2); }
+.aim-an-spread { text-align: right; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--an-muted); }
+.aim-an-spread.is-steady { color: var(--an-good); }
+.aim-an-spread.is-swingy { color: var(--an-tip); }
+.aim-an-spark { display: block; width: 96px; height: 24px; }
+.aim-an-spark .aim-an-line, .aim-an-score .aim-an-line { fill: none; stroke: var(--an-red); stroke-width: 1.7; stroke-linejoin: round; }
+.aim-an-spark .aim-an-pt { fill: #fff; }
+.aim-an-drill-title { margin: 4px 0 12px; font: 800 italic 22px/1.1 var(--an-head); font-stretch: 75%; letter-spacing: 0.04em; text-transform: uppercase; color: #fff; }
+.aim-an-medals-row { display: flex; flex-wrap: wrap; gap: 6px 0; margin: 0 0 6px; }
+.aim-an-prog { height: 8px; margin: 6px 0 4px; background: rgba(255, 255, 255, 0.06); }
+.aim-an-prog i { display: block; height: 100%; background: var(--an-red); }
+.aim-an-scorewrap { padding: 10px 12px; background: var(--an-raised); border: 1px solid var(--an-line); border-left: 3px solid var(--an-line-2); }
+.aim-an-score { display: block; width: 100%; height: auto; }
+.aim-an-score .aim-an-grid { stroke: rgba(255, 255, 255, 0.07); stroke-width: 1; }
+.aim-an-score .aim-an-axis { fill: var(--an-muted); font: 600 10px var(--an-head); }
+.aim-an-medal-line { stroke-width: 1; stroke-dasharray: 5 4; }
+.aim-an-medal-line.is-bronze { stroke: #e8a867; }
+.aim-an-medal-line.is-silver { stroke: #c9d1da; }
+.aim-an-medal-line.is-gold { stroke: #ffd24d; }
+.aim-an-run { fill: #fff; stroke: var(--an-red); stroke-width: 1.4; }
+.aim-an-run.is-died { fill: var(--an-panel); stroke: var(--an-red-2); }
+.aim-an-best-ring { fill: none; stroke: var(--an-tip); stroke-width: 1.6; }
+/* Compare */
+.aim-an-cmp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px; }
+.aim-an-cmp { display: grid; gap: 4px; min-width: 0; padding: 12px; background: var(--an-raised); border: 1px solid var(--an-line); border-left: 3px solid var(--an-line-2); }
+.aim-an-cmp.is-up { border-left-color: var(--an-good); }
+.aim-an-cmp.is-down { border-left-color: var(--an-red); }
+.aim-an-cmp-label { font: 700 11px/1.2 var(--an-head); letter-spacing: 0.1em; text-transform: uppercase; color: var(--an-muted); }
+.aim-an-cmp b { font: 700 26px/1.1 var(--an-head); color: #fff; font-variant-numeric: tabular-nums; }
+.aim-an-cmp b .aim-an-arrow { font-style: normal; }
+.aim-an-cmp.is-up b .aim-an-arrow { color: var(--an-good); }
+.aim-an-cmp.is-down b .aim-an-arrow { color: var(--an-red-2); }
+.aim-an-cmp-delta { min-height: 1.2em; color: var(--an-soft); font: 700 13px/1.2 var(--an-head); font-variant-numeric: tabular-nums; }
+.aim-an-cmp-bars { display: grid; gap: 3px; margin: 2px 0; }
+.aim-an-cmp-bars i { display: block; height: 6px; background: rgba(255, 255, 255, 0.05); }
+.aim-an-cmp-bars i b { display: block; height: 100%; background: var(--an-red); font-size: 0; }
+.aim-an-cmp-bars i.is-before b { background: var(--an-line-2); }
+.aim-an-cmp small { color: var(--an-dim); font-size: 11px; line-height: 1.35; }
+/* Export strip under the view: part of the panel, so the view height stays the same on every tab */
+.aim-an-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 10px 0 0; padding-top: 10px; border-top: 1px solid var(--an-line); }
+.aim-an-foot-label { margin-right: 4px; color: var(--an-muted); font: 700 11px/1.2 var(--an-head); letter-spacing: 0.1em; text-transform: uppercase; }
+.es-tool.aim-an-panel .aim-an-foot button { height: 30px; padding: 0 12px; background: transparent; color: var(--an-soft); border: 1px solid var(--an-line-2); border-radius: 0; font: 700 12px/1 var(--an-head); letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer;
+  clip-path: var(--an-slant-sm); transition: background-color 0.15s, border-color 0.15s, color 0.15s; }
+.es-tool.aim-an-panel .aim-an-foot button:hover { background: var(--an-raised); border-color: #fff; color: #fff; }
+.aim-an-foot-msg { color: var(--an-muted); font-size: 12px; }
+/* Hit report: heat density under the dots, and how you fire */
+.aim-an-heat circle { fill: rgba(255, 70, 85, 0.14); }
+.aim-an-hit-sub { margin: 10px 0 5px; font: 700 11px/1.2 var(--an-head); letter-spacing: 0.1em; text-transform: uppercase; color: var(--an-muted); }
+.aim-an-hit .aim-an-bars { gap: 3px; }
+.aim-an-hit .aim-an-bar { grid-template-columns: minmax(70px, 44%) minmax(0, 1fr) auto; font-size: 11.5px; }
+.aim-an-hit .aim-an-bar i { height: 7px; }
+.aim-an-hit .aim-an-bar em { min-width: 3em; }
+@media (max-width: 760px) {
+  .aim-an-drill { grid-template-columns: 20px minmax(0, 1fr) 72px 64px; }
+  .aim-an-drill .aim-an-spark, .aim-an-drill .aim-an-drill-num + .aim-an-drill-num, .aim-an-drill .aim-an-spread { display: none; }
+  .aim-an-sess-drills li { grid-template-columns: minmax(0, 1fr) 70px 50px; }
+  .aim-an-sess-drills li > :nth-child(4) { display: none; }
+}
 `;
   function injectCss() {
     try {
@@ -530,7 +629,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
   function hitSummary(round) {
     const shots = Array.isArray(round && round.shots) ? round.shots : [];
     const damage = round && num(round.damage) ? round.damage : round && num(round.damageDealt) ? round.damageDealt : null;
-    return { ...summarize(shots.map((s, i) => ({ s, i })), round), damage };
+    return { ...summarize(shots.map((s, i) => ({ s, i })), round), damage, bursts: burstSplit(shots, round && round.tickSeconds) };
   }
   // Which enemy life a hit landed on (fix 17 Nov 2026). A shot row keeps only the enemy TYPE it hit, so among the fight rows
   // (engagements) of that type in progress at the shot's tick:
@@ -617,6 +716,44 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
   // The body diagram of a summary. label = what it shows, for the aria-label.
   // The circle of a sphere target, to scale (sum.radius metres), with a dashed centre ring and cross, four outer sectors that light up when hit,
   // the hits as dots and the near misses as rings (outside the circle).
+  // How you fire (20 Nov 2026). Shots of one weapon less than BURST_GAP_S apart are one burst. First shot = the first of a burst, follow-up = every
+  // later shot of it. A burst of 1 or 2 shots is a tap, 5 or more a spray (3 and 4 are neither). Returns the shots and hits of each group.
+  function burstSplit(shots, dt) {
+    const gap = BURST_GAP_S / (num(dt) && dt > 0 ? dt : 1 / 128);
+    const list = (Array.isArray(shots) ? shots : []).filter((s) => s && num(s.tick)).sort((a, b) => a.tick - b.tick);
+    const bursts = [];
+    for (const s of list) {
+      const b = bursts[bursts.length - 1];
+      if (b && s.tick - b.last <= gap && b.weapon === s.weapon) { b.shots.push(s); b.last = s.tick; } else bursts.push({ shots: [s], last: s.tick, weapon: s.weapon });
+    }
+    const out = { first: { n: 0, hits: 0 }, follow: { n: 0, hits: 0 }, tap: { bursts: 0, n: 0, hits: 0 }, spray: { bursts: 0, n: 0, hits: 0 } };
+    for (const b of bursts) {
+      b.shots.forEach((s, i) => { const g = i === 0 ? out.first : out.follow; g.n++; if (isHit(s)) g.hits++; });
+      const g = b.shots.length <= 2 ? out.tap : b.shots.length >= 5 ? out.spray : null;
+      if (g) { g.bursts++; for (const s of b.shots) { g.n++; if (isHit(s)) g.hits++; } }
+    }
+    return out;
+  }
+  const BURST_MIN_SHOTS = 8; // shots in the round before the first-shot and spray bars are shown
+  // The bars under the figure: hit rate of first shots against follow-ups, and of taps against sprays. "" when the round has too few shots.
+  function burstHtml(b) {
+    if (!b || b.first.n + b.follow.n < BURST_MIN_SHOTS) return "";
+    const row = (label, g, key) => {
+      const v = g.n ? Math.round((g.hits / g.n) * 100) : null;
+      return `<div class="aim-an-bar" data-burst="${key}" title="${g.hits} of ${g.n} shots hit"><span>${label} (${g.n})</span><i><b style="width:${v === null ? 0 : v}%"></b></i><em>${v === null ? "–" : v + "%"}</em></div>`;
+    };
+    const rows = [row("First shot", b.first, "first"), row("Follow-ups", b.follow, "follow")];
+    if (b.tap.n) rows.push(row("Taps", b.tap, "tap"));
+    if (b.spray.n) rows.push(row("Sprays", b.spray, "spray"));
+    return `<h5 class="aim-an-hit-sub">How you fire</h5><div class="aim-an-bars" data-vis="burst">${rows.join("")}</div>`
+      + `<p class="aim-an-hit-note">Hit rate by shot. A tap is 1 or 2 shots in a row, a spray 5 or more. The red glow marks where your hits cluster.</p>`;
+  }
+  // Heat density: a soft disc under every hit, so where hits pile up glows stronger (the discs add up). "" with fewer than 3 hits.
+  function heatHtml(sum) {
+    const hs = sum.dots.filter((d) => d.kind !== "miss");
+    if (hs.length < 3) return "";
+    return `<g class="aim-an-heat" aria-hidden="true">` + hs.slice(0, 400).map((d) => `<circle cx="${d.x}" cy="${d.y}" r="${sum.shape === "sphere" ? 12 : 10}"/>`).join("") + `</g>`;
+  }
   function sphereSvg(sum, label) {
     const C = 60, CY = 100, Ro = sum.radius * sum.scale, Ri = Ro * SPHERE_CENTRE_FRAC;
     const P = (a, r) => [(C + r * Math.cos((a * Math.PI) / 180)).toFixed(1), (CY - r * Math.sin((a * Math.PI) / 180)).toFixed(1)];
@@ -636,7 +773,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
       `<path class="aim-an-guide" d="M${C - Ro} ${CY}H${C + Ro}M${C} ${CY - Ro}V${CY + Ro}"/>`,
     ];
     return `<svg class="aim-an-body aim-an-sphere" viewBox="0 0 120 200" role="img" aria-label="${esc(label)}: ${SPHERE_ZONES.map((z) => SPHERE_LABEL[z] + " " + sum.zones[z]).join(", ")}, near misses ${sum.rings}">`
-      + `${parts.join("")}${dots.join("")}${ringEls.join("")}</svg>`;
+      + `${parts.join("")}${heatHtml(sum)}${dots.join("")}${ringEls.join("")}</svg>`;
   }
   function silhouetteSvg(sum, label = "Body hit zones") {
     if (sum.shape === "sphere") return sphereSvg(sum, label);
@@ -657,7 +794,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     const ringEls = sum.dots.filter((d) => d.kind === "miss").map((d) => `<g class="aim-an-ring"><title>${ringTitle(d.zone)}</title>`
       + `<circle class="aim-an-ring-halo" cx="${d.x}" cy="${d.y}" r="4.8"/><circle class="aim-an-ring-line" cx="${d.x}" cy="${d.y}" r="4.8"/></g>`);
     return `<svg class="aim-an-body" viewBox="0 0 120 200" role="img" aria-label="${esc(label)}: ${ZONES.map((z) => ZONE_LABEL[z] + " " + sum.zones[z]).join(", ")}, near misses ${rings}">`
-      + `${parts.join("")}${dots.join("")}${ringEls.join("")}</svg>`;
+      + `${parts.join("")}${heatHtml(sum)}${dots.join("")}${ringEls.join("")}</svg>`;
   }
   const KEY_HTML = `<ul class="aim-an-hit-key">`
     + `<li><svg viewBox="0 0 14 14" aria-hidden="true"><circle class="aim-an-dot" cx="7" cy="7" r="3.6"/></svg>Hit</li>`
@@ -673,7 +810,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
   function diagramHtml(sum, label, notes) {
     const sphere = sum.shape === "sphere", names = sphere ? SPHERE_ZONES : ZONES, labels = sphere ? SPHERE_LABEL : ZONE_LABEL;
     const list = names.map((z) => `<li class="${sum.zones[z] > 0 ? "is-hit" : "is-zero"}" data-zone="${z}"><span>${labels[z]}</span><b>${sum.zones[z]}</b></li>`).join("");
-    return `<div class="aim-an-hit-grid">${silhouetteSvg(sum, label)}<ul class="aim-an-zones">${list}</ul></div>${notes || ""}${sphere ? KEY_SPHERE : KEY_HTML}`;
+    return `<div class="aim-an-hit-grid">${silhouetteSvg(sum, label)}<ul class="aim-an-zones">${list}</ul></div>${burstHtml(sum.bursts)}${notes || ""}${sphere ? KEY_SPHERE : KEY_HTML}`;
   }
   // A small note under the figure (one line of muted text); "" for no text.
   const hitNote = (text, attr = "") => (text ? `<p class="aim-an-hit-note"${attr}>${text}</p>` : "");
@@ -1464,6 +1601,389 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
       + `<div class="aim-an-thumbs" role="group" aria-label="Charts">${METRICS.map((m) => chartHtml(m, series[m.id], range, now, unit, true, m === big)).join("")}</div>`;
   }
 
+  // ---------------------------------------------------------------- sessions, comparison, drills, export (20 Nov 2026)
+  // Pure functions first (tested through __aimAnalyticsUi.render), then the HTML of the Session, Drills and Compare tabs.
+  // Every number comes from what the recorder already stores: nothing here writes anything. Timing numbers (kill time, tracking) use
+  // only rounds with line-of-sight data (round.sight), like the Progress and Tracking tabs. Each comparison has a minimum sample
+  // and says "not enough data" instead of a number that would only be noise.
+  const arr = (v) => (Array.isArray(v) ? v : []);
+  const MIN_SESSION_SHOTS = 30, MIN_BASE_SHOTS = 60;  // shots in a session / in the sessions before it, before accuracy is compared
+  const BASE_SESSIONS = 5;                            // earlier sessions that make up "your usual"
+  const MIN_SESSION_ROUNDS_BASE = 2;                  // rounds in the earlier sessions together
+  const BURST_GAP_S = 0.4, TAP_MAX = 2, SPRAY_MIN = 5; // shots closer than 0.4 s with the same weapon are one burst; a tap is 1 or 2 shots, a spray 5 or more
+  const DAY_MS = 86400000;
+
+  // How long a round lasted, in seconds: the last thing recorded in it (the rounds do not store their length).
+  function roundSeconds(r) {
+    const dt = num(r && r.tickSeconds) && r.tickSeconds > 0 ? r.tickSeconds : 1 / 128;
+    let m = 0;
+    for (const s of arr(r && r.shots)) if (s && num(s.tick)) m = Math.max(m, s.tick);
+    for (const d of arr(r && r.deaths)) if (d && num(d.tick)) m = Math.max(m, d.tick);
+    for (const e of arr(r && r.engagements)) if (e) m = Math.max(m, num(e.killTick) ? e.killTick : 0, num(e.startTick) ? e.startTick : 0);
+    return Math.min(3600, Math.round(m * dt * 10) / 10);
+  }
+  // One round as plain facts: counts, the line-of-sight kill times and the tracking ticks (the last two only from rounds with sight data).
+  function roundFacts(r) {
+    const c = roundCounts(r || {});
+    let trackOn = 0, trackN = 0;
+    if (r && r.sight === true) for (const e of arr(r.engagements)) { const t = e && e.tracking; if (t && num(t.samples) && t.samples >= TRACK_MIN_TICKS) { trackOn += t.bodyOn || 0; trackN += t.samples; } }
+    return { id: r && r.id != null ? r.id : null, at: r && num(r.at) ? r.at : null, code: r && r.code != null ? r.code : null, map: r && r.map != null ? r.map : null, mode: r && r.mode != null ? r.mode : null,
+      end: r && r.end != null ? r.end : null, seconds: roundSeconds(r), shots: c.shots, hits: c.hits, headshots: c.headshots, kills: c.kills, deaths: c.deaths, nearMisses: c.nearMisses,
+      ttk: c.ttk, trackOn, trackN, sight: !!(r && r.sight === true) };
+  }
+  // Rounds that ran together: a round that starts less than `gap` ms after the previous one ended is in the same session. Facts in, sessions out (oldest first).
+  function groupSessions(facts, gap = SESSION_GAP_MS) {
+    const out = [];
+    for (const f of arr(facts).filter((x) => x && num(x.at)).sort((a, b) => a.at - b.at)) {
+      const g = out[out.length - 1], end = f.at + (f.seconds || 0) * 1000;
+      if (g && f.at - g.endAt < gap) { g.rounds.push(f); g.endAt = Math.max(g.endAt, end); }
+      else out.push({ start: f.at, endAt: end, rounds: [f] });
+    }
+    return out;
+  }
+  function totalsOf(facts) {
+    const t = { rounds: 0, seconds: 0, shots: 0, hits: 0, headshots: 0, kills: 0, deaths: 0, nearMisses: 0, ttk: [], trackOn: 0, trackN: 0, cleared: 0, died: 0 };
+    for (const f of arr(facts)) {
+      if (!f) continue;
+      t.rounds++; t.seconds += f.seconds || 0; t.shots += f.shots || 0; t.hits += f.hits || 0; t.headshots += f.headshots || 0; t.kills += f.kills || 0; t.deaths += f.deaths || 0; t.nearMisses += f.nearMisses || 0;
+      for (const v of arr(f.ttk)) if (num(v)) t.ttk.push(v);
+      t.trackOn += f.trackOn || 0; t.trackN += f.trackN || 0;
+      if (f.end === "cleared") t.cleared++; else if (f.end === "died") t.died++;
+    }
+    return t;
+  }
+  // The metrics a session or a period is compared on. value(t) is only read when n(t) >= min (the sample guard); eps = a change smaller than this counts as "about the same".
+  const COMPARE_METRICS = [
+    { id: "accuracy", label: "Accuracy", unit: "%", dec: 1, better: 1, eps: 2, min: MIN_SESSION_SHOTS, noun: "shots", n: (t) => t.shots, value: (t) => (t.shots ? (t.hits / t.shots) * 100 : null) },
+    { id: "headshots", label: "Headshot rate", unit: "%", dec: 1, better: 1, eps: 3, min: 20, noun: "hits", n: (t) => t.hits, value: (t) => (t.hits ? (t.headshots / t.hits) * 100 : null) },
+    { id: "killTime", label: "Kill time", unit: " s", dec: 2, better: -1, eps: 0.08, min: 5, noun: "kills with sight data", n: (t) => t.ttk.length, value: (t) => (t.ttk.length ? medianOf(t.ttk) : null) },
+    { id: "tracking", label: "Tracking (on body)", unit: "%", dec: 1, better: 1, eps: 3, min: 64, noun: "tracked ticks", n: (t) => t.trackN, value: (t) => (t.trackN ? (t.trackOn / t.trackN) * 100 : null) },
+    { id: "deaths", label: "Deaths per round", unit: "", dec: 2, better: -1, eps: 0.15, min: 3, noun: "rounds", n: (t) => t.rounds, value: (t) => (t.rounds ? t.deaths / t.rounds : null) },
+  ];
+  const fmtCmp = (m, v) => (v === null || v === undefined || !num(v) ? "–" : v.toFixed(m.dec) + (m.unit === "%" ? "%" : m.unit === " s" ? " s" : ""));
+  // One metric, the current totals against the earlier ones: { cur, prev (null when the sample is too small), delta, verdict: "better" | "worse" | "same" | "unknown", nCur, nPrev }.
+  function compareMetric(m, cur, prev) {
+    const a = cur && m.n(cur) >= m.min ? m.value(cur) : null, b = prev && m.n(prev) >= m.min ? m.value(prev) : null;
+    const row = { id: m.id, label: m.label, unit: m.unit, dec: m.dec, better: m.better, cur: num(a) ? a : null, prev: num(b) ? b : null, delta: null, verdict: "unknown", nCur: cur ? m.n(cur) : 0, nPrev: prev ? m.n(prev) : 0, min: m.min, noun: m.noun };
+    if (row.cur !== null && row.prev !== null) { row.delta = row.cur - row.prev; row.verdict = Math.abs(row.delta) < m.eps ? "same" : row.delta * m.better > 0 ? "better" : "worse"; }
+    return row;
+  }
+  const compareRows = (cur, prev) => COMPARE_METRICS.map((m) => compareMetric(m, cur, prev));
+  // Session s of sessions against the (up to BASE_SESSIONS) before it put together. { cur, base, rows, improved, slipped, hasBase }
+  function sessionVersus(sessions, index) {
+    const cur = totalsOf(sessions[index] ? sessions[index].rounds : []);
+    const before = sessions.slice(Math.max(0, index - BASE_SESSIONS), index), base = totalsOf(before.flatMap((s) => s.rounds));
+    const hasBase = before.length > 0 && base.rounds >= MIN_SESSION_ROUNDS_BASE && base.shots >= MIN_BASE_SHOTS;
+    const rows = hasBase ? compareRows(cur, base) : COMPARE_METRICS.map((m) => compareMetric(m, cur, null));
+    const rel = (r) => Math.abs(r.delta) / Math.max(1e-9, Math.abs(r.prev));
+    return { cur, base, before: before.length, hasBase, rows, improved: rows.filter((r) => r.verdict === "better").sort((a, b) => rel(b) - rel(a)), slipped: rows.filter((r) => r.verdict === "worse").sort((a, b) => rel(b) - rel(a)) };
+  }
+  // "Accuracy rose to 48% (was 41%)" for a row with both numbers.
+  function changeText(r) {
+    if (r.cur === null || r.prev === null) return r.label + ": " + fmtCmp(r, r.cur);
+    const verb = r.delta > 0 ? "rose to" : "fell to";
+    return `${r.label} ${verb} ${fmtCmp(r, r.cur)} (was ${fmtCmp(r, r.prev)})`;
+  }
+  // Which rounds of the session were which: the strip's cells, oldest first. A cell's height is the round's accuracy.
+  function timelineOf(session) {
+    return arr(session && session.rounds).map((f) => ({ at: f.at, code: f.code, end: f.end || "other", seconds: f.seconds, shots: f.shots, accuracy: f.shots > 0 ? (f.hits / f.shots) * 100 : null, kills: f.kills, deaths: f.deaths }));
+  }
+  const END_CLASS = { cleared: "is-cleared", time: "is-time", died: "is-died" };
+  const END_WORD = { cleared: "Cleared", time: "Time up", died: "Died", restart: "Restarted", quit: "Quit" };
+  const MEDAL_RANK = { bronze: 1, silver: 2, gold: 3 };
+  // The drills of a session: { code, name, rounds, shots, hits, accuracy, bestMedal, bestScore, unit }, most played first. runsState = routines.runs() ({ code: entry }), nameOf(code).
+  function sessionDrills(session, runsState, nameOf) {
+    const by = new Map();
+    for (const f of arr(session && session.rounds)) {
+      const k = f.code == null ? "?" : String(f.code);
+      if (!by.has(k)) by.set(k, { code: k, rounds: 0, shots: 0, hits: 0 });
+      const d = by.get(k); d.rounds++; d.shots += f.shots || 0; d.hits += f.hits || 0;
+    }
+    const lo = session ? session.start - 5000 : 0, hi = session ? session.endAt + 15000 : 0;
+    return [...by.values()].map((d) => {
+      const entry = runsState && runsState[d.code], lower = !!(entry && entry.lower);
+      let bestMedal = null, bestScore = null;
+      for (const r of arr(entry && entry.runs)) {
+        if (!r || !num(r.at) || r.at < lo || r.at > hi || r.died || !num(r.score)) continue;
+        if (r.medal && (!bestMedal || MEDAL_RANK[r.medal] > MEDAL_RANK[bestMedal])) bestMedal = r.medal;
+        if (bestScore === null || (lower ? r.score < bestScore : r.score > bestScore)) bestScore = r.score;
+      }
+      return { ...d, name: typeof nameOf === "function" ? nameOf(d.code) : d.code, accuracy: d.shots > 0 ? (d.hits / d.shots) * 100 : null, bestMedal, bestScore, unit: entry ? entry.unit || "" : "" };
+    }).sort((a, b) => b.rounds - a.rounds || (a.name < b.name ? -1 : 1));
+  }
+  // "Today 14:05", "Yesterday 21:30", "17 Nov 21:30".
+  function sessionLabel(s, now = Date.now()) {
+    const d = dayOf(s.start);
+    return (d === dayOf(now) ? "Today" : d === daysAgo(1, now) ? "Yesterday" : shortDate(s.start)) + " " + hhmm(s.start);
+  }
+  const playTime = (sec) => { const m = Math.round(sec / 60); return sec < 60 ? Math.round(sec) + " s" : m < 60 ? m + " min" : Math.floor(m / 60) + " h " + pad(m % 60) + " min"; };
+
+  // ---- the Session tab ----
+  function tileHtml(label, value, hint) { return `<div class="aim-an-track-tile"><span>${esc(label)}</span><b>${esc(value)}</b><em>${esc(hint || "")}</em></div>`; }
+  function timelineHtml(cells) {
+    if (!cells.length) return "";
+    const bars = cells.map((c, i) => {
+      const h = c.accuracy === null ? 8 : Math.max(8, Math.round(c.accuracy));
+      const tip = `Round ${i + 1}: ${END_WORD[c.end] || c.end}\n${hhmm(c.at)}${num(c.seconds) && c.seconds > 0 ? ", " + Math.round(c.seconds) + " s" : ""}\n${c.accuracy === null ? "No shots fired" : Math.round(c.accuracy) + "% accuracy, " + plural(c.shots, "shot")} · ${plural(c.kills, "kill")}, ${plural(c.deaths, "death")}`;
+      return `<span class="aim-an-tl ${END_CLASS[c.end] || "is-other"}" style="height:${h}%" data-tip="${esc(tip)}" data-round="${i}" aria-label="${esc(tip.replace(/\n/g, ", "))}"></span>`;
+    }).join("");
+    return `<div class="aim-an-tl-wrap"><div class="aim-an-timeline" data-timeline role="img" aria-label="${plural(cells.length, "round")} this session, coloured by result, as tall as the round's accuracy">${bars}</div>`
+      + `<ul class="aim-an-hit-key aim-an-tl-key"><li><i class="is-cleared"></i>Cleared</li><li><i class="is-time"></i>Time up</li><li><i class="is-died"></i>Died</li><li><i class="is-other"></i>Other</li></ul></div>`;
+  }
+  const verdictList = (title, rows, cls) => `<div class="aim-an-vs ${cls}"><h4>${title}</h4>${rows.length ? `<ul>${rows.map((r) => `<li data-metric="${r.id}">${esc(changeText(r))}</li>`).join("")}</ul>` : `<p>Nothing here.</p>`}</div>`;
+  function sessionHtml(data, index, now, runsState, nameOf) {
+    const sessions = groupSessions(arr(data && data.rounds).map(roundFacts));
+    if (!sessions.length) return `<p class="aim-an-msg">No rounds recorded yet. Play a drill and your session shows up here: what you played, how it went, and how it compares with your earlier sessions. Rounds are kept for 30 days.</p>`;
+    const idx = Number.isInteger(index) && index >= 0 && index < sessions.length ? index : sessions.length - 1, s = sessions[idx];
+    const pick = sessions.slice(-8).map((x) => [sessions.indexOf(x), sessionLabel(x, now)]);
+    const chips = `<div class="aim-an-filters" role="group" aria-label="Session">` + pick.map(([i, label]) => `<button type="button" data-session="${i}" aria-pressed="${i === idx}">${esc(label)}</button>`).join("") + `</div>`;
+    const v = sessionVersus(sessions, idx), t = v.cur;
+    const acc = t.shots ? Math.round((t.hits / t.shots) * 100) + "%" : "–", hs = t.hits ? Math.round((t.headshots / t.hits) * 100) + "%" : "–";
+    const drills = sessionDrills(s, runsState, nameOf);
+    const tiles = `<div class="aim-an-track-tiles" data-session-tiles>` + tileHtml("Rounds", String(t.rounds), `${t.cleared} cleared, ${t.died} died`) + tileHtml("Play time", playTime(t.seconds), "from first to last shot of each round")
+      + tileHtml("Accuracy", acc, plural(t.shots, "shot")) + tileHtml("Headshots", hs, "of your hits") + tileHtml("Kills", String(t.kills), `${plural(t.deaths, "death")}`) + tileHtml("Drills", String(drills.length), "different drills") + `</div>`;
+    const medals = drills.filter((d) => d.bestMedal);
+    const medalLine = medals.length ? `<p class="aim-an-sess-medals" data-session-medals>Best medals: ` + medals.sort((a, b) => MEDAL_RANK[b.bestMedal] - MEDAL_RANK[a.bestMedal]).slice(0, 4).map((d) => `<span class="aim-an-medal is-${d.bestMedal}">${medalSvg(d.bestMedal)}${esc(d.name)}</span>`).join("") + `</p>` : "";
+    let versus;
+    if (!v.hasBase) versus = `<p class="aim-an-msg" data-versus-empty>Not enough earlier sessions to compare yet (needs ${MIN_SESSION_ROUNDS_BASE} earlier rounds and ${MIN_BASE_SHOTS} shots). Your numbers will be set against your last ${BASE_SESSIONS} sessions once you have them.</p>`;
+    else {
+      const none = !v.improved.length && !v.slipped.length;
+      versus = `<div class="aim-an-versus" data-versus>${verdictList("What improved", v.improved, "is-up")}${verdictList("What slipped", v.slipped, "is-down")}</div>`
+        + (none ? `<p class="aim-an-note">Everything is within a normal range of your last ${plural(v.before, "session")}.</p>` : `<p class="aim-an-note">Against your last ${plural(v.before, "session")} put together. Small changes are ignored, and a number needs enough shots, kills or ticks behind it.</p>`);
+    }
+    const rows = drills.map((d) => `<li><span class="aim-an-sd-name">${esc(d.name)}</span><span>${plural(d.rounds, "round")}</span><span>${d.accuracy === null ? "–" : Math.round(d.accuracy) + "%"}</span><span>${d.bestMedal ? `<span class="aim-an-medal is-${d.bestMedal}">${medalSvg(d.bestMedal)}${MEDAL_WORD[d.bestMedal]}</span>` : ""}</span></li>`).join("");
+    return chips + tiles + medalLine + `<h4 class="aim-an-sub">Rounds</h4>` + timelineHtml(timelineOf(s)) + `<h4 class="aim-an-sub">Against your earlier sessions</h4>` + versus
+      + `<h4 class="aim-an-sub">Drills this session</h4><ul class="aim-an-sess-drills" data-session-drills>${rows}</ul>`;
+  }
+  const MEDAL_WORD = { bronze: "Bronze", silver: "Silver", gold: "Gold" };
+  const medalSvg = (tier) => { try { const R = window.__aimRoutines; return R && R.ui && typeof R.ui.medalIcon === "function" ? R.ui.medalIcon(tier) || "" : ""; } catch { return ""; } };
+
+  // ---- the Compare tab: this period against the one before it ----
+  const COMPARE_RANGES = [7, 14, 30];
+  // Day rows (all days are kept for good) as totals.
+  function totalsFromDays(days, fromDay, toDay) {
+    const t = { rounds: 0, seconds: 0, shots: 0, hits: 0, headshots: 0, kills: 0, deaths: 0, nearMisses: 0, ttk: [], trackOn: 0, trackN: 0, cleared: 0, died: 0 };
+    for (const d of arr(days)) {
+      if (!d || typeof d.day !== "string" || d.day < fromDay || d.day > toDay) continue;
+      t.rounds += d.rounds || 0; t.shots += d.shots || 0; t.hits += d.hits || 0; t.headshots += d.headshots || 0; t.kills += d.kills || 0; t.deaths += d.deaths || 0;
+    }
+    return t;
+  }
+  // The last `range` days against the `range` days before: accuracy, headshot rate and deaths from the day rows (they reach back for good); kill time and tracking
+  // from the stored rounds with sight data, which only reach back 30 days (and RAW_ROUNDS rounds), so the earlier period's timing is left out when it would not be whole.
+  // { range, cur, prev, rows, timingPrev: whether the earlier period's timing is complete }
+  function periodCompare(days, rounds, range, now = Date.now()) {
+    const curFrom = daysAgo(range - 1, now), prevFrom = daysAgo(2 * range - 1, now), prevTo = daysAgo(range, now), today = dayOf(now);
+    const cur = totalsFromDays(days, curFrom, today), prev = totalsFromDays(days, prevFrom, prevTo);
+    const facts = arr(rounds).map(roundFacts).filter((f) => num(f.at));
+    const oldest = facts.length ? Math.min(...facts.map((f) => f.at)) : Infinity;
+    const timingPrev = 2 * range <= 30 && (facts.length < RAW_ROUNDS || dayOf(oldest) <= prevFrom);
+    const part = (from, to) => totalsOf(facts.filter((f) => { const d = dayOf(f.at); return d >= from && d <= to; }));
+    const tc = part(curFrom, today), tp = timingPrev ? part(prevFrom, prevTo) : null;
+    cur.ttk = tc.ttk; cur.trackOn = tc.trackOn; cur.trackN = tc.trackN;
+    if (tp) { prev.ttk = tp.ttk; prev.trackOn = tp.trackOn; prev.trackN = tp.trackN; } else { prev.ttk = []; prev.trackOn = 0; prev.trackN = 0; }
+    return { range, cur, prev, rows: compareRows(cur, prev), timingPrev };
+  }
+  function compareCardHtml(r, range) {
+    const bar = (v, cls) => `<i class="${cls}"><b style="width:${r.cur !== null && r.prev !== null && Math.max(r.cur, r.prev) > 0 && v !== null ? Math.max(4, Math.round((v / Math.max(r.cur, r.prev)) * 100)) : 0}%"></b></i>`;
+    const arrow = r.verdict === "unknown" ? "" : r.delta > 0 ? "↑" : r.delta < 0 ? "↓" : "→";
+    const verdict = { better: "is-up", worse: "is-down", same: "", unknown: "" }[r.verdict];
+    const why = r.cur === null ? `Not enough ${r.noun} in the last ${range} days (needs ${r.min}).` : r.prev === null ? `Not enough ${r.noun} in the ${range} days before.` : "";
+    const delta = r.delta === null ? "" : (r.delta > 0 ? "+" : r.delta < 0 ? "−" : "") + Math.abs(r.delta).toFixed(r.dec) + (r.unit === "%" ? " pts" : r.unit === " s" ? " s" : "");
+    return `<div class="aim-an-cmp ${verdict}" data-metric="${r.id}" data-verdict="${r.verdict}"><span class="aim-an-cmp-label">${esc(r.label)}</span>`
+      + `<b>${esc(fmtCmp(r, r.cur))} <em class="aim-an-arrow">${arrow}</em></b><span class="aim-an-cmp-delta">${esc(delta)}</span>`
+      + `<div class="aim-an-cmp-bars">${bar(r.cur, "is-now")}${bar(r.prev, "is-before")}</div>`
+      + `<small>${r.prev === null ? esc(why) : `was ${esc(fmtCmp(r, r.prev))} · ${esc(String(r.nCur))} now, ${esc(String(r.nPrev))} before`}</small></div>`;
+  }
+  function compareHtml(days, rounds, range, now) {
+    range = COMPARE_RANGES.includes(range) ? range : 7;
+    const tabs = `<div class="aim-an-filters" role="group" aria-label="Period">` + COMPARE_RANGES.map((r) => `<button type="button" data-cmp-range="${r}" aria-pressed="${r === range}">Last ${r} days</button>`).join("") + `</div>`;
+    const c = periodCompare(days, rounds, range, now);
+    if (!c.cur.rounds && !c.prev.rounds) return tabs + `<p class="aim-an-msg">Nothing recorded in the last ${2 * range} days. Play a few rounds and this view sets the last ${range} days against the ${range} before.</p>`;
+    const imp = c.rows.filter((r) => r.verdict === "better").length, slip = c.rows.filter((r) => r.verdict === "worse").length;
+    const head = `<p class="aim-an-note" data-cmp-sum>Last ${range} days: ${plural(c.cur.rounds, "round")}, ${plural(c.cur.shots, "shot")}. The ${range} days before: ${plural(c.prev.rounds, "round")}, ${plural(c.prev.shots, "shot")}. ${imp} better, ${slip} worse.</p>`;
+    return tabs + head + `<div class="aim-an-cmp-grid" data-cmp-grid>${c.rows.map((r) => compareCardHtml(r, range)).join("")}</div>`
+      + `<p class="aim-an-note">Accuracy, headshot rate and deaths come from your daily totals. Kill time and tracking only count rounds recorded with line-of-sight data and need enough kills or ticks in both periods.${c.timingPrev ? "" : " Rounds older than 30 days are kept only as daily totals, so the earlier period has no kill time or tracking here: pick 7 or 14 days to see them."}</p>`;
+  }
+
+  // ---- the Drills tab ----
+  const DRILL_RECENT = 5;      // the newest runs the trend is taken from, against the DRILL_RECENT before them
+  const DRILL_TREND_MIN = 6;   // good runs needed for a trend
+  const DRILL_SPREAD_MIN = 5, DRILL_SPREAD_N = 10, STEADY_PCT = 6, SWINGY_PCT = 15;
+  const SPARK_RUNS = 20;
+  const meanOf = (l) => l.reduce((a, b) => a + b, 0) / l.length;
+  // Everything one drill's tab row and detail need. entry = a routines.runs() entry, logic = routines.logic (thresholds, nextMedal; may be missing), plays = the drill's round facts.
+  function drillModel(code, entry, logic, plays, name) {
+    entry = entry || null;
+    const runs = arr(entry && entry.runs).filter((r) => r && num(r.score) && num(r.at)), lower = !!(entry && entry.lower);
+    const good = runs.filter((r) => !r.died), scores = good.map((r) => r.score);
+    const g = (v) => (lower ? -v : v);
+    const last = scores.length ? scores[scores.length - 1] : null;
+    const best = entry && num(entry.best) ? entry.best : scores.length ? (lower ? Math.min(...scores) : Math.max(...scores)) : null;
+    // trend: the newest DRILL_RECENT good runs against the DRILL_RECENT before them (a score where less is better counts the other way)
+    let trend = null;
+    if (scores.length >= DRILL_TREND_MIN) {
+      const k = Math.min(DRILL_RECENT, Math.floor(scores.length / 2)), a = meanOf(scores.slice(-k)), b = meanOf(scores.slice(-2 * k, -k));
+      const pct = b !== 0 ? ((a - b) / Math.abs(b)) * 100 : 0, goodPct = lower ? -pct : pct;
+      trend = { pct, direction: Math.abs(goodPct) < 2 ? "flat" : goodPct > 0 ? "up" : "down", goodPct, from: b, to: a, runs: k };
+    }
+    // consistency: the spread of the newest scores as a share of their mean
+    let spread = null;
+    const win = scores.slice(-DRILL_SPREAD_N);
+    if (win.length >= DRILL_SPREAD_MIN) {
+      const m = meanOf(win), sd = Math.sqrt(win.reduce((s, v) => s + (v - m) * (v - m), 0) / (win.length - 1));
+      spread = { pct: m !== 0 ? (sd / Math.abs(m)) * 100 : 0, runs: win.length };
+      spread.label = spread.pct <= STEADY_PCT ? "steady" : spread.pct >= SWINGY_PCT ? "swingy" : "normal";
+    }
+    // medals: the three scores, the next one and how far the last run is along the way to it
+    let th = null, next = null, progress = null;
+    try { th = logic && typeof logic.thresholds === "function" ? logic.thresholds(entry) : null; } catch { th = null; }
+    if (th && last !== null) {
+      try { next = typeof logic.nextMedal === "function" ? logic.nextMedal(last, th, lower) : null; } catch { next = null; }
+      if (next) {
+        const have = typeof logic.medalFor === "function" ? logic.medalFor(last, th, lower) : null;
+        const floor = have ? th[have] : scores.length ? (lower ? Math.max(...scores.slice(-20)) : Math.min(...scores.slice(-20))) : last;
+        const span = g(next.score) - g(floor);
+        progress = span > 0 ? clampNum((g(last) - g(floor)) / span, 0, 1) : 0;
+      }
+    }
+    const shots = arr(plays).reduce((s, f) => s + (f.shots || 0), 0), hits = arr(plays).reduce((s, f) => s + (f.hits || 0), 0), heads = arr(plays).reduce((s, f) => s + (f.headshots || 0), 0);
+    return { code, name: name || (entry && entry.name) || String(code).slice(0, 7), unit: entry ? entry.unit || "" : "", lower, runs: runs.length, goodRuns: scores.length, died: runs.length - scores.length,
+      last, best, bestMedal: entry && entry.bestMedal ? entry.bestMedal : null, medals: entry && entry.medals ? entry.medals : { bronze: 0, silver: 0, gold: 0 }, lastAt: runs.length ? runs[runs.length - 1].at : (arr(plays).length ? Math.max(...plays.map((f) => f.at || 0)) : 0),
+      spark: scores.slice(-SPARK_RUNS), trend, spread, thresholds: th, next, progress,
+      rounds: arr(plays).length, accuracy: shots ? (hits / shots) * 100 : null, headshotPct: hits ? (heads / hits) * 100 : null, kills: arr(plays).reduce((s, f) => s + (f.kills || 0), 0), deaths: arr(plays).reduce((s, f) => s + (f.deaths || 0), 0) };
+  }
+  // Every drill with a medal history or a recorded round, as models.
+  function drillModels(runsState, logic, facts, nameOf) {
+    const by = new Map();
+    for (const f of arr(facts)) { if (f.code == null) continue; const k = String(f.code); if (!by.has(k)) by.set(k, []); by.get(k).push(f); }
+    const codes = new Set([...Object.keys(runsState || {}), ...by.keys()]);
+    return [...codes].filter((c) => /^[a-z0-9-]{1,64}$/i.test(c)).map((c) => drillModel(c, (runsState || {})[c], logic, by.get(c) || [], typeof nameOf === "function" ? nameOf(c) : ""));
+  }
+  const DRILL_SORTS = [["recent", "Recent"], ["runs", "Most played"], ["medal", "Medal"], ["trend", "Trend"], ["steady", "Steadiest"], ["name", "A to Z"]];
+  const nullLast = (a, b, cmp) => (a === null && b === null ? 0 : a === null ? 1 : b === null ? -1 : cmp(a, b));
+  function sortDrills(models, key) {
+    const byName = (a, b) => (a.name.toLowerCase() < b.name.toLowerCase() ? -1 : a.name.toLowerCase() > b.name.toLowerCase() ? 1 : 0);
+    const cmp = {
+      recent: (a, b) => b.lastAt - a.lastAt || byName(a, b),
+      runs: (a, b) => (b.runs + b.rounds) - (a.runs + a.rounds) || byName(a, b),
+      medal: (a, b) => (MEDAL_RANK[b.bestMedal] || 0) - (MEDAL_RANK[a.bestMedal] || 0) || (b.medals.gold + b.medals.silver + b.medals.bronze) - (a.medals.gold + a.medals.silver + a.medals.bronze) || byName(a, b),
+      trend: (a, b) => nullLast(a.trend ? a.trend.goodPct : null, b.trend ? b.trend.goodPct : null, (x, y) => y - x) || byName(a, b),
+      steady: (a, b) => nullLast(a.spread ? a.spread.pct : null, b.spread ? b.spread.pct : null, (x, y) => x - y) || byName(a, b),
+      name: byName,
+    }[key] || ((a, b) => b.lastAt - a.lastAt);
+    return [...models].sort(cmp);
+  }
+  const fmtScore = (v, unit) => (v === null || v === undefined || !num(v) ? "–" : String(+v.toFixed(2)) + (unit ? (unit === "%" ? "%" : " " + unit) : ""));
+  // A tiny line chart of the scores, drawn left to right; "" with fewer than two points.
+  function sparkSvg(values, w = 96, h = 24, cls = "aim-an-spark") {
+    const v = arr(values).filter(num);
+    if (v.length < 2) return `<svg class="${cls}" viewBox="0 0 ${w} ${h}" aria-hidden="true"></svg>`;
+    const lo = Math.min(...v), hi = Math.max(...v), span = hi - lo || 1, P = 2;
+    const pts = v.map((x, i) => `${(P + (i / (v.length - 1)) * (w - 2 * P)).toFixed(1)},${(h - P - ((x - lo) / span) * (h - 2 * P)).toFixed(1)}`);
+    const [lx, ly] = pts[pts.length - 1].split(",");
+    return `<svg class="${cls}" viewBox="0 0 ${w} ${h}" aria-hidden="true"><polyline class="aim-an-line" points="${pts.join(" ")}"/><circle class="aim-an-pt" cx="${lx}" cy="${ly}" r="2.2"/></svg>`;
+  }
+  const trendText = (m) => (m.trend ? (m.trend.direction === "flat" ? "→ flat" : (m.trend.direction === "up" ? "↑ " : "↓ ") + Math.abs(Math.round(m.trend.goodPct)) + "%") : "–");
+  function drillRowHtml(m) {
+    const medal = m.bestMedal ? `<span class="aim-an-medal is-${m.bestMedal}" title="${MEDAL_WORD[m.bestMedal]} is your best medal">${medalSvg(m.bestMedal)}</span>` : `<span class="aim-an-medal is-none"></span>`;
+    const cls = m.trend ? (m.trend.direction === "up" ? " is-up" : m.trend.direction === "down" ? " is-down" : "") : "";
+    const sp = m.spread ? `<span class="aim-an-spread is-${m.spread.label}" title="Scores vary by about ${Math.round(m.spread.pct)}% from run to run">${m.spread.label}</span>` : `<span class="aim-an-spread">–</span>`;
+    return `<li><div class="aim-an-drill${cls}" role="button" tabindex="0" data-drill-open="${esc(m.code)}" aria-label="${esc(m.name)}: open its history">`
+      + `${medal}<span class="aim-an-drill-name">${esc(m.name)}<small>${m.runs ? plural(m.runs, "scored run") : "no scored runs"}${m.rounds ? ", " + plural(m.rounds, "round") + " recorded" : ""}</small></span>`
+      + `${sparkSvg(m.spark)}<span class="aim-an-drill-num">${esc(fmtScore(m.last, m.unit))}<small>last</small></span><span class="aim-an-drill-num">${esc(fmtScore(m.best, m.unit))}<small>best</small></span>`
+      + `<span class="aim-an-drill-trend">${esc(trendText(m))}</span>${sp}</div></li>`;
+  }
+  function drillsHtml(models, sort) {
+    if (!models.length) return `<p class="aim-an-msg">No drills yet. Finish a drill and its score history, medals and trend show up here.</p>`;
+    sort = DRILL_SORTS.some((s) => s[0] === sort) ? sort : "recent";
+    const bar = `<div class="aim-an-filters" role="group" aria-label="Sort drills">` + DRILL_SORTS.map(([id, label]) => `<button type="button" data-sort="${id}" aria-pressed="${id === sort}">${label}</button>`).join("") + `</div>`;
+    return bar + `<ul class="aim-an-drills" data-drill-list>` + sortDrills(models, sort).map(drillRowHtml).join("") + `</ul>`
+      + `<p class="aim-an-note">Scores come from your finished runs (the newest 40 per drill, runs that ended in your death are not counted). Trend compares your newest 5 runs with the 5 before; steady means your scores vary by under ${STEADY_PCT}%, swingy by ${SWINGY_PCT}% or more. Click a drill for its history.</p>`;
+  }
+  // The big score chart of one drill: every run (a died run is a hollow mark), dashed lines at the three medal scores, the best run ringed.
+  function scoreChartSvg(entry, m) {
+    const runs = arr(entry && entry.runs).filter((r) => r && num(r.score)).slice(-40);
+    if (runs.length < 2) return "";
+    const W = 600, H = 190, L = 40, R = 8, T = 10, B = 18;
+    const th = m.thresholds, vals = runs.map((r) => r.score).concat(th ? [th.bronze, th.silver, th.gold] : []);
+    let lo = Math.min(...vals), hi = Math.max(...vals);
+    if (hi - lo < 1e-9) { lo -= 1; hi += 1; }
+    const nt = niceTicks(lo, hi, 4); lo = nt.ticks[0]; hi = nt.ticks[nt.ticks.length - 1];
+    const x = (i) => L + (i / (runs.length - 1)) * (W - L - R), y = (v) => H - B - ((v - lo) / (hi - lo)) * (H - T - B);
+    const grid = nt.ticks.map((v) => `<line class="aim-an-grid" x1="${L}" x2="${W - R}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}"/><text class="aim-an-axis" x="${L - 5}" y="${(y(v) + 3.5).toFixed(1)}" text-anchor="end">${v.toFixed(nt.dec)}</text>`).join("");
+    const lines = th ? ["bronze", "silver", "gold"].map((t) => `<line class="aim-an-medal-line is-${t}" x1="${L}" x2="${W - R}" y1="${y(th[t]).toFixed(1)}" y2="${y(th[t]).toFixed(1)}"/>`).join("") : "";
+    const path = runs.map((r, i) => `${x(i).toFixed(1)},${y(r.score).toFixed(1)}`).join(" ");
+    const bestI = m.best !== null ? runs.reduce((bi, r, i) => (!r.died && r.score === m.best ? i : bi), -1) : -1;
+    const dots = runs.map((r, i) => `<circle class="aim-an-run${r.died ? " is-died" : ""}" cx="${x(i).toFixed(1)}" cy="${y(r.score).toFixed(1)}" r="3.2" data-tip="${esc(`${fmtScore(r.score, m.unit)}${r.died ? " (died)" : r.medal ? ", " + MEDAL_WORD[r.medal] : ""}\n${shortDate(r.at)} ${hhmm(r.at)}`)}"/>`).join("");
+    const star = bestI >= 0 ? `<circle class="aim-an-best-ring" cx="${x(bestI).toFixed(1)}" cy="${y(runs[bestI].score).toFixed(1)}" r="7"/>` : "";
+    return `<svg class="aim-an-score" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(m.name)}: your last ${runs.length} scores">${grid}${lines}<polyline class="aim-an-line" points="${path}"/>${star}${dots}</svg>`;
+  }
+  function drillDetailHtml(m, entry) {
+    const back = `<div class="aim-an-filters"><button type="button" data-drill-back>← All drills</button></div>`;
+    const th = m.thresholds;
+    const medalRow = th ? ["bronze", "silver", "gold"].map((t) => `<span class="aim-an-medal is-${t}">${medalSvg(t)}${MEDAL_WORD[t]} ${esc(fmtScore(th[t], m.unit))}${m.medals && m.medals[t] ? ` <small>×${m.medals[t]}</small>` : ""}</span>`).join("") : "";
+    const nextLine = m.next ? `<p class="aim-an-note" data-next>Next medal: ${MEDAL_WORD[m.next.tier]} at ${esc(fmtScore(m.next.score, m.unit))}, ${esc(fmtScore(m.next.gap, m.unit))} to go.</p><div class="aim-an-prog" role="img" aria-label="${Math.round((m.progress || 0) * 100)}% of the way to ${MEDAL_WORD[m.next.tier]}"><i style="width:${Math.round((m.progress || 0) * 100)}%"></i></div>`
+      : th && m.bestMedal === "gold" ? `<p class="aim-an-note">Your last run reached gold.</p>` : !th ? `<p class="aim-an-note">Medals start after 3 finished runs of a drill.</p>` : "";
+    const tiles = `<div class="aim-an-track-tiles" data-drill-tiles>` + tileHtml("Best", fmtScore(m.best, m.unit), m.bestMedal ? MEDAL_WORD[m.bestMedal] + " medal" : "no medal yet") + tileHtml("Last", fmtScore(m.last, m.unit), plural(m.runs, "scored run"))
+      + tileHtml("Trend", trendText(m), m.trend ? `newest ${m.trend.runs} runs against the ${m.trend.runs} before` : "needs " + DRILL_TREND_MIN + " finished runs")
+      + tileHtml("Consistency", m.spread ? m.spread.label : "–", m.spread ? "scores vary by about " + Math.round(m.spread.pct) + "%" : "needs " + DRILL_SPREAD_MIN + " finished runs")
+      + (m.rounds ? tileHtml("Accuracy", m.accuracy === null ? "–" : Math.round(m.accuracy) + "%", m.headshotPct === null ? plural(m.rounds, "round") : Math.round(m.headshotPct) + "% headshots, " + plural(m.rounds, "round")) : "") + `</div>`;
+    const chart = scoreChartSvg(entry, m);
+    const recent = arr(entry && entry.runs).filter((r) => r && num(r.score)).slice(-8).reverse();
+    const table = recent.length ? `<h4 class="aim-an-sub">Latest runs</h4><ul class="aim-an-sess-drills">` + recent.map((r) => `<li><span class="aim-an-sd-name">${shortDate(r.at)} ${hhmm(r.at)}</span><span>${esc(fmtScore(r.score, m.unit))}</span><span>${r.died ? "Died" : ""}</span><span>${r.medal ? `<span class="aim-an-medal is-${r.medal}">${medalSvg(r.medal)}${MEDAL_WORD[r.medal]}</span>` : ""}</span></li>`).join("") + `</ul>` : "";
+    return back + `<h3 class="aim-an-drill-title">${esc(m.name)}</h3>` + tiles + `<div class="aim-an-medals-row">${medalRow}</div>` + nextLine + (chart ? `<h4 class="aim-an-sub">Score history</h4><div class="aim-an-scorewrap">${chart}</div>` : "") + table
+      + `<p class="aim-an-note">${m.lower ? "Less is better on this drill. " : ""}Dashed lines are your medal scores. A hollow mark is a run that ended in your death. ${m.rounds ? "Accuracy and headshots come from your stored rounds of this drill (the last 30 days)." : ""}</p>`;
+  }
+
+  // ---- export ----
+  // A CSV cell: quoted when it holds a comma, quote or line break; a text starting with = + - @ gets a leading ' so a spreadsheet does not run it as a formula.
+  function csvCell(v) {
+    if (v === null || v === undefined || (typeof v === "number" && !isFinite(v))) return "";
+    let s = String(v);
+    if (typeof v === "string" && /^[=+\-@\t\r]/.test(s)) s = "'" + s;
+    return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+  const toCsv = (cols, rows) => [cols.map((c) => csvCell(c[0])).join(",")].concat(rows.map((r) => cols.map((c) => csvCell(c[1](r))).join(","))).join("\r\n") + "\r\n";
+  const stamp = (ms) => dayOf(ms) + " " + hhmm(ms) + ":" + pad(new Date(ms).getSeconds());
+  const pctOf = (a, b, d = 1) => (b > 0 ? +((a / b) * 100).toFixed(d) : null);
+  // One row per stored round (the last 30 days).
+  function roundsCsv(rounds, nameOf) {
+    const facts = arr(rounds).map(roundFacts).filter((f) => num(f.at)).sort((a, b) => a.at - b.at);
+    const cols = [["started", (f) => stamp(f.at)], ["drill", (f) => (typeof nameOf === "function" ? nameOf(f.code) : f.code)], ["drill_code", (f) => f.code], ["map", (f) => f.map], ["mode", (f) => f.mode], ["result", (f) => f.end],
+      ["seconds", (f) => f.seconds], ["shots", (f) => f.shots], ["hits", (f) => f.hits], ["accuracy_pct", (f) => pctOf(f.hits, f.shots)], ["headshots", (f) => f.headshots], ["headshot_pct", (f) => pctOf(f.headshots, f.hits)],
+      ["kills", (f) => f.kills], ["deaths", (f) => f.deaths], ["near_misses", (f) => f.nearMisses], ["median_kill_time_s", (f) => (f.ttk.length ? +medianOf(f.ttk).toFixed(3) : null)],
+      ["tracking_on_body_pct", (f) => pctOf(f.trackOn, f.trackN)], ["line_of_sight_data", (f) => (f.sight ? 1 : 0)]];
+    return toCsv(cols, facts);
+  }
+  // One row per day (kept for good).
+  function daysCsv(days) {
+    const rows = arr(days).filter((d) => d && typeof d.day === "string").sort((a, b) => (a.day < b.day ? -1 : 1));
+    const cols = [["day", (d) => d.day], ["rounds", (d) => d.rounds || 0], ["shots", (d) => d.shots || 0], ["hits", (d) => d.hits || 0], ["accuracy_pct", (d) => pctOf(d.hits || 0, d.shots || 0)], ["headshots", (d) => d.headshots || 0],
+      ["headshot_pct", (d) => pctOf(d.headshots || 0, d.hits || 0)], ["kills", (d) => d.kills || 0], ["deaths", (d) => d.deaths || 0], ["falls", (d) => d.falls || 0], ["near_misses", (d) => d.nearMisses || 0],
+      ["flick_kills", (d) => d.flicks || 0], ["strafe_kills", (d) => d.strafes || 0]];
+    return toCsv(cols, rows);
+  }
+  // Everything as one JSON text: round facts, day rows without their position grids, and the drill score histories.
+  function exportJson(rounds, days, runsState, nameOf, now = Date.now()) {
+    const slim = (d) => { const o = { ...d }; delete o.grid; delete o.fights; delete o.ids; return o; };
+    return JSON.stringify({ app: "openVaim", exported: new Date(now).toISOString(), note: "Rounds are the stored rounds of the last 30 days (counts only); days are daily totals kept for good; drills are the score histories behind the medals.",
+      rounds: arr(rounds).map(roundFacts).filter((f) => num(f.at)).sort((a, b) => a.at - b.at).map((f) => ({ ...f, drill: typeof nameOf === "function" ? nameOf(f.code) : f.code, startedAt: new Date(f.at).toISOString() })),
+      days: arr(days).filter((d) => d && typeof d.day === "string").map(slim), drills: runsState && typeof runsState === "object" ? runsState : {} }, null, 2);
+  }
+  // Saves text as a file: a Blob and a link with the download attribute (the desktop app opens its own save dialog for it).
+  function downloadText(name, text, type) {
+    try {
+      const blob = new Blob([text], { type: type || "text/plain" }), url = URL.createObjectURL(blob), a = document.createElement("a");
+      a.href = url; a.download = name; a.style.display = "none";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => { try { URL.revokeObjectURL(url); } catch {} }, 4000);
+      return true;
+    } catch { return false; }
+  }
+  const EXPORTS = { rounds: ["Rounds CSV", "rounds", "csv", "text/csv"], days: ["Daily CSV", "daily", "csv", "text/csv"], json: ["Everything JSON", "stats", "json", "application/json"] };
+  const FOOT_HTML = `<span class="aim-an-foot-label">Export your stats</span>` + Object.entries(EXPORTS).map(([id, e]) => `<button type="button" data-export="${id}">${e[0]}</button>`).join("") + `<span class="aim-an-foot-msg" data-export-msg role="status"></span>`;
+
   // ---------------------------------------------------------------- coach (pure)
   // Gallery (17 Nov 2026, fixed cards): one card per finding, in the order returned (most important first). Every card is the
   // same size whatever its content (equal grid columns at least --an-card-min wide, one fixed row height --an-card-h), and
@@ -1598,7 +2118,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     "headshot-weapon": GLYPH.target, "accuracy-weapon": GLYPH.crosshair, "strafe-map": GLYPH.strafe, "strafe-drill": GLYPH.strafe,
     "burst-length": GLYPH.bullets, "spray-control": GLYPH.spray, "accuracy-range": GLYPH.range, "counter-strafe": GLYPH.stop,
     "walk-accuracy": GLYPH.steps, "crouch-accuracy": GLYPH.crouch, "sens-changed": GLYPH.mouse, "sens-extreme": GLYPH.mouse, "mouse-accel": GLYPH.mouseFast,
-    "tracking": GLYPH.track, "tracking-lock": GLYPH.stopwatch, "consistency": GLYPH.wave, "trend-accuracy": GLYPH.trend, "trend-headshots": GLYPH.trend,
+    "tracking": GLYPH.track, "tracking-lock": GLYPH.stopwatch, "consistency": GLYPH.wave, "warmup": GLYPH.hourglass, "fade": GLYPH.trend, "trend-accuracy": GLYPH.trend, "trend-headshots": GLYPH.trend,
     "round-tip-accuracy": GLYPH.crosshair, "round-tip-headshot": GLYPH.target, "round-tip-side": GLYPH.missSide, "round-tip-vertical": GLYPH.missUp,
   };
   const ruleOf = (id) => String(id ?? "").split(":")[0];
@@ -1812,7 +2332,8 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
   let panel = null;       // the open modal panel
   let inlinePanel = null; // the panel mounted in the page
   function close() { if (tipBox && tipBox.p === panel) closeTip(false); if (panel) { panel.alive = false; try { panel.shade.remove(); } catch {} } panel = null; }
-  const VIEWS = [["heatmap", "Heatmap"], ["progress", "Progress"], ["tracking", "Tracking"], ["coach", "Coach"]];
+  const VIEWS = [["session", "Session"], ["drills", "Drills"], ["progress", "Progress"], ["compare", "Compare"], ["heatmap", "Heatmap"], ["tracking", "Tracking"], ["coach", "Coach"]];
+  const DEFAULT_VIEW = "session";
   const closestOf = (target, sel) => (target && target.closest ? target.closest(sel) : null);
   function buildStats(inline) {
     const box = document.createElement("section");
@@ -1833,10 +2354,13 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     tip.className = "aim-an-tipbox";
     tip.setAttribute("role", "tooltip");
     tip.hidden = true;
-    body.append(tabs, content);
+    const foot = document.createElement("div");
+    foot.className = "aim-an-foot";
+    foot.innerHTML = FOOT_HTML;
+    body.append(tabs, content, foot);
     box.append(head, body, tip);
-    const p = { root: box, head, shade: null, tabs, content, tip, alive: true, inline, tab: null, cache: {}, filter: { map: "", mode: ALL, code: ALL, weapon: ALL, layer: "deaths" },
-      range: DEFAULT_RANGE, trackTarget: "body", minis: new Map(), fights: new Map(), bright: readBright(), zoom: { k: 1, tx: 0, ty: 0 }, zoomKey: "", focus: null };
+    const p = { root: box, head, foot, shade: null, tabs, content, tip, alive: true, inline, tab: null, cache: {}, filter: { map: "", mode: ALL, code: ALL, weapon: ALL, layer: "deaths" },
+      range: DEFAULT_RANGE, sessionIdx: null, drillSort: "recent", drillOpen: null, cmpRange: 7, trackTarget: "body", minis: new Map(), fights: new Map(), bright: readBright(), zoom: { k: 1, tx: 0, ty: 0 }, zoomKey: "", focus: null };
     for (const [id, label] of VIEWS) {
       const b = document.createElement("button");
       b.type = "button"; b.dataset.view = id; b.textContent = label;
@@ -1846,6 +2370,15 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     content.addEventListener("click", (event) => {
       const b = closestOf(event.target, "[data-range]");
       if (b) { p.range = RANGES.includes(+b.dataset.range) ? +b.dataset.range : DEFAULT_RANGE; renderProgress(p); return; }
+      const ss = closestOf(event.target, "[data-session]");
+      if (ss) { p.sessionIdx = +ss.dataset.session; renderSession(p); return; }
+      const so = closestOf(event.target, "[data-sort]");
+      if (so) { p.drillSort = so.dataset.sort; renderDrills(p); return; }
+      const dopen = closestOf(event.target, "[data-drill-open]");
+      if (dopen) { p.drillOpen = dopen.dataset.drillOpen; try { p.content.scrollTop = 0; } catch {} renderDrills(p); return; }
+      if (closestOf(event.target, "[data-drill-back]")) { p.drillOpen = null; try { p.content.scrollTop = 0; } catch {} renderDrills(p); return; }
+      const cr = closestOf(event.target, "[data-cmp-range]");
+      if (cr) { p.cmpRange = COMPARE_RANGES.includes(+cr.dataset.cmpRange) ? +cr.dataset.cmpRange : 7; renderCompare(p); return; }
       const tt = closestOf(event.target, "[data-track]");
       if (tt && (tt.dataset.track === "body" || tt.dataset.track === "head")) { p.trackTarget = tt.dataset.track; renderTracking(p); return; }
       const l = closestOf(event.target, "[data-layer]");
@@ -1857,6 +2390,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
       if (fo) { p.focus = fo.dataset.focus; renderProgress(p); return; }
       if (closestOf(event.target, "[data-zoom-reset]")) setZoom(p, { k: 1, tx: 0, ty: 0 });
     });
+    foot.addEventListener("click", (event) => { const b = closestOf(event.target, "[data-export]"); if (b) runExport(p, b.dataset.export); });
     // "Brighten map" slider: updates the picture in place (no re-render, so the slider keeps focus while dragged) and remembers the level.
     content.addEventListener("input", (event) => {
       const r = event.target;
@@ -1882,6 +2416,8 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
       const cc = (event.key === "Enter" || event.key === " ") && !event.repeat && closestOf(event.target, "[data-coach]");
       if (cc && cc === event.target && cc.tagName !== "BUTTON") { if (event.preventDefault) event.preventDefault(); openTip(p, +cc.dataset.coach, cc); return; }
       // thumbnails are role=button divs: Enter and Space pick them like a click
+      const dr = (event.key === "Enter" || event.key === " ") && !event.repeat && closestOf(event.target, "[data-drill-open]");
+      if (dr && dr === event.target) { event.preventDefault && event.preventDefault(); p.drillOpen = dr.dataset.drillOpen; try { p.content.scrollTop = 0; } catch {} renderDrills(p); return; }
       const fo = (event.key === "Enter" || event.key === " ") && closestOf(event.target, "[data-focus]");
       if (fo) { event.preventDefault && event.preventDefault(); p.focus = fo.dataset.focus; renderProgress(p); }
     });
@@ -2153,7 +2689,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     }
     document.body.appendChild(shade);
     panel = p;
-    show(VIEWS.some((v) => v[0] === view) ? view : "heatmap", p);
+    show(VIEWS.some((v) => v[0] === view) ? view : DEFAULT_VIEW, p);
     return p;
   }
   // Mounts the Stats panel inside host as page content. Mounting into the same host again keeps the panel (and its tab and
@@ -2166,7 +2702,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     const p = buildStats(true);
     host.appendChild(p.root);
     inlinePanel = p;
-    show(VIEWS.some((v) => v[0] === view) ? view : "heatmap", p);
+    show(VIEWS.some((v) => v[0] === view) ? view : DEFAULT_VIEW, p);
     return p;
   }
   // Drops the inline panel's cached reads and redraws its tab (new rounds may have been played since).
@@ -2175,7 +2711,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     if (!p) return;
     p.cache = {}; p.minis = new Map(); p.fights = new Map();
     drillLoad = null; // a drill may have been renamed or added since
-    show(p.tab || "heatmap", p);
+    show(p.tab || DEFAULT_VIEW, p);
   }
   // Reads a view's data once per panel; later tab switches and filter changes reuse it.
   function dataFor(view, p) {
@@ -2183,6 +2719,8 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     if (cache[view]) return cache[view];
     if (view === "heatmap") cache[view] = Promise.all([read("days", {}), read("rounds", { limit: RAW_ROUNDS })]).then(([days, rounds]) => ({ days, rounds }));
     else if (view === "progress") cache[view] = Promise.all([read("days", { from: daysAgo(PROGRESS_DAYS - 1) }), read("engagements", { rounds: RAW_ROUNDS })]).then(([days, engagements]) => ({ days, engagements }));
+    else if (view === "session" || view === "drills") cache[view] = read("rounds", { limit: RAW_ROUNDS }).then((rounds) => ({ rounds }));
+    else if (view === "compare") cache[view] = Promise.all([read("days", { from: daysAgo(2 * COMPARE_RANGES[COMPARE_RANGES.length - 1] - 1) }), read("rounds", { limit: RAW_ROUNDS })]).then(([days, rounds]) => ({ days, rounds }));
     else if (view === "tracking") cache[view] = read("engagements", { rounds: RAW_ROUNDS }).then((engagements) => ({ engagements }));
     else cache[view] = (async () => {
       try {
@@ -2192,7 +2730,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
         return { list: Array.isArray(list) ? list : [], failed: false };
       } catch { return { list: [], failed: false }; }
     })();
-    cache[view] = cache[view].catch(() => (view === "coach" ? { list: [], failed: false } : view === "heatmap" ? { days: [], rounds: [] } : { days: [], engagements: [] }));
+    cache[view] = cache[view].catch(() => (view === "coach" ? { list: [], failed: false } : view === "session" || view === "drills" ? { rounds: [] } : view === "compare" ? { days: [], rounds: [] } : view === "heatmap" ? { days: [], rounds: [] } : { days: [], engagements: [] }));
     return cache[view];
   }
   function show(view, p = panel) {
@@ -2203,7 +2741,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     if (tipBox && tipBox.p === p) closeTip(false);
     for (const b of p.tabs.children) b.setAttribute("aria-pressed", String(b.dataset.view === view));
     p.content.innerHTML = `<p class="aim-an-msg">Loading…</p>`;
-    if (view === "heatmap") renderHeatmap(p); else if (view === "progress") renderProgress(p); else if (view === "tracking") renderTracking(p); else renderCoach(p);
+    if (view === "session") renderSession(p); else if (view === "drills") renderDrills(p); else if (view === "compare") renderCompare(p); else if (view === "heatmap") renderHeatmap(p); else if (view === "progress") renderProgress(p); else if (view === "tracking") renderTracking(p); else renderCoach(p);
   }
   const current = (p, view) => !!p && p.alive && p.tab === view;
   // The map's minimap info, fetched once per map per panel: { src, transform } or null.
@@ -2289,6 +2827,58 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     }).catch(() => { if (current(p, "coach")) { p.coachList = []; p.content.innerHTML = coachHtml([], false); } });
   }
 
+  // ---- the renderers of the new tabs (they read the medal history of routines.js without writing to it) ----
+  function runsNow() { try { const R = window.__aimRoutines, v = R && typeof R.runs === "function" ? R.runs() : {}; return v && typeof v === "object" && !Array.isArray(v) ? v : {}; } catch { return {}; } }
+  function logicNow() { try { return (window.__aimRoutines && window.__aimRoutines.logic) || null; } catch { return null; } }
+  // A drill's name: the gallery's title, else the name kept with its runs, else the short share code.
+  const nameFor = (code, runs) => { const d = drillBook.get(code); return d && d.name ? d.name : runs && runs[code] && runs[code].name ? runs[code].name : code == null ? "?" : shortCode(code); };
+  const namesReady = () => Promise.race([loadDrills(), wait(1500)]);
+  function renderSession(p = panel) {
+    if (!p) return Promise.resolve();
+    hideTip(p);
+    return Promise.all([dataFor("session", p), namesReady()]).then(([data]) => {
+      if (!current(p, "session")) return;
+      const runs = runsNow();
+      p.content.innerHTML = sessionHtml(data, p.sessionIdx, Date.now(), runs, (c) => nameFor(c, runs));
+    }).catch(() => { if (current(p, "session")) p.content.innerHTML = `<p class="aim-an-msg">Could not read your records.</p>`; });
+  }
+  function renderDrills(p = panel) {
+    if (!p) return Promise.resolve();
+    hideTip(p);
+    return Promise.all([dataFor("drills", p), namesReady()]).then(([data]) => {
+      if (!current(p, "drills")) return;
+      const runs = runsNow(), logic = logicNow(), facts = arr(data.rounds).map(roundFacts);
+      const models = drillModels(runs, logic, facts, (c) => nameFor(c, runs));
+      const open = p.drillOpen ? models.find((m) => m.code === p.drillOpen) : null;
+      if (p.drillOpen && !open) p.drillOpen = null;
+      p.content.innerHTML = open ? drillDetailHtml(open, runs[open.code]) : drillsHtml(models, p.drillSort);
+    }).catch(() => { if (current(p, "drills")) p.content.innerHTML = `<p class="aim-an-msg">Could not read your records.</p>`; });
+  }
+  function renderCompare(p = panel) {
+    if (!p) return Promise.resolve();
+    hideTip(p);
+    return dataFor("compare", p).then((data) => {
+      if (current(p, "compare")) p.content.innerHTML = compareHtml(data.days, data.rounds, p.cmpRange, Date.now());
+    }).catch(() => { if (current(p, "compare")) p.content.innerHTML = `<p class="aim-an-msg">Could not read your records.</p>`; });
+  }
+  // The export buttons: read everything fresh (the panel's cached reads may be older), build the file and hand it to the browser's download.
+  async function runExport(p, kind) {
+    const e = EXPORTS[kind];
+    if (!e || !p) return false;
+    const say = (text) => { try { const m = p.foot && p.foot.querySelector ? p.foot.querySelector(".aim-an-foot-msg") : null; if (m) m.textContent = text; p.exportMsg = text; } catch {} };
+    try {
+      say("Preparing…");
+      const [rounds, days] = await Promise.all([read("rounds", { limit: 5000 }), read("days", {}), namesReady()]);
+      if (!rounds.length && !days.length) { say("Nothing recorded yet, so there is nothing to export."); return false; }
+      const runs = runsNow(), nameOf = (c) => nameFor(c, runs);
+      const text = kind === "rounds" ? roundsCsv(rounds, nameOf) : kind === "days" ? daysCsv(days) : exportJson(rounds, days, runs, nameOf);
+      const name = `openvaim-${e[1]}-${dayOf(Date.now())}.${e[2]}`;
+      const ok = downloadText(name, (e[2] === "csv" ? "﻿" : "") + text, e[3] + ";charset=utf-8");
+      say(ok ? `Export started: ${name}` : "The file could not be saved.");
+      return ok;
+    } catch { say("The file could not be saved."); return false; }
+  }
+
   // ---------------------------------------------------------------- Stats on the Training history page (17 Nov 2026)
   // The records view (lobby tab "Training history", the active .hall-tab) draws its board with history-board.mjs render(el),
   // which rewrites el.innerHTML each time, so the Stats host never goes inside el: it goes right AFTER the board's root (the
@@ -2343,7 +2933,10 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     // pure renderers, for tests
     render: { trackReadoutHtml, trackingHtml, trackingTotals, hitSummary, killerShots, enemyShots, tilePoint, hitPanelHtml, heatCells, heatOptions, fightLayer, countFights, heatmapHtml, mapLook, cellTip, zoomAt, clampPan,
       progressSeries, progressBuckets, progressHtml, niceTicks, xTicks, nodeTip, coachHtml, coachModalHtml, coachVisual, cardVisual, angleHtml, angleOffset, mapCardHtml, drillCardHtml,
-      refHtml, withRefs, refsOf, splitNote, coachIcon, cardSummary },
+      refHtml, withRefs, refsOf, splitNote, coachIcon, cardSummary,
+      roundSeconds, roundFacts, groupSessions, totalsOf, compareMetric, compareRows, sessionVersus, changeText, timelineOf, sessionDrills, sessionLabel, sessionHtml, totalsFromDays, periodCompare, compareHtml,
+      drillModel, drillModels, sortDrills, sparkSvg, drillsHtml, drillDetailHtml, scoreChartSvg, csvCell, toCsv, roundsCsv, daysCsv, exportJson, burstSplit, burstHtml, heatHtml },
+    runExport,
     coachIconIds: Object.keys(COACH_ICON),
     syncResult,
   };

@@ -798,6 +798,26 @@ const HEAD_CM = T.HEAD_ABOVE_CENTRE_CM;
     assert.ok(f, "fights lost does not need sight");
   });
 
+  await test("session shape: a cold start and a late fade, with the minimums (3 sessions of 6 rounds, 150 shots per group, 6 points)", async () => {
+    const acc = (a, n = 50) => many(n, (i) => shot({ part: i < Math.round(a * n) ? "body" : null }));
+    const sessions = (n, accs, rounds = 8, gapMin = 5) => Array.from({ length: n }, (_, d) => Array.from({ length: rounds }, (_, i) => round({ at: at("2026-11-1" + (d + 1)) + i * gapMin * 60000, shots: acc(accs(i, rounds)) }))).flat();
+    assert.strictEqual(T.SHAPE_SESSIONS_MIN, 3); assert.strictEqual(T.SHAPE_ROUNDS_MIN, 6); assert.strictEqual(T.SHAPE_GAP_POINTS, 6);
+    let out = await run({ rounds: sessions(3, (i) => (i < 2 ? 0.3 : 0.5)) });
+    let f = find(out, "warmup");
+    assert.ok(f && f.severity === "tip" && f.evidence.firstRoundsAccuracyPercent === 30 && f.evidence.middleAccuracyPercent === 50 && f.evidence.gapPoints === 20 && f.evidence.sessions === 3, JSON.stringify(f));
+    assert.ok(!find(out, "fade"), "the end of the session is as good as the middle");
+    assert.ok(f.summary.includes("30% first rounds vs 50% after"), f.summary);
+    out = await run({ rounds: sessions(3, (i, n) => (i >= n - 2 ? 0.3 : 0.5)) });
+    f = find(out, "fade");
+    assert.ok(f && f.evidence.lastRoundsAccuracyPercent === 30 && !find(out, "warmup"), JSON.stringify(f));
+    assert.ok(!find(await run({ rounds: sessions(3, (i) => (i < 2 ? 0.46 : 0.5)) }), "warmup"), "4 points is under the gap");
+    assert.ok(find(await run({ rounds: sessions(3, (i) => (i < 2 ? 0.44 : 0.5)) }), "warmup"), "6 points");
+    assert.ok(!find(await run({ rounds: sessions(2, (i) => (i < 2 ? 0.3 : 0.5)) }), "warmup"), "two sessions");
+    assert.ok(!find(await run({ rounds: sessions(3, (i) => (i < 2 ? 0.3 : 0.5), 5) }), "warmup"), "sessions of 5 rounds");
+    assert.ok(!find(await run({ rounds: sessions(3, (i) => (i < 2 ? 0.3 : 0.5), 8, 60) }), "warmup"), "rounds an hour apart are separate sessions");
+    assert.ok(!find(await run({ rounds: sessions(3, (i) => (i < 2 ? 0.3 : 0.5)).map((r) => ({ ...r, shots: r.shots.slice(0, 15) })) }), "warmup"), "too few shots in the first rounds");
+  });
+
   const failed = results.filter(([, ok]) => !ok).length;
   console.log("\n" + (results.length - failed) + " of " + results.length + " passed");
   process.exit(failed ? 1 : 0);
