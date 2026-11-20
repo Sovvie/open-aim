@@ -1,0 +1,197 @@
+{
+  "item": {
+    "name": "Easy-Reaction — Pop-up",
+    "description": "A ball pops up at a random spot and shrinks away. Shoot it before it is gone: an expired ball costs points. Trains a fast, calm first shot. Easy: 1 ball 4.2° wide, gone after 1.6 s, 100 points off for each one you miss.",
+    "shareCode": "0b6751eee07d3db9",
+    "sceneKey": "set-0b6751eee07d3db9",
+    "createTime": "2026-11-20 12:00:00",
+    "updateTime": "2026-11-20 12:00:00",
+    "docBytes": 1634,
+    "playCount": 0,
+    "status": 1,
+    "featured": false,
+    "parSeconds": null,
+    "mapId": null,
+    "sort": 227,
+    "type": "ball"
+  },
+  "scene": {
+    "name": "Easy-Reaction — Pop-up",
+    "description": "A ball pops up at a random spot and shrinks away. Shoot it before it is gone: an expired ball costs points. Trains a fast, calm first shot. Easy: 1 ball 4.2° wide, gone after 1.6 s, 100 points off for each one you miss.",
+    "shareCode": "0b6751eee07d3db9",
+    "sceneKey": "set-0b6751eee07d3db9",
+    "createTime": "2026-11-20 12:00:00",
+    "updateTime": "2026-11-20 12:00:00",
+    "docBytes": 1634,
+    "playCount": 0,
+    "status": 1,
+    "featured": false,
+    "parSeconds": null,
+    "schemaVersion": 2,
+    "blockCount": 1,
+    "authorNickname": "openVaim",
+    "authorUid": "openvaim",
+    "sceneHash": "cc5697171b4f4095",
+    "doc": {
+      "schemaVersion": 2,
+      "meta": {
+        "id": "scene-11957534",
+        "name": "Easy-Reaction — Pop-up",
+        "seed": 11957534,
+        "createdAt": 0
+      },
+      "environment": {
+        "skyColor": "#000000",
+        "fogNear": 50,
+        "fogFar": 140,
+        "ambientIntensity": 1.55,
+        "keyLightIntensity": 2.2,
+        "grid": {
+          "size": 42,
+          "divisions": 28,
+          "centerColor": "#ffffff",
+          "gridColor": "#0091ff",
+          "position": {
+            "x": 0,
+            "y": -0.02,
+            "z": 4.2
+          }
+        }
+      },
+      "blocks": [
+        {
+          "id": "ground",
+          "shape": "plane",
+          "position": {
+            "x": -0.2,
+            "y": -13.6,
+            "z": -8.8
+          },
+          "rotationY": 0,
+          "size": {
+            "x": 40,
+            "y": 0.4,
+            "z": 45
+          },
+          "color": "#18222b",
+          "collidable": true,
+          "transparent": true
+        }
+      ],
+      "playerSpawn": {
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 4.2
+        },
+        "yaw": 0
+      },
+      "spawners": [
+        {
+          "id": "spawner-1",
+          "actorTemplateId": "actor-1",
+          "kind": "area",
+          "position": {
+            "x": 0,
+            "y": 2.793,
+            "z": -13.8
+          },
+          "size": {
+            "x": 11.697,
+            "y": 3.466,
+            "z": 0
+          },
+          "maxAlive": 1,
+          "spawnDelay": [
+            0.2,
+            0.45
+          ],
+          "minAngularGap": 6
+        }
+      ],
+      "actors": [
+        {
+          "id": "actor-1",
+          "name": "Target",
+          "body": {
+            "shape": "sphere",
+            "headSize": 1,
+            "bodyWidth": 0.44,
+            "bodyHeight": 0,
+            "radius": 0.66
+          },
+          "color": "#ff4655",
+          "behaviors": [
+            {
+              "kind": "decay",
+              "lifetime": 1.6,
+              "growTime": 0.12,
+              "minScale": 0.55
+            },
+            {
+              "kind": "blink",
+              "visible": [
+                30,
+                30
+              ],
+              "hidden": [
+                0.5,
+                0.5
+              ]
+            },
+            {
+              "kind": "respawn",
+              "delay": [
+                0.2,
+                0.45
+              ],
+              "mode": "reSpawner"
+            }
+          ]
+        }
+      ],
+      "rules": {
+        "duration": 60,
+        "scoring": "clicking",
+        "weapon": "vandal",
+        "playerMovable": false,
+        "fireMode": "single",
+        "perfectAccuracy": true,
+        "expiredPenalty": 100,
+        "tunables": [
+          {
+            "field": "radius",
+            "id": "actor-1",
+            "label": "Target size",
+            "min": 0.26,
+            "max": 1.46,
+            "step": 0.01
+          },
+          {
+            "field": "decay.lifetime",
+            "id": "actor-1",
+            "label": "Target lifetime",
+            "min": 0.3,
+            "max": 4,
+            "step": 0.1
+          },
+          {
+            "field": "maxAlive",
+            "id": "spawner-1",
+            "label": "Targets at once",
+            "min": 1,
+            "max": 4,
+            "step": 1
+          },
+          {
+            "field": "duration",
+            "label": "Round length",
+            "min": 30,
+            "max": 180,
+            "step": 15
+          }
+        ]
+      }
+    }
+  }
+}

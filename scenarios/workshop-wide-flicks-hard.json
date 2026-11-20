@@ -1,0 +1,179 @@
+{
+  "item": {
+    "name": "Hard-Flick — Wide flicks",
+    "description": "One ball at a time, always far from the last one, across most of your screen. Trains big flicks that land on target without a correction. Hard: 1 ball 4.2° wide in a 80° × 12° area.",
+    "shareCode": "bdd7d78fb0b54d6a",
+    "sceneKey": "set-bdd7d78fb0b54d6a",
+    "createTime": "2026-11-20 12:00:00",
+    "updateTime": "2026-11-20 12:00:00",
+    "docBytes": 1502,
+    "playCount": 0,
+    "status": 1,
+    "featured": false,
+    "parSeconds": null,
+    "mapId": null,
+    "sort": 214,
+    "type": "ball"
+  },
+  "scene": {
+    "name": "Hard-Flick — Wide flicks",
+    "description": "One ball at a time, always far from the last one, across most of your screen. Trains big flicks that land on target without a correction. Hard: 1 ball 4.2° wide in a 80° × 12° area.",
+    "shareCode": "bdd7d78fb0b54d6a",
+    "sceneKey": "set-bdd7d78fb0b54d6a",
+    "createTime": "2026-11-20 12:00:00",
+    "updateTime": "2026-11-20 12:00:00",
+    "docBytes": 1502,
+    "playCount": 0,
+    "status": 1,
+    "featured": false,
+    "parSeconds": null,
+    "schemaVersion": 2,
+    "blockCount": 1,
+    "authorNickname": "openVaim",
+    "authorUid": "openvaim",
+    "sceneHash": "dd08fc54b44adeed",
+    "doc": {
+      "schemaVersion": 2,
+      "meta": {
+        "id": "scene-199064952",
+        "name": "Hard-Flick — Wide flicks",
+        "seed": 199064952,
+        "createdAt": 0
+      },
+      "environment": {
+        "skyColor": "#000000",
+        "fogNear": 50,
+        "fogFar": 140,
+        "ambientIntensity": 1.55,
+        "keyLightIntensity": 2.2,
+        "grid": {
+          "size": 42,
+          "divisions": 28,
+          "centerColor": "#ffffff",
+          "gridColor": "#0091ff",
+          "position": {
+            "x": 0,
+            "y": -0.02,
+            "z": 4.2
+          }
+        }
+      },
+      "blocks": [
+        {
+          "id": "ground",
+          "shape": "plane",
+          "position": {
+            "x": -0.2,
+            "y": -13.6,
+            "z": -8.8
+          },
+          "rotationY": 0,
+          "size": {
+            "x": 40,
+            "y": 0.4,
+            "z": 45
+          },
+          "color": "#18222b",
+          "collidable": true,
+          "transparent": true
+        }
+      ],
+      "playerSpawn": {
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 4.2
+        },
+        "yaw": 0
+      },
+      "spawners": [
+        {
+          "id": "spawner-1",
+          "actorTemplateId": "actor-1",
+          "kind": "area",
+          "position": {
+            "x": 0,
+            "y": 2.102,
+            "z": -7.8
+          },
+          "size": {
+            "x": 20.138,
+            "y": 2.523,
+            "z": 0
+          },
+          "maxAlive": 1,
+          "spawnDelay": [
+            0.05,
+            0.12
+          ],
+          "minAngularGapFromPrevious": 35
+        }
+      ],
+      "actors": [
+        {
+          "id": "actor-1",
+          "name": "Target",
+          "body": {
+            "shape": "sphere",
+            "headSize": 1,
+            "bodyWidth": 0.44,
+            "bodyHeight": 0,
+            "radius": 0.44
+          },
+          "color": "#ff4655",
+          "behaviors": [
+            {
+              "kind": "respawn",
+              "delay": [
+                0.05,
+                0.12
+              ],
+              "mode": "reSpawner"
+            }
+          ]
+        }
+      ],
+      "rules": {
+        "duration": 60,
+        "scoring": "clicking",
+        "weapon": "vandal",
+        "playerMovable": false,
+        "fireMode": "single",
+        "perfectAccuracy": true,
+        "tunables": [
+          {
+            "field": "radius",
+            "id": "actor-1",
+            "label": "Target size",
+            "min": 0.17,
+            "max": 0.97,
+            "step": 0.01
+          },
+          {
+            "field": "maxAlive",
+            "id": "spawner-1",
+            "label": "Targets at once",
+            "min": 1,
+            "max": 4,
+            "step": 1
+          },
+          {
+            "field": "width",
+            "id": "spawner-1",
+            "label": "Area width",
+            "min": 8,
+            "max": 36.5,
+            "step": 0.5
+          },
+          {
+            "field": "duration",
+            "label": "Round length",
+            "min": 30,
+            "max": 180,
+            "step": 15
+          }
+        ]
+      }
+    }
+  }
+}

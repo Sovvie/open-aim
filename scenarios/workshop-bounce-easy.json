@@ -1,0 +1,194 @@
+{
+  "item": {
+    "name": "Easy-Bounce — Zig-zag",
+    "description": "A ball ricochets up and down and across the wall on a zig-zag path. Hit it as it goes. Trains following a mover in two directions at once. Easy: Ball 4.4° wide at 5 m/s over 12 m.",
+    "shareCode": "ae1b97d4c75755d2",
+    "sceneKey": "set-ae1b97d4c75755d2",
+    "createTime": "2026-11-20 12:00:00",
+    "updateTime": "2026-11-20 12:00:00",
+    "docBytes": 1473,
+    "playCount": 0,
+    "status": 1,
+    "featured": false,
+    "parSeconds": null,
+    "mapId": null,
+    "sort": 239,
+    "type": "ball"
+  },
+  "scene": {
+    "name": "Easy-Bounce — Zig-zag",
+    "description": "A ball ricochets up and down and across the wall on a zig-zag path. Hit it as it goes. Trains following a mover in two directions at once. Easy: Ball 4.4° wide at 5 m/s over 12 m.",
+    "shareCode": "ae1b97d4c75755d2",
+    "sceneKey": "set-ae1b97d4c75755d2",
+    "createTime": "2026-11-20 12:00:00",
+    "updateTime": "2026-11-20 12:00:00",
+    "docBytes": 1473,
+    "playCount": 0,
+    "status": 1,
+    "featured": false,
+    "parSeconds": null,
+    "schemaVersion": 2,
+    "blockCount": 1,
+    "authorNickname": "openVaim",
+    "authorUid": "openvaim",
+    "sceneHash": "59e04c6f2ae1f812",
+    "doc": {
+      "schemaVersion": 2,
+      "meta": {
+        "id": "scene-182565245",
+        "name": "Easy-Bounce — Zig-zag",
+        "seed": 182565245,
+        "createdAt": 0
+      },
+      "environment": {
+        "skyColor": "#000000",
+        "fogNear": 50,
+        "fogFar": 140,
+        "ambientIntensity": 1.55,
+        "keyLightIntensity": 2.2,
+        "grid": {
+          "size": 42,
+          "divisions": 28,
+          "centerColor": "#ffffff",
+          "gridColor": "#0091ff",
+          "position": {
+            "x": 0,
+            "y": -0.02,
+            "z": 4.2
+          }
+        }
+      },
+      "blocks": [
+        {
+          "id": "ground",
+          "shape": "plane",
+          "position": {
+            "x": -0.2,
+            "y": -13.6,
+            "z": -8.8
+          },
+          "rotationY": 0,
+          "size": {
+            "x": 40,
+            "y": 0.4,
+            "z": 45
+          },
+          "color": "#18222b",
+          "collidable": true,
+          "transparent": true
+        }
+      ],
+      "playerSpawn": {
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 4.2
+        },
+        "yaw": 0
+      },
+      "spawners": [
+        {
+          "id": "spawner-1",
+          "actorTemplateId": "actor-1",
+          "kind": "area",
+          "position": {
+            "x": -6,
+            "y": 1.2,
+            "z": -13.8
+          },
+          "size": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "maxAlive": 1,
+          "spawnDelay": [
+            0.15,
+            0.35
+          ]
+        }
+      ],
+      "actors": [
+        {
+          "id": "actor-1",
+          "name": "Target",
+          "body": {
+            "shape": "sphere",
+            "headSize": 1,
+            "bodyWidth": 0.44,
+            "bodyHeight": 0,
+            "radius": 0.691
+          },
+          "color": "#ff4655",
+          "behaviors": [
+            {
+              "kind": "path",
+              "waypoints": [
+                {
+                  "x": -6,
+                  "y": 1.2,
+                  "z": -13.8
+                },
+                {
+                  "x": 6,
+                  "y": 3.6,
+                  "z": -13.8
+                },
+                {
+                  "x": -6,
+                  "y": 3.6,
+                  "z": -13.8
+                },
+                {
+                  "x": 6,
+                  "y": 1.2,
+                  "z": -13.8
+                },
+                {
+                  "x": -5.99,
+                  "y": 1.2,
+                  "z": -13.8
+                }
+              ],
+              "loop": true,
+              "speed": 5
+            },
+            {
+              "kind": "respawn",
+              "delay": [
+                0.15,
+                0.35
+              ],
+              "mode": "reSpawner"
+            }
+          ]
+        }
+      ],
+      "rules": {
+        "duration": 60,
+        "scoring": "clicking",
+        "weapon": "vandal",
+        "playerMovable": false,
+        "fireMode": "single",
+        "perfectAccuracy": true,
+        "tunables": [
+          {
+            "field": "radius",
+            "id": "actor-1",
+            "label": "Target size",
+            "min": 0.27,
+            "max": 1.53,
+            "step": 0.01
+          },
+          {
+            "field": "duration",
+            "label": "Round length",
+            "min": 30,
+            "max": 180,
+            "step": 15
+          }
+        ]
+      }
+    }
+  }
+}
