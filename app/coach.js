@@ -408,7 +408,7 @@
       const { cx, cz, x, z } = spot(best[0]);
       out.push({
         id: "death-zone:" + map, severity: "tip", sample: total, title: "You keep dying in one spot on " + map,
-        detail: "On " + map + " you died or fell " + plural(best[1], "time", "times") + " within a metre of x " + x + " m, z " + z + " m (measured from the map's origin), " + pct(best[1] / total) + "% of your " + total + " deaths there" + (mean > 0 ? " and about " + Math.round(best[1] / mean) + " times a typical other spot" : "") + ". Next time you pass there, check the corners first or take another route.",
+        detail: "On " + map + " you died or fell " + plural(best[1], "time", "times") + " within a metre of x " + x + " m, z " + z + " m (measured from the map's origin), " + pct(best[1] / total) + "% of your " + total + " deaths there" + (mean > 0 ? " and about " + Math.round(best[1] / mean) + " times a typical other spot" : "") + ". Next time you pass there, check the corners first or take another route. The Heatmap tab (Deaths, " + map + ") marks the spot.",
         evidence: { map, cellX: cx, cellZ: cz, centreX: x, centreZ: z, deathsInCell: best[1], deathsOnMap: total, usedCells: cells.size, timesAverage: mean > 0 ? r1(best[1] / mean) : null },
       });
     }
@@ -428,7 +428,7 @@
     const tip = fell >= FALL_MIN && fell / total >= FALL_SHARE;
     return [{
       id: "deaths-cause", severity: tip ? "tip" : "info", sample: total, title: tip ? "Many of your deaths are falls" : "Most of your deaths come from enemy shots",
-      detail: "Of your " + total + " deaths, " + shot + " (" + pct(shot / total) + "%) were enemy shots and " + fell + " (" + pct(fell / total) + "%) were falls." + (tip ? " Falls are free deaths: slow down near edges and drops, and check the ground before you jump." : " Work on the fights themselves."),
+      detail: "Of your " + total + " deaths, " + shot + " (" + pct(shot / total) + "%) were enemy shots and " + fell + " (" + pct(fell / total) + "%) were falls." + (tip ? " Falls are free deaths: slow down near edges and drops, and check the ground before you jump." : " Falls are not what costs you rounds: the fights are, so the other cards about aim and fights are where to start."),
       evidence: { deaths: total, byShot: shot, falls: fell, fallPercent: pct(fell / total) },
     }];
   }
@@ -1313,7 +1313,7 @@
     "kill-time": (e) => (has(e.medianSeconds) ? e.medianSeconds + " s median" + (has(e.kills) ? ", " + e.kills + " kills" : "") : ""),
     "kill-time-trend": (e) => (has(e.previousSeconds, e.recentSeconds) ? e.previousSeconds + " s → " + e.recentSeconds + " s" : ""),
     "death-zone": (e) => (has(e.deathsInCell, e.deathsOnMap) ? e.deathsInCell + " of " + e.deathsOnMap + " deaths in one spot" : ""),
-    "deaths-cause": (e) => (has(e.fallPercent) ? e.fallPercent + "% of deaths were falls" : ""),
+    "deaths-cause": (e) => (has(e.byShot, e.deaths, e.falls) && e.byShot > e.falls ? e.byShot + " of " + e.deaths + " deaths to enemy shots" : has(e.fallPercent) ? e.fallPercent + "% of deaths were falls" : ""),
     "deaths-unanswered": (e) => (has(e.sharePercent) ? e.sharePercent + "% with no shot back" : ""),
     "multi-enemy": (e) => (has(e.deathPercent) ? e.deathPercent + "% of deaths vs 2+ enemies" : has(e.killPercent) ? e.killPercent + "% of kills vs 2+ enemies" : ""),
     "fights-lost": (e) => (has(e.lostPercent) ? e.lostPercent + "% lost" + (has(e.fightsLost, e.fights) ? " (" + e.fightsLost + " of " + e.fights + ")" : "") : ""),
@@ -1341,7 +1341,7 @@
       : has(e.adsMultiplier, e.usualAdsMultiplier) ? "ADS " + r2(e.usualAdsMultiplier) + " → " + r2(e.adsMultiplier) : ""),
     "sens-extreme": (e) => (has(e.medianSensitivity) ? "Median " + r2(e.medianSensitivity) : ""),
     "mouse-accel": (e) => (has(e.sharePercent) ? e.sharePercent + "% of rounds flagged" : ""),
-    "tracking": (e) => (has(e.bodyOnPercent) ? e.bodyOnPercent + "% on body" + (has(e.lagDegrees) && Math.abs(e.lagDegrees) >= 0.1 ? ", " + Math.abs(e.lagDegrees) + "° " + (e.lagDegrees > 0 ? "behind" : "ahead") : "") : ""),
+    "tracking": (e) => (has(e.bodyOnPercent) ? e.bodyOnPercent + "% on body" + (has(e.lagDegrees) && (e.direction === "behind" || e.direction === "ahead") ? ", " + Math.abs(e.lagDegrees) + "° " + (e.lagDegrees > 0 ? "behind" : "ahead") : "") : ""),
     "tracking-lock": (e) => (has(e.medianLockSeconds) ? e.medianLockSeconds + " s to lock on" : ""),
     "warmup": (e) => (has(e.firstRoundsAccuracyPercent, e.middleAccuracyPercent) ? e.firstRoundsAccuracyPercent + "% first rounds vs " + e.middleAccuracyPercent + "% after" : ""),
     "fade": (e) => (has(e.lastRoundsAccuracyPercent, e.middleAccuracyPercent) ? e.lastRoundsAccuracyPercent + "% last rounds vs " + e.middleAccuracyPercent + "% before" : ""),

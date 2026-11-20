@@ -574,6 +574,12 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
 /* session timeline: a died round is hatched as well as red, so the result does not rest on colour alone */
 .aim-an-tl.is-died, .aim-an-tl-key i.is-died { background: repeating-linear-gradient(-45deg, var(--an-red) 0 3px, #8a1c27 3px 6px); }
 .aim-an-tl-key li.aim-an-tl-note { margin-left: auto; color: var(--an-dim); }
+/* a long session (100+ rounds) fits the strip at any width: thinner gaps, bars down to 1px, never wider than the view */
+.aim-an-timeline { overflow: hidden; }
+.aim-an-timeline.is-dense { gap: 1px; }
+.aim-an-timeline.is-packed { gap: 0; }
+.aim-an-timeline.is-dense .aim-an-tl, .aim-an-timeline.is-packed .aim-an-tl { min-width: 1px; }
+.aim-an-timeline.is-packed .aim-an-tl { box-shadow: inset -1px 0 0 rgba(5, 7, 10, 0.55); }
 /* tip modal title: sentence case like the card it came from (a long uppercase sentence is hard to read) */
 html[data-aim-local]:not(#es) body .es-tool.aim-an-tipm h3 { text-transform: none !important; }
 /* keyboard: a chart, the round strip and the score chart take focus; arrows move between their points and show the hover card */
@@ -1878,7 +1884,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-tipm h3 { text-transform: non
       const tip = `Round ${i + 1}: ${END_WORD[c.end] || c.end}\n${hhmm(c.at)}${num(c.seconds) && c.seconds > 0 ? ", " + Math.round(c.seconds) + " s" : ""}\n${c.accuracy === null ? "No shots fired" : Math.round(c.accuracy) + "% accuracy, " + plural(c.shots, "shot")} · ${plural(c.kills, "kill")}, ${plural(c.deaths, "death")}`;
       return `<span class="aim-an-tl ${END_CLASS[c.end] || "is-other"}" style="height:${h}%" data-tip="${esc(tip)}" data-round="${i}" aria-label="${esc(tip.replace(/\n/g, ", "))}"></span>`;
     }).join("");
-    return `<div class="aim-an-tl-wrap"><div class="aim-an-timeline" data-timeline tabindex="0" data-tipnav role="group" aria-label="${plural(cells.length, "round")} this session, coloured by result, as tall as the round's accuracy; arrow keys step through them">${bars}</div>`
+    return `<div class="aim-an-tl-wrap"><div class="aim-an-timeline${cells.length > 90 ? " is-packed" : cells.length > 36 ? " is-dense" : ""}" data-timeline tabindex="0" data-tipnav role="group" aria-label="${plural(cells.length, "round")} this session, coloured by result, as tall as the round's accuracy; arrow keys step through them">${bars}</div>`
       + `<ul class="aim-an-hit-key aim-an-tl-key"><li><i class="is-cleared"></i>Cleared</li><li><i class="is-time"></i>Time up</li><li><i class="is-died"></i>Died</li><li><i class="is-other"></i>Other</li><li class="aim-an-tl-note">Bar height = accuracy</li></ul></div>`;
   }
   const verdictList = (title, rows, cls, empty = "Nothing here.") => `<div class="aim-an-vs ${cls}"><h4>${title}</h4>${rows.length ? `<ul>${rows.map((r) => `<li data-metric="${r.id}">${esc(changeText(r))}</li>`).join("")}</ul>` : `<p>${empty}</p>`}</div>`;
