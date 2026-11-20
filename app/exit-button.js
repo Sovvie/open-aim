@@ -17,7 +17,15 @@ body.al-training-active .es-exit{display:none}
   document.head.append(css);
 
   function mount() {
-    if (!document.body || document.querySelector(".es-exit")) return;
+    if (!document.body) return;
+    // ui-lobby-v1: the X sits in the page right after the top bar, so Tab reaches it after the Sens box (it is
+    // drawn top-right) instead of last, after the search box at the bottom.
+    const nav = document.querySelector(".hall-topnav");
+    const existing = document.querySelector(".es-exit");
+    if (existing) {
+      if (nav && nav.nextElementSibling !== existing && nav.parentElement) nav.after(existing);
+      return;
+    }
     const button = document.createElement("button");
     button.type = "button";
     button.className = "es-exit";
@@ -25,8 +33,8 @@ body.al-training-active .es-exit{display:none}
     button.setAttribute("aria-label", "Exit openVaim");
     button.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
     button.addEventListener("click", () => window.__aimDesktop.quit());
-    document.body.append(button);
+    if (nav?.parentElement) nav.after(button); else document.body.append(button);
   }
   mount();
-  window.__aimWatchPage?.(mount, { childList: true });
+  window.__aimWatchPage?.(mount, { childList: true, subtree: true });
 })();

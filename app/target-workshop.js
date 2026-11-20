@@ -121,8 +121,8 @@
    search bar scrolled away with it). */
 .tw-root{height:100%;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-gutter:stable}
 .tw-root>.tw-page{min-height:100%}
-.tw-empty{min-height:240px;align-content:center;gap:12px;text-align:center}
-.tw-empty b{display:block;font:800 18px var(--es-head,"Bahnschrift");letter-spacing:.06em;text-transform:uppercase;color:#d6d9df}
+.tw-empty{min-height:200px;align-content:center;gap:12px;text-align:center;background:#10131a;border-top:2px solid #ff4655;clip-path:var(--es-cut,none);padding:30px 24px}
+.tw-empty b{display:block;margin-bottom:8px;font:italic 800 22px var(--es-head,"Bahnschrift");letter-spacing:.04em;text-transform:uppercase;color:#fff}
 @media (max-width:1400px){.tw-page{padding:22px 24px 26px}.tw-name h2{font-size:22px}.tw-body{padding:18px 18px 16px}}
 @media (prefers-reduced-motion:reduce){.tw-card,.tw-btn,.tw-row{transition:none}}
 `;
@@ -463,7 +463,8 @@
     const hasTiers = state.items.some((it) => tierOf(it.name).tier);
     if (!hasTiers && state.items.length) level = "any";
     // Counts follow the other filter, so "Hard 32" and "Flicking 12" always say what a click will show.
-    const inLevel = state.items.filter(levelOk), inSkill = state.items.filter(skillOk);
+    const matching = state.items.filter((it) => it.match);
+    const inLevel = matching.filter(levelOk), inSkill = matching.filter(skillOk);
     const chip = (key, label, n, attr = "data-filter", current = filter) => `<button type="button" ${attr}="${esc(key)}" aria-pressed="${current === key}">${esc(label)}${n != null ? `<i>${n}</i>` : ""}</button>`;
     const items = visibleItems(), q = state.query.trim();
     let body;
