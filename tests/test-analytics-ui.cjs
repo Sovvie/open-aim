@@ -178,12 +178,12 @@ test("result screen: failing reader shows the no-record message, no throw", asyn
 
 // ---- Stats panel ----
 const content = (document) => document.body.querySelector(".aim-an-content");
-test("panel: opens with four tabs, Esc-style close removes it", async () => {
+test("panel: opens with seven tabs, Esc-style close removes it", async () => {
   const { ui, document } = load({ analytics: stub() });
   ui.open("heatmap"); await settle();
   const tabs = document.body.querySelector(".aim-an-tabs");
-  assert.deepStrictEqual(tabs.children.map((b) => b.textContent), ["Heatmap", "Progress", "Tracking", "Coach"]);
-  assert.strictEqual(tabs.children[0].getAttribute("aria-pressed"), "true");
+  assert.deepStrictEqual(tabs.children.map((b) => b.textContent), ["Session", "Drills", "Progress", "Compare", "Heatmap", "Tracking", "Coach"]);
+  assert.strictEqual(tabs.children[4].getAttribute("aria-pressed"), "true");
   ui.close();
   assert.strictEqual(document.body.querySelector(".aim-an-shade"), null);
 });
@@ -827,11 +827,11 @@ test("inline Stats: mountInline renders the same tabs in the host, no backdrop a
   const { ui, document } = load({ analytics: stub({ days: [dayRow(0)] }) });
   const host = document.createElement("div");
   document.body.appendChild(host);
-  const p = ui.mountInline(host);
+  const p = ui.mountInline(host, "heatmap");
   await settle();
   assert.ok(host.children[0].className.includes("aim-an-panel") && host.children[0].className.includes("aim-an-inline"));
   assert.strictEqual(host.children[0].getAttribute("role"), null, "not a dialog");
-  assert.deepStrictEqual(host.querySelector(".aim-an-tabs").children.map((b) => b.textContent), ["Heatmap", "Progress", "Tracking", "Coach"]);
+  assert.deepStrictEqual(host.querySelector(".aim-an-tabs").children.map((b) => b.textContent), ["Session", "Drills", "Progress", "Compare", "Heatmap", "Tracking", "Coach"]);
   assert.strictEqual(host.querySelector(".es-tool-x"), null);
   assert.strictEqual(document.body.querySelector(".aim-an-shade"), null);
   assert.ok(host.querySelector(".aim-an-content").innerHTML.includes('fill="#ff4655"'), "heatmap drawn inline");
@@ -909,7 +909,7 @@ test("progress focus: a large chart on top and six thumbnails; the focus follows
   content(document).listeners.click[0]({ target: { closest: (sel) => (sel === "[data-range]" ? { dataset: { range: "90" } } : null) } }); await settle();
   assert.ok(content(document).innerHTML.includes('data-focused="deaths"'), "kept over a range change");
   const tabs = document.body.querySelector(".aim-an-tabs").children;
-  tabs[2].listeners.click[0](); tabs[1].listeners.click[0](); await settle();
+  tabs[5].listeners.click[0](); tabs[2].listeners.click[0](); await settle();
   assert.ok(content(document).innerHTML.includes('data-focused="accuracy"'), "back to the default after another Stats tab");
   assert.strictEqual(A.calls.filter((c) => c[0] === "days").length, 1, "no new read for a focus change");
 });
@@ -1247,6 +1247,8 @@ const FIXTURE = {
   "sens-extreme": ["Your sensitivity is very high", { medianSensitivity: 2.4 }],
   "mouse-accel": ["Your mouse may be accelerated", { sharePercent: 80 }],
   "consistency": ["Your aim is streaky", { spreadPoints: 12 }],
+  "warmup": ["You start sessions cold", { firstRoundsAccuracyPercent: 28, middleAccuracyPercent: 36 }],
+  "fade": ["Your aim fades late in a session", { lastRoundsAccuracyPercent: 26, middleAccuracyPercent: 35 }],
   "tracking": ["Your crosshair trails moving enemies", { bodyOnPercent: 41, lagDegrees: 2.3 }],
   "tracking-lock": ["You take a while to lock on", { medianLockSeconds: 0.62 }],
   "trend-accuracy": ["Your accuracy is dropping", { previousPercent: 34, recentPercent: 28 }],
@@ -1438,7 +1440,7 @@ test("tab switch keeps the outer panel height: one fixed view area for every tab
   const snap = () => JSON.stringify([root.className, root.attrs, root.style || null, view.className, view.attrs, view.style || null, root.children.length, tabs.parentElement === view.parentElement]);
   const first = snap();
   view.scrollTop = 300;
-  for (const i of [1, 3, 0, 3]) {
+  for (const i of [2, 6, 0, 1, 3, 4, 6]) {
     tabs.children[i].listeners.click[0](); await settle();
     assert.strictEqual(snap(), first, "the panel and the view box are the same after each switch");
     assert.strictEqual(root.querySelector(".aim-an-content"), view, "same view box");
