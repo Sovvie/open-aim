@@ -3795,3 +3795,60 @@ html[data-aim-local]:not(#es) body .al-wk-card > .al-wk-fav { top: 7px !importan
 /* hero-diff-off-v1 (user, 14 Nov 2026): no Easy / Hard difficulty chip on the Recommended drill at the top of
    VALORANT Training (the enemy rank replaces it; the cards already hide theirs). */
 html[data-aim-local]:not(#es) body .al-wk-feat .al-wk-diff { display: none !important; }
+
+/* ===== ui-lobby-v1 (1.6.0 round 3): lobby shell and list screens. Keep lobby fixes inside this block. ===== */
+/* Top bar: the tab row, the bar buttons and the Sens box stay on one 64 px line at every window width. The
+   site hid every tab but the active one under 1100 px (it expected its left rail, which openVaim hides) and
+   wrapped the Sens box onto a second row that covered the top of each page; at 1280-1536 px the bar ran off
+   the right edge (page scrolled sideways). The tabs now shrink first, then scroll sideways (lobby-bar.js turns
+   the mouse wheel into sideways scrolling there and keeps the active tab in view). */
+html[data-aim-local]:not(#es) body .hall-topnav { flex-wrap: nowrap !important; }
+html[data-aim-local]:not(#es) body .hall-topnav .hall-tabs {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+html[data-aim-local]:not(#es) body .hall-topnav .hall-tabs::-webkit-scrollbar { display: none; }
+html[data-aim-local]:not(#es) body .hall-topnav .hall-tab { flex: none !important; white-space: nowrap !important; }
+html[data-aim-local]:not(#es) body .hall-topnav :is(.hall-brand, .es-bar, .hall-topnav-right) { flex: none !important; }
+/* a soft edge on the side where more tabs are hidden */
+html[data-aim-local]:not(#es) body .hall-topnav .hall-tabs.es-tabs-more-right { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent); }
+html[data-aim-local]:not(#es) body .hall-topnav .hall-tabs.es-tabs-more-left { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 36px), transparent); }
+html[data-aim-local]:not(#es) body .hall-topnav .hall-tabs.es-tabs-more-left.es-tabs-more-right { -webkit-mask-image: linear-gradient(to right, transparent, #000 36px, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(to right, transparent, #000 36px, #000 calc(100% - 36px), transparent); }
+@media (max-width: 1700px) {
+  html[data-aim-local]:not(#es) body .hall-topnav .hall-tab { padding-inline: 13px !important; }
+  html[data-aim-local]:not(#es) body .hall-topnav .hall-brand { padding: 0 14px 0 18px !important; }
+}
+@media (max-width: 1400px) {
+  html[data-aim-local]:not(#es) body .hall-topnav .hall-tab { padding-inline: 9px !important; font-size: 13.5px !important; }
+  html[data-aim-local]:not(#es) body .hall-topnav .hall-brand { padding: 0 10px 0 14px !important; }
+  html[data-aim-local]:not(#es) body .hall-topnav .hall-brand > .hall-brand-logo { height: 20px !important; }
+  html[data-aim-local]:not(#es) body .es-bar { margin-right: 6px !important; gap: 2px; }
+  html[data-aim-local]:not(#es) body .es-bar-btn { padding: 0 7px !important; }
+}
+@media (max-width: 1100px) {
+  html[data-aim-local]:not(#es) body .hall-topnav { height: 64px !important; min-height: 0 !important; }
+  html[data-aim-local]:not(#es) body .hall-topnav .hall-tab { display: flex !important; }
+  html[data-aim-local]:not(#es) body .hall-topnav .hall-topnav-right { order: 0 !important; flex-basis: auto !important; margin: 0 !important; padding: 0 12px 0 0 !important; }
+}
+/* Map strip: the map name (17 px) ran into its task count on the 112 px tiles ("CORRODE12"). The count now
+   sits under the name, left-aligned, in the number font. */
+html[data-aim-local]:not(#es) body .al-wk-slice:not(.is-all) .al-wk-s-name { bottom: 31px !important; left: 16px !important; }
+html[data-aim-local]:not(#es) body .al-wk-slice:not(.is-all) .al-wk-s-count { display: flex !important; left: 16px !important; right: auto !important; bottom: 11px !important; font-size: 15px !important; gap: 4px; color: rgba(236, 232, 225, .78) !important; }
+html[data-aim-local]:not(#es) body .al-wk-slice:not(.is-all) .al-wk-s-count small { display: inline !important; font-size: 10px !important; text-transform: uppercase; letter-spacing: .06em; }
+/* Discord dock (lobby-bar.js): tucked to its tab while the drill list is scrolled down; looks like collapsed. */
+html[data-aim-local]:not(#es) body .es-discord-dock.is-tucked { transform: translateX(calc(100% - 16px)); }
+html[data-aim-local]:not(#es) body .es-discord-dock.is-tucked .es-discord-toggle { width: 38px; height: 72px; margin-top: 0; box-shadow: -8px 10px 24px rgba(0, 0, 0, .45), inset 0 0 0 1px var(--es-line-2), inset 0 3px 0 var(--es-red); }
+html[data-aim-local]:not(#es) body .es-discord-dock.is-tucked .es-discord-toggle-icon { display: block; }
+html[data-aim-local]:not(#es) body .es-discord-dock.is-tucked .es-discord-toggle-arrow { transform: rotate(180deg); }
+html[data-aim-local]:not(#es) body .es-discord-dock.is-tucked .es-discord-panel { visibility: hidden; transition: visibility 0s .45s, background-color .15s ease, transform .15s ease; }
+html[data-aim-local]:not(#es) body .es-discord-dock .es-discord-toggle { border-radius: 0 !important; }
+/* Shelf paging arrows: on the first / last page the dead arrow (opacity .3) sat over the first card's art. */
+html[data-aim-local]:not(#es) body .al-wk-paddle:disabled { opacity: 0 !important; pointer-events: none !important; }
+/* Filter chips with no drills (e.g. "Fundamentals 0") were 2.4:1 against the panel; still dimmed, now readable. */
+html[data-aim-local]:not(#es) body .al-wk-chip.is-zero { opacity: .62 !important; }
+/* Bottom search: wide enough for its whole hint ("Search VALORANT Training, target tasks and the Community Workshop"). */
+html[data-aim-local]:not(#es) body .hall-bottombar .hall-search { width: clamp(300px, 38vw, 520px) !important; }
