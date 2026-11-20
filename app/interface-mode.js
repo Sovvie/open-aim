@@ -78,4 +78,31 @@
     });
   }, { childList: true, subtree: true });
   addRow();
+
+  // ui-motion: keyboard focus on slanted/cut buttons. The red ring is drawn outside the button, and a
+  // clip-path on the button (or a clipping parent hugging it) cut it away, so Tab showed nothing on the
+  // top tabs, filter chips and map slices. Such elements get .es-focus-inset (theme-esports.css draws the
+  // ring inside). Runs only when focus moves; mouse focus never shows a ring (focus-visible).
+  const EDGE = 4;
+  function needsInsetRing(selfClipped, rect, clippers) {
+    if (selfClipped) return true;
+    return clippers.some((r) => rect.left - EDGE < r.left || rect.top - EDGE < r.top || rect.right + EDGE > r.right || rect.bottom + EDGE > r.bottom);
+  }
+  window.__aimFocusRing = { needsInsetRing };
+  document.addEventListener("focusin", (event) => {
+    const el = event.target;
+    if (!(el instanceof Element) || el === document.body) return;
+    let inset = false;
+    try {
+      const cs = getComputedStyle(el);
+      const clippers = [];
+      let a = el.parentElement;
+      for (let depth = 0; a && a !== document.body && depth < 6; depth++, a = a.parentElement) {
+        const s = getComputedStyle(a);
+        if (s.clipPath !== "none" || s.overflowX !== "visible" || s.overflowY !== "visible") clippers.push(a.getBoundingClientRect());
+      }
+      inset = needsInsetRing(cs.clipPath !== "none", el.getBoundingClientRect(), clippers);
+    } catch {}
+    if (el.classList.contains("es-focus-inset") !== inset) el.classList.toggle("es-focus-inset", inset);
+  }, true);
 })();

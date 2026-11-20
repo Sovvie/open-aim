@@ -10,15 +10,27 @@
   let currentPanel = null;
 
   function closePanel() {
+    const opener = currentPanel?.esOpener;
     currentPanel?.remove();
     currentPanel = null;
+    // ui-motion: keyboard users land back on the top-bar button that opened the panel.
+    if (opener?.isConnected) { try { opener.focus({ preventScroll: true }); } catch {} }
   }
 
+  // ui-motion: Esc closed the panel only while focus was inside it, and focus stayed on the top-bar
+  // button, so Esc did nothing after opening. Esc now closes it from anywhere while it is open.
+  document.addEventListener("keydown", (event) => {
+    if (currentPanel && event.key === "Escape" && !currentPanel.contains(event.target)) { event.stopPropagation(); closePanel(); }
+  }, true);
+  const focusables = (root) => [...root.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex]:not([tabindex="-1"])')].filter((el) => el.getClientRects().length);
+
   function showPanel(title, subtitle) {
+    const opener = currentPanel?.esOpener || document.activeElement;
     closePanel();
     const shade = document.createElement("div");
     shade.className = "es-tool-shade";
-    shade.innerHTML = `<section class="es-tool" role="dialog" aria-label="${title}">
+    shade.esOpener = opener && opener !== document.body ? opener : null;
+    shade.innerHTML = `<section class="es-tool" role="dialog" aria-modal="true" aria-label="${title}">
       <header class="es-tool-head"><div><h2>${title}</h2><p>${subtitle}</p></div>
       <button type="button" class="es-tool-x" aria-label="Close">✕</button></header>
       <div class="es-tool-body"></div></section>`;
@@ -28,11 +40,20 @@
     for (const type of ["keydown", "keyup", "keypress"]) {
       shade.addEventListener(type, (event) => {
         if (type === "keydown" && event.key === "Escape") closePanel();
+        // ui-motion: Tab stays inside the panel (wraps from the last control to the first).
+        if (type === "keydown" && event.key === "Tab") {
+          const list = focusables(shade);
+          const first = list[0], last = list[list.length - 1];
+          if (first && event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+          else if (last && !event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+        }
         event.stopPropagation();
       });
     }
     document.body.appendChild(shade);
     currentPanel = shade;
+    // ui-motion: focus moves into the panel (the close button), so Tab and Esc work at once.
+    try { shade.querySelector(".es-tool-x").focus({ preventScroll: true }); } catch {}
     return shade.querySelector(".es-tool-body");
   }
 
