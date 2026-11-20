@@ -1,0 +1,182 @@
+{
+  "item": {
+    "name": "Hard-Reaction — Blink",
+    "description": "A ball appears at a random spot, then flashes on and off. Shoot it while it is lit. Trains reacting to a target that shows up and blinks away. Hard: 2 balls 3.2° wide, lit for 0.5 to 0.8 s at a time.",
+    "shareCode": "933befff5375aa0a",
+    "sceneKey": "set-933befff5375aa0a",
+    "createTime": "2026-11-20 12:00:00",
+    "updateTime": "2026-11-20 12:00:00",
+    "docBytes": 1453,
+    "playCount": 0,
+    "status": 1,
+    "featured": false,
+    "parSeconds": null,
+    "mapId": null,
+    "sort": 226,
+    "type": "ball"
+  },
+  "scene": {
+    "name": "Hard-Reaction — Blink",
+    "description": "A ball appears at a random spot, then flashes on and off. Shoot it while it is lit. Trains reacting to a target that shows up and blinks away. Hard: 2 balls 3.2° wide, lit for 0.5 to 0.8 s at a time.",
+    "shareCode": "933befff5375aa0a",
+    "sceneKey": "set-933befff5375aa0a",
+    "createTime": "2026-11-20 12:00:00",
+    "updateTime": "2026-11-20 12:00:00",
+    "docBytes": 1453,
+    "playCount": 0,
+    "status": 1,
+    "featured": false,
+    "parSeconds": null,
+    "schemaVersion": 2,
+    "blockCount": 1,
+    "authorNickname": "openVaim",
+    "authorUid": "openvaim",
+    "sceneHash": "5add700d8277ad4a",
+    "doc": {
+      "schemaVersion": 2,
+      "meta": {
+        "id": "scene-154386175",
+        "name": "Hard-Reaction — Blink",
+        "seed": 154386175,
+        "createdAt": 0
+      },
+      "environment": {
+        "skyColor": "#000000",
+        "fogNear": 50,
+        "fogFar": 140,
+        "ambientIntensity": 1.55,
+        "keyLightIntensity": 2.2,
+        "grid": {
+          "size": 42,
+          "divisions": 28,
+          "centerColor": "#ffffff",
+          "gridColor": "#0091ff",
+          "position": {
+            "x": 0,
+            "y": -0.02,
+            "z": 4.2
+          }
+        }
+      },
+      "blocks": [
+        {
+          "id": "ground",
+          "shape": "plane",
+          "position": {
+            "x": -0.2,
+            "y": -13.6,
+            "z": -8.8
+          },
+          "rotationY": 0,
+          "size": {
+            "x": 40,
+            "y": 0.4,
+            "z": 45
+          },
+          "color": "#18222b",
+          "collidable": true,
+          "transparent": true
+        }
+      ],
+      "playerSpawn": {
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 4.2
+        },
+        "yaw": 0
+      },
+      "spawners": [
+        {
+          "id": "spawner-1",
+          "actorTemplateId": "actor-1",
+          "kind": "area",
+          "position": {
+            "x": 0,
+            "y": 2.478,
+            "z": -13.8
+          },
+          "size": {
+            "x": 9.646,
+            "y": 3.15,
+            "z": 0
+          },
+          "maxAlive": 2,
+          "spawnDelay": [
+            0.15,
+            0.4
+          ],
+          "minAngularGap": 6
+        }
+      ],
+      "actors": [
+        {
+          "id": "actor-1",
+          "name": "Target",
+          "body": {
+            "shape": "sphere",
+            "headSize": 1,
+            "bodyWidth": 0.44,
+            "bodyHeight": 0,
+            "radius": 0.503
+          },
+          "color": "#ff4655",
+          "behaviors": [
+            {
+              "kind": "blink",
+              "visible": [
+                0.5,
+                0.8
+              ],
+              "hidden": [
+                0.3,
+                0.5
+              ]
+            },
+            {
+              "kind": "respawn",
+              "delay": [
+                0.15,
+                0.4
+              ],
+              "mode": "reSpawner"
+            }
+          ]
+        }
+      ],
+      "rules": {
+        "duration": 60,
+        "scoring": "clicking",
+        "weapon": "vandal",
+        "playerMovable": false,
+        "fireMode": "single",
+        "perfectAccuracy": true,
+        "tunables": [
+          {
+            "field": "radius",
+            "id": "actor-1",
+            "label": "Target size",
+            "min": 0.2,
+            "max": 1.11,
+            "step": 0.01
+          },
+          {
+            "field": "maxAlive",
+            "id": "spawner-1",
+            "label": "Targets at once",
+            "min": 1,
+            "max": 4,
+            "step": 1
+          },
+          {
+            "field": "duration",
+            "label": "Round length",
+            "min": 30,
+            "max": 180,
+            "step": 15
+          }
+        ]
+      }
+    }
+  }
+}

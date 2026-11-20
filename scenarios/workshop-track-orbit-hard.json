@@ -1,0 +1,248 @@
+{
+  "item": {
+    "name": "Hard-Tracking — Orbit",
+    "description": "The ball runs around a wide loop in front of you. Follow it smoothly. Trains curved tracking with a constant change of direction. Hard: Ball 2.2° wide, loop 10 m wide and 4.8 m tall, 7 m/s.",
+    "shareCode": "fa1fd55caaea5e7f",
+    "sceneKey": "set-fa1fd55caaea5e7f",
+    "createTime": "2026-11-20 12:00:00",
+    "updateTime": "2026-11-20 12:00:00",
+    "docBytes": 1820,
+    "playCount": 0,
+    "status": 1,
+    "featured": false,
+    "parSeconds": null,
+    "mapId": null,
+    "sort": 248,
+    "type": "ball"
+  },
+  "scene": {
+    "name": "Hard-Tracking — Orbit",
+    "description": "The ball runs around a wide loop in front of you. Follow it smoothly. Trains curved tracking with a constant change of direction. Hard: Ball 2.2° wide, loop 10 m wide and 4.8 m tall, 7 m/s.",
+    "shareCode": "fa1fd55caaea5e7f",
+    "sceneKey": "set-fa1fd55caaea5e7f",
+    "createTime": "2026-11-20 12:00:00",
+    "updateTime": "2026-11-20 12:00:00",
+    "docBytes": 1820,
+    "playCount": 0,
+    "status": 1,
+    "featured": false,
+    "parSeconds": null,
+    "schemaVersion": 2,
+    "blockCount": 1,
+    "authorNickname": "openVaim",
+    "authorUid": "openvaim",
+    "sceneHash": "f55706723dc40ce1",
+    "doc": {
+      "schemaVersion": 2,
+      "meta": {
+        "id": "scene-262274389",
+        "name": "Hard-Tracking — Orbit",
+        "seed": 262274389,
+        "createdAt": 0
+      },
+      "environment": {
+        "skyColor": "#000000",
+        "fogNear": 50,
+        "fogFar": 140,
+        "ambientIntensity": 1.55,
+        "keyLightIntensity": 2.2,
+        "grid": {
+          "size": 42,
+          "divisions": 28,
+          "centerColor": "#ffffff",
+          "gridColor": "#0091ff",
+          "position": {
+            "x": 0,
+            "y": -0.02,
+            "z": 4.2
+          }
+        }
+      },
+      "blocks": [
+        {
+          "id": "ground",
+          "shape": "plane",
+          "position": {
+            "x": -0.2,
+            "y": -13.6,
+            "z": -8.8
+          },
+          "rotationY": 0,
+          "size": {
+            "x": 40,
+            "y": 0.4,
+            "z": 45
+          },
+          "color": "#18222b",
+          "collidable": true,
+          "transparent": true
+        }
+      ],
+      "playerSpawn": {
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 4.2
+        },
+        "yaw": 0
+      },
+      "spawners": [
+        {
+          "id": "spawner-1",
+          "actorTemplateId": "actor-1",
+          "kind": "area",
+          "position": {
+            "x": 5,
+            "y": 3.3,
+            "z": -15
+          },
+          "size": {
+            "x": 0.1,
+            "y": 0.1,
+            "z": 1
+          },
+          "maxAlive": 1,
+          "spawnDelay": [
+            0.2,
+            0.5
+          ]
+        }
+      ],
+      "actors": [
+        {
+          "id": "actor-1",
+          "name": "Target",
+          "body": {
+            "shape": "sphere",
+            "headSize": 1,
+            "bodyWidth": 0.44,
+            "bodyHeight": 0,
+            "radius": 0.369
+          },
+          "color": "#ff4655",
+          "behaviors": [
+            {
+              "kind": "path",
+              "waypoints": [
+                {
+                  "x": 5,
+                  "y": 3.3,
+                  "z": -15
+                },
+                {
+                  "x": 4.619,
+                  "y": 4.218,
+                  "z": -15
+                },
+                {
+                  "x": 3.536,
+                  "y": 4.997,
+                  "z": -15
+                },
+                {
+                  "x": 1.913,
+                  "y": 5.517,
+                  "z": -15
+                },
+                {
+                  "x": 0,
+                  "y": 5.7,
+                  "z": -15
+                },
+                {
+                  "x": -1.913,
+                  "y": 5.517,
+                  "z": -15
+                },
+                {
+                  "x": -3.536,
+                  "y": 4.997,
+                  "z": -15
+                },
+                {
+                  "x": -4.619,
+                  "y": 4.218,
+                  "z": -15
+                },
+                {
+                  "x": -5,
+                  "y": 3.3,
+                  "z": -15
+                },
+                {
+                  "x": -4.619,
+                  "y": 2.382,
+                  "z": -15
+                },
+                {
+                  "x": -3.536,
+                  "y": 1.603,
+                  "z": -15
+                },
+                {
+                  "x": -1.913,
+                  "y": 1.083,
+                  "z": -15
+                },
+                {
+                  "x": 0,
+                  "y": 0.9,
+                  "z": -15
+                },
+                {
+                  "x": 1.913,
+                  "y": 1.083,
+                  "z": -15
+                },
+                {
+                  "x": 3.536,
+                  "y": 1.603,
+                  "z": -15
+                },
+                {
+                  "x": 4.619,
+                  "y": 2.382,
+                  "z": -15
+                },
+                {
+                  "x": 5.01,
+                  "y": 3.3,
+                  "z": -15
+                }
+              ],
+              "loop": true,
+              "speed": 7
+            }
+          ],
+          "hitSlow": true
+        }
+      ],
+      "rules": {
+        "duration": 60,
+        "scoring": "tracking",
+        "weapon": "vandal",
+        "playerMovable": false,
+        "fireMode": "hold",
+        "targetsInvincible": true,
+        "perfectAccuracy": true,
+        "tunables": [
+          {
+            "field": "radius",
+            "id": "actor-1",
+            "label": "Target size",
+            "min": 0.14,
+            "max": 0.8200000000000001,
+            "step": 0.01
+          },
+          {
+            "field": "duration",
+            "label": "Round length",
+            "min": 30,
+            "max": 180,
+            "step": 15
+          }
+        ]
+      }
+    }
+  }
+}

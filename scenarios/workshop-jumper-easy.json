@@ -1,0 +1,202 @@
+{
+  "item": {
+    "name": "Easy-Jump — Jumping ball",
+    "description": "A ball that strafes and jumps, like a player in the air. Trains hitting a target that is moving up and down as well as sideways. Easy: Ball 4.2° wide, jumps 0.7 m high every 1.3 to 2.1 s.",
+    "shareCode": "7c9d401a4d92fe3e",
+    "sceneKey": "set-7c9d401a4d92fe3e",
+    "createTime": "2026-11-20 12:00:00",
+    "updateTime": "2026-11-20 12:00:00",
+    "docBytes": 1641,
+    "playCount": 0,
+    "status": 1,
+    "featured": false,
+    "parSeconds": null,
+    "mapId": null,
+    "sort": 237,
+    "type": "ball"
+  },
+  "scene": {
+    "name": "Easy-Jump — Jumping ball",
+    "description": "A ball that strafes and jumps, like a player in the air. Trains hitting a target that is moving up and down as well as sideways. Easy: Ball 4.2° wide, jumps 0.7 m high every 1.3 to 2.1 s.",
+    "shareCode": "7c9d401a4d92fe3e",
+    "sceneKey": "set-7c9d401a4d92fe3e",
+    "createTime": "2026-11-20 12:00:00",
+    "updateTime": "2026-11-20 12:00:00",
+    "docBytes": 1641,
+    "playCount": 0,
+    "status": 1,
+    "featured": false,
+    "parSeconds": null,
+    "schemaVersion": 2,
+    "blockCount": 1,
+    "authorNickname": "openVaim",
+    "authorUid": "openvaim",
+    "sceneHash": "7c7c430ac3543e5c",
+    "doc": {
+      "schemaVersion": 2,
+      "meta": {
+        "id": "scene-130667521",
+        "name": "Easy-Jump — Jumping ball",
+        "seed": 130667521,
+        "createdAt": 0
+      },
+      "environment": {
+        "skyColor": "#000000",
+        "fogNear": 50,
+        "fogFar": 140,
+        "ambientIntensity": 1.55,
+        "keyLightIntensity": 2.2,
+        "grid": {
+          "size": 42,
+          "divisions": 28,
+          "centerColor": "#ffffff",
+          "gridColor": "#0091ff",
+          "position": {
+            "x": 0,
+            "y": -0.02,
+            "z": 4.2
+          }
+        }
+      },
+      "blocks": [
+        {
+          "id": "ground",
+          "shape": "plane",
+          "position": {
+            "x": -0.2,
+            "y": -13.6,
+            "z": -8.8
+          },
+          "rotationY": 0,
+          "size": {
+            "x": 40,
+            "y": 0.4,
+            "z": 45
+          },
+          "color": "#18222b",
+          "collidable": true,
+          "transparent": true
+        }
+      ],
+      "playerSpawn": {
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 4.2
+        },
+        "yaw": 0
+      },
+      "spawners": [
+        {
+          "id": "spawner-1",
+          "actorTemplateId": "actor-1",
+          "kind": "area",
+          "position": {
+            "x": 0,
+            "y": 1.05,
+            "z": -9.8
+          },
+          "size": {
+            "x": 4,
+            "y": 0,
+            "z": 0
+          },
+          "maxAlive": 1,
+          "spawnDelay": [
+            0.15,
+            0.35
+          ]
+        }
+      ],
+      "actors": [
+        {
+          "id": "actor-1",
+          "name": "Target",
+          "body": {
+            "shape": "sphere",
+            "headSize": 1,
+            "bodyWidth": 0.44,
+            "bodyHeight": 0,
+            "radius": 0.513
+          },
+          "color": "#ff4655",
+          "behaviors": [
+            {
+              "kind": "jump",
+              "interval": [
+                1.3,
+                2.1
+              ],
+              "height": 0.7
+            },
+            {
+              "kind": "strafe",
+              "speed": [
+                2.97,
+                2.97
+              ],
+              "dwell": [
+                0.15,
+                0.5
+              ],
+              "travel": [
+                2,
+                4
+              ],
+              "counterStrafe": true
+            },
+            {
+              "kind": "respawn",
+              "delay": [
+                0.15,
+                0.35
+              ],
+              "mode": "reSpawner"
+            }
+          ]
+        }
+      ],
+      "rules": {
+        "duration": 60,
+        "scoring": "clicking",
+        "weapon": "vandal",
+        "playerMovable": false,
+        "fireMode": "single",
+        "perfectAccuracy": true,
+        "tunables": [
+          {
+            "field": "radius",
+            "id": "actor-1",
+            "label": "Target size",
+            "min": 0.2,
+            "max": 1.1300000000000001,
+            "step": 0.01
+          },
+          {
+            "field": "jump.height",
+            "id": "actor-1",
+            "label": "Jump height",
+            "min": 0.2,
+            "max": 1.2000000000000002,
+            "step": 0.05
+          },
+          {
+            "field": "strafe.speed",
+            "id": "actor-1",
+            "label": "Strafe speed",
+            "min": 1,
+            "max": 8,
+            "step": 0.1
+          },
+          {
+            "field": "duration",
+            "label": "Round length",
+            "min": 30,
+            "max": 180,
+            "step": 15
+          }
+        ]
+      }
+    }
+  }
+}

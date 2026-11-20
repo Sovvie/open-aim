@@ -1,0 +1,172 @@
+{
+  "item": {
+    "name": "Easy-Precision — Pinpoint",
+    "description": "Tiny balls in a small area, two up at once. There is no room to be sloppy: slow down your aim and place the crosshair exactly. Easy: 2 balls 1.5° wide in a 16° × 9° area.",
+    "shareCode": "62777a1b6f1c9bae",
+    "sceneKey": "set-62777a1b6f1c9bae",
+    "createTime": "2026-11-20 12:00:00",
+    "updateTime": "2026-11-20 12:00:00",
+    "docBytes": 1448,
+    "playCount": 0,
+    "status": 1,
+    "featured": false,
+    "parSeconds": null,
+    "mapId": null,
+    "sort": 221,
+    "type": "ball"
+  },
+  "scene": {
+    "name": "Easy-Precision — Pinpoint",
+    "description": "Tiny balls in a small area, two up at once. There is no room to be sloppy: slow down your aim and place the crosshair exactly. Easy: 2 balls 1.5° wide in a 16° × 9° area.",
+    "shareCode": "62777a1b6f1c9bae",
+    "sceneKey": "set-62777a1b6f1c9bae",
+    "createTime": "2026-11-20 12:00:00",
+    "updateTime": "2026-11-20 12:00:00",
+    "docBytes": 1448,
+    "playCount": 0,
+    "status": 1,
+    "featured": false,
+    "parSeconds": null,
+    "schemaVersion": 2,
+    "blockCount": 1,
+    "authorNickname": "openVaim",
+    "authorUid": "openvaim",
+    "sceneHash": "659672193b667b07",
+    "doc": {
+      "schemaVersion": 2,
+      "meta": {
+        "id": "scene-103249825",
+        "name": "Easy-Precision — Pinpoint",
+        "seed": 103249825,
+        "createdAt": 0
+      },
+      "environment": {
+        "skyColor": "#000000",
+        "fogNear": 50,
+        "fogFar": 140,
+        "ambientIntensity": 1.55,
+        "keyLightIntensity": 2.2,
+        "grid": {
+          "size": 42,
+          "divisions": 28,
+          "centerColor": "#ffffff",
+          "gridColor": "#0091ff",
+          "position": {
+            "x": 0,
+            "y": -0.02,
+            "z": 4.2
+          }
+        }
+      },
+      "blocks": [
+        {
+          "id": "ground",
+          "shape": "plane",
+          "position": {
+            "x": -0.2,
+            "y": -13.6,
+            "z": -8.8
+          },
+          "rotationY": 0,
+          "size": {
+            "x": 40,
+            "y": 0.4,
+            "z": 45
+          },
+          "color": "#18222b",
+          "collidable": true,
+          "transparent": true
+        }
+      ],
+      "playerSpawn": {
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 4.2
+        },
+        "yaw": 0
+      },
+      "spawners": [
+        {
+          "id": "spawner-1",
+          "actorTemplateId": "actor-1",
+          "kind": "area",
+          "position": {
+            "x": 0,
+            "y": 1.75,
+            "z": -7.8
+          },
+          "size": {
+            "x": 3.373,
+            "y": 1.889,
+            "z": 0
+          },
+          "maxAlive": 2,
+          "spawnDelay": [
+            0.05,
+            0.12
+          ],
+          "minAngularGap": 3,
+          "minAngularGapFromPrevious": 4
+        }
+      ],
+      "actors": [
+        {
+          "id": "actor-1",
+          "name": "Target",
+          "body": {
+            "shape": "sphere",
+            "headSize": 1,
+            "bodyWidth": 0.44,
+            "bodyHeight": 0,
+            "radius": 0.157
+          },
+          "color": "#ff4655",
+          "behaviors": [
+            {
+              "kind": "respawn",
+              "delay": [
+                0.05,
+                0.12
+              ],
+              "mode": "reSpawner"
+            }
+          ]
+        }
+      ],
+      "rules": {
+        "duration": 60,
+        "scoring": "clicking",
+        "weapon": "vandal",
+        "playerMovable": false,
+        "fireMode": "single",
+        "perfectAccuracy": true,
+        "tunables": [
+          {
+            "field": "radius",
+            "id": "actor-1",
+            "label": "Target size",
+            "min": 0.06,
+            "max": 0.35000000000000003,
+            "step": 0.01
+          },
+          {
+            "field": "maxAlive",
+            "id": "spawner-1",
+            "label": "Targets at once",
+            "min": 1,
+            "max": 4,
+            "step": 1
+          },
+          {
+            "field": "duration",
+            "label": "Round length",
+            "min": 30,
+            "max": 180,
+            "step": 15
+          }
+        ]
+      }
+    }
+  }
+}

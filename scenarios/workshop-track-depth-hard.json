@@ -1,0 +1,178 @@
+{
+  "item": {
+    "name": "Hard-Tracking — Depth",
+    "description": "The ball runs toward you and away again, so its size and speed keep changing. Trains tracking a target whose distance changes. Hard: Ball 2.4° wide at the middle distance, 7.5 m/s, from 10.2 m to 34.2 m away.",
+    "shareCode": "ed2753bfb9949c12",
+    "sceneKey": "set-ed2753bfb9949c12",
+    "createTime": "2026-11-20 12:00:00",
+    "updateTime": "2026-11-20 12:00:00",
+    "docBytes": 1393,
+    "playCount": 0,
+    "status": 1,
+    "featured": false,
+    "parSeconds": null,
+    "mapId": null,
+    "sort": 246,
+    "type": "ball"
+  },
+  "scene": {
+    "name": "Hard-Tracking — Depth",
+    "description": "The ball runs toward you and away again, so its size and speed keep changing. Trains tracking a target whose distance changes. Hard: Ball 2.4° wide at the middle distance, 7.5 m/s, from 10.2 m to 34.2 m away.",
+    "shareCode": "ed2753bfb9949c12",
+    "sceneKey": "set-ed2753bfb9949c12",
+    "createTime": "2026-11-20 12:00:00",
+    "updateTime": "2026-11-20 12:00:00",
+    "docBytes": 1393,
+    "playCount": 0,
+    "status": 1,
+    "featured": false,
+    "parSeconds": null,
+    "schemaVersion": 2,
+    "blockCount": 1,
+    "authorNickname": "openVaim",
+    "authorUid": "openvaim",
+    "sceneHash": "59faa0ac40690648",
+    "doc": {
+      "schemaVersion": 2,
+      "meta": {
+        "id": "scene-248673595",
+        "name": "Hard-Tracking — Depth",
+        "seed": 248673595,
+        "createdAt": 0
+      },
+      "environment": {
+        "skyColor": "#000000",
+        "fogNear": 50,
+        "fogFar": 140,
+        "ambientIntensity": 1.55,
+        "keyLightIntensity": 2.2,
+        "grid": {
+          "size": 90,
+          "divisions": 60,
+          "centerColor": "#ffffff",
+          "gridColor": "#0091ff",
+          "position": {
+            "x": 0,
+            "y": -0.02,
+            "z": 4.2
+          }
+        }
+      },
+      "blocks": [
+        {
+          "id": "ground",
+          "shape": "plane",
+          "position": {
+            "x": -0.2,
+            "y": -13.6,
+            "z": -8.8
+          },
+          "rotationY": 0,
+          "size": {
+            "x": 40,
+            "y": 0.4,
+            "z": 45
+          },
+          "color": "#18222b",
+          "collidable": true,
+          "transparent": true
+        }
+      ],
+      "playerSpawn": {
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 4.2
+        },
+        "yaw": 0
+      },
+      "spawners": [
+        {
+          "id": "spawner-1",
+          "actorTemplateId": "actor-1",
+          "kind": "area",
+          "position": {
+            "x": -3,
+            "y": 1.4,
+            "z": -6
+          },
+          "size": {
+            "x": 0.1,
+            "y": 0.1,
+            "z": 1
+          },
+          "maxAlive": 1,
+          "spawnDelay": [
+            0.2,
+            0.5
+          ]
+        }
+      ],
+      "actors": [
+        {
+          "id": "actor-1",
+          "name": "Target",
+          "body": {
+            "shape": "sphere",
+            "headSize": 1,
+            "bodyWidth": 0.44,
+            "bodyHeight": 0,
+            "radius": 0.465
+          },
+          "color": "#ff4655",
+          "behaviors": [
+            {
+              "kind": "path",
+              "waypoints": [
+                {
+                  "x": -3,
+                  "y": 1.4,
+                  "z": -6
+                },
+                {
+                  "x": 5,
+                  "y": 2.4,
+                  "z": -30
+                },
+                {
+                  "x": -2.99,
+                  "y": 1.4,
+                  "z": -6
+                }
+              ],
+              "loop": true,
+              "speed": 7.5
+            }
+          ],
+          "hitSlow": true
+        }
+      ],
+      "rules": {
+        "duration": 60,
+        "scoring": "tracking",
+        "weapon": "vandal",
+        "playerMovable": false,
+        "fireMode": "hold",
+        "targetsInvincible": true,
+        "perfectAccuracy": true,
+        "tunables": [
+          {
+            "field": "radius",
+            "id": "actor-1",
+            "label": "Target size",
+            "min": 0.18,
+            "max": 1.03,
+            "step": 0.01
+          },
+          {
+            "field": "duration",
+            "label": "Round length",
+            "min": 30,
+            "max": 180,
+            "step": 15
+          }
+        ]
+      }
+    }
+  }
+}

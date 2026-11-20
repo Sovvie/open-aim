@@ -1,0 +1,172 @@
+{
+  "item": {
+    "name": "Easy-Spray — Burst control",
+    "description": "A big ball drifts slowly and takes several hits with the Phantom. Hold the trigger in short bursts and pull the spray back down onto the ball. Easy: Phantom, ball 5° wide at 20 m, 300 health (three hits).",
+    "shareCode": "876758b586f97bbc",
+    "sceneKey": "set-876758b586f97bbc",
+    "createTime": "2026-11-20 12:00:00",
+    "updateTime": "2026-11-20 12:00:00",
+    "docBytes": 1372,
+    "playCount": 0,
+    "status": 1,
+    "featured": false,
+    "parSeconds": null,
+    "mapId": null,
+    "sort": 241,
+    "type": "ball"
+  },
+  "scene": {
+    "name": "Easy-Spray — Burst control",
+    "description": "A big ball drifts slowly and takes several hits with the Phantom. Hold the trigger in short bursts and pull the spray back down onto the ball. Easy: Phantom, ball 5° wide at 20 m, 300 health (three hits).",
+    "shareCode": "876758b586f97bbc",
+    "sceneKey": "set-876758b586f97bbc",
+    "createTime": "2026-11-20 12:00:00",
+    "updateTime": "2026-11-20 12:00:00",
+    "docBytes": 1372,
+    "playCount": 0,
+    "status": 1,
+    "featured": false,
+    "parSeconds": null,
+    "schemaVersion": 2,
+    "blockCount": 1,
+    "authorNickname": "openVaim",
+    "authorUid": "openvaim",
+    "sceneHash": "55312176dd57fd7c",
+    "doc": {
+      "schemaVersion": 2,
+      "meta": {
+        "id": "scene-141981067",
+        "name": "Easy-Spray — Burst control",
+        "seed": 141981067,
+        "createdAt": 0
+      },
+      "environment": {
+        "skyColor": "#000000",
+        "fogNear": 50,
+        "fogFar": 140,
+        "ambientIntensity": 1.55,
+        "keyLightIntensity": 2.2,
+        "grid": {
+          "size": 42,
+          "divisions": 28,
+          "centerColor": "#ffffff",
+          "gridColor": "#0091ff",
+          "position": {
+            "x": 0,
+            "y": -0.02,
+            "z": 4.2
+          }
+        }
+      },
+      "blocks": [
+        {
+          "id": "ground",
+          "shape": "plane",
+          "position": {
+            "x": -0.2,
+            "y": -13.6,
+            "z": -8.8
+          },
+          "rotationY": 0,
+          "size": {
+            "x": 40,
+            "y": 0.4,
+            "z": 45
+          },
+          "color": "#18222b",
+          "collidable": true,
+          "transparent": true
+        }
+      ],
+      "playerSpawn": {
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 4.2
+        },
+        "yaw": 0
+      },
+      "spawners": [
+        {
+          "id": "spawner-1",
+          "actorTemplateId": "actor-1",
+          "kind": "area",
+          "position": {
+            "x": 0,
+            "y": 2.2,
+            "z": -15.8
+          },
+          "size": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "maxAlive": 1,
+          "spawnDelay": [
+            0.2,
+            0.4
+          ]
+        }
+      ],
+      "actors": [
+        {
+          "id": "actor-1",
+          "name": "Target",
+          "body": {
+            "shape": "sphere",
+            "headSize": 1,
+            "bodyWidth": 0.44,
+            "bodyHeight": 0,
+            "radius": 0.873
+          },
+          "color": "#ff4655",
+          "behaviors": [
+            {
+              "kind": "sway",
+              "amplitude": {
+                "x": 2.5,
+                "y": 0.4
+              },
+              "frequency": 0.1,
+              "unit": "hz"
+            },
+            {
+              "kind": "respawn",
+              "delay": [
+                0.2,
+                0.4
+              ],
+              "mode": "reSpawner"
+            }
+          ],
+          "health": 300
+        }
+      ],
+      "rules": {
+        "duration": 60,
+        "scoring": "clicking",
+        "weapon": "phantom",
+        "playerMovable": false,
+        "fireMode": "hold",
+        "perfectAccuracy": false,
+        "tunables": [
+          {
+            "field": "radius",
+            "id": "actor-1",
+            "label": "Target size",
+            "min": 0.34,
+            "max": 1.93,
+            "step": 0.01
+          },
+          {
+            "field": "duration",
+            "label": "Round length",
+            "min": 30,
+            "max": 180,
+            "step": 15
+          }
+        ]
+      }
+    }
+  }
+}

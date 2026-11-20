@@ -1,0 +1,186 @@
+{
+  "item": {
+    "name": "Easy-Strafe — Run pace",
+    "description": "A ball strafes at the game's run speed with short stops. Trains leading the target and timing the shot when it is almost still. Easy: Ball 3.6° wide at 5.4 m/s, steady stops.",
+    "shareCode": "80b7e0ad270f0f63",
+    "sceneKey": "set-80b7e0ad270f0f63",
+    "createTime": "2026-11-20 12:00:00",
+    "updateTime": "2026-11-20 12:00:00",
+    "docBytes": 1464,
+    "playCount": 0,
+    "status": 1,
+    "featured": false,
+    "parSeconds": null,
+    "mapId": null,
+    "sort": 231,
+    "type": "ball"
+  },
+  "scene": {
+    "name": "Easy-Strafe — Run pace",
+    "description": "A ball strafes at the game's run speed with short stops. Trains leading the target and timing the shot when it is almost still. Easy: Ball 3.6° wide at 5.4 m/s, steady stops.",
+    "shareCode": "80b7e0ad270f0f63",
+    "sceneKey": "set-80b7e0ad270f0f63",
+    "createTime": "2026-11-20 12:00:00",
+    "updateTime": "2026-11-20 12:00:00",
+    "docBytes": 1464,
+    "playCount": 0,
+    "status": 1,
+    "featured": false,
+    "parSeconds": null,
+    "schemaVersion": 2,
+    "blockCount": 1,
+    "authorNickname": "openVaim",
+    "authorUid": "openvaim",
+    "sceneHash": "2185d677abcfb52e",
+    "doc": {
+      "schemaVersion": 2,
+      "meta": {
+        "id": "scene-134970890",
+        "name": "Easy-Strafe — Run pace",
+        "seed": 134970890,
+        "createdAt": 0
+      },
+      "environment": {
+        "skyColor": "#000000",
+        "fogNear": 50,
+        "fogFar": 140,
+        "ambientIntensity": 1.55,
+        "keyLightIntensity": 2.2,
+        "grid": {
+          "size": 42,
+          "divisions": 28,
+          "centerColor": "#ffffff",
+          "gridColor": "#0091ff",
+          "position": {
+            "x": 0,
+            "y": -0.02,
+            "z": 4.2
+          }
+        }
+      },
+      "blocks": [
+        {
+          "id": "ground",
+          "shape": "plane",
+          "position": {
+            "x": -0.2,
+            "y": -13.6,
+            "z": -8.8
+          },
+          "rotationY": 0,
+          "size": {
+            "x": 40,
+            "y": 0.4,
+            "z": 45
+          },
+          "color": "#18222b",
+          "collidable": true,
+          "transparent": true
+        }
+      ],
+      "playerSpawn": {
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 4.2
+        },
+        "yaw": 0
+      },
+      "spawners": [
+        {
+          "id": "spawner-1",
+          "actorTemplateId": "actor-1",
+          "kind": "area",
+          "position": {
+            "x": 0,
+            "y": 1.75,
+            "z": -11.8
+          },
+          "size": {
+            "x": 6,
+            "y": 1.4,
+            "z": 0
+          },
+          "maxAlive": 1,
+          "spawnDelay": [
+            0.1,
+            0.3
+          ]
+        }
+      ],
+      "actors": [
+        {
+          "id": "actor-1",
+          "name": "Target",
+          "body": {
+            "shape": "sphere",
+            "headSize": 1,
+            "bodyWidth": 0.44,
+            "bodyHeight": 0,
+            "radius": 0.503
+          },
+          "color": "#ff4655",
+          "behaviors": [
+            {
+              "kind": "strafe",
+              "speed": [
+                5.4,
+                5.4
+              ],
+              "dwell": [
+                0.15,
+                0.6
+              ],
+              "travel": [
+                3,
+                5
+              ],
+              "counterStrafe": true
+            },
+            {
+              "kind": "respawn",
+              "delay": [
+                0.1,
+                0.3
+              ],
+              "mode": "reSpawner"
+            }
+          ]
+        }
+      ],
+      "rules": {
+        "duration": 60,
+        "scoring": "clicking",
+        "weapon": "vandal",
+        "playerMovable": false,
+        "fireMode": "single",
+        "perfectAccuracy": true,
+        "tunables": [
+          {
+            "field": "radius",
+            "id": "actor-1",
+            "label": "Target size",
+            "min": 0.2,
+            "max": 1.11,
+            "step": 0.01
+          },
+          {
+            "field": "strafe.speed",
+            "id": "actor-1",
+            "label": "Strafe speed",
+            "min": 1,
+            "max": 8,
+            "step": 0.1
+          },
+          {
+            "field": "duration",
+            "label": "Round length",
+            "min": 30,
+            "max": 180,
+            "step": 15
+          }
+        ]
+      }
+    }
+  }
+}
