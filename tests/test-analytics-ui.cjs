@@ -183,7 +183,7 @@ test("panel: opens with seven tabs, Esc-style close removes it", async () => {
   ui.open("heatmap"); await settle();
   const tabs = document.body.querySelector(".aim-an-tabs");
   assert.deepStrictEqual(tabs.children.map((b) => b.textContent), ["Session", "Drills", "Progress", "Compare", "Heatmap", "Tracking", "Coach"]);
-  assert.strictEqual(tabs.children[4].getAttribute("aria-pressed"), "true");
+  assert.strictEqual(tabs.children[4].getAttribute("aria-selected"), "true");
   ui.close();
   assert.strictEqual(document.body.querySelector(".aim-an-shade"), null);
 });
@@ -276,7 +276,8 @@ test("fights layer: an empty fights grid shows a plain message, a missing reader
     ui.open("heatmap"); await settle();
     layerClick(document, "fights"); await settle();
     const html = content(document).innerHTML;
-    assert.ok(html.includes("No fights with a position on ascent for these filters."), html);
+    assert.ok(html.includes("No fights with a position on ascent yet."), html);
+    assert.ok(!html.includes("data-zoom-reset"), "no Reset zoom chip without a map");
     assert.ok(!html.includes("<svg"));
     assert.ok(html.includes('data-layer="fights" aria-pressed="true"'), "toggle stays");
   }
@@ -364,7 +365,7 @@ test("coach: findings in the order returned, severity class, sample, why with ev
   const modal = list.map(ui.render.coachModalHtml).join("");
   assert.ok(modal.includes("sample 20") && modal.includes("sample 44") && !html.includes("sample "), "sample in the modal only");
   assert.strictEqual(count(html, "<summary>"), 0, "no collapsible parts");
-  assert.ok(!html.includes("<dt>") && modal.includes("<dt>lost</dt><dd>12</dd>") && modal.includes("<dt>above</dt><dd>30</dd>"), "evidence in the modal only");
+  assert.ok(!html.includes("<dt>") && modal.includes('<dt title="lost">Lost</dt><dd>12</dd>') && modal.includes('<dt title="above">Above</dt><dd>30</dd>'), "evidence in the modal only");
   assert.ok(html.includes("You miss &lt;high&gt;"), "escaped");
   // switch away and back: no second read
   document.body.querySelector(".aim-an-tabs").children[1].listeners.click[0]();
@@ -734,7 +735,7 @@ test("coach gallery: equal larger cards in order (icon, title, summary, small vi
   assert.ok(box && box.getAttribute("role") === "dialog" && box.getAttribute("aria-modal") === "true" && box.getAttribute("aria-labelledby") === "aim-an-tipm-title", "a modal dialog");
   assert.ok(box.className.includes("aim-an-tipm") && box.className.includes("is-tip"));
   assert.ok(box.innerHTML.includes('<h3 id="aim-an-tipm-title">You miss high</h3>') && box.innerHTML.includes("sample 44"));
-  assert.ok(box.innerHTML.includes('<div class="aim-an-why"><h5>Numbers</h5><dl>') && box.innerHTML.includes("<dt>averageOffsetCm</dt><dd>9</dd>"), "the Numbers list");
+  assert.ok(box.innerHTML.includes('<div class="aim-an-why"><h5>Numbers</h5><dl>') && box.innerHTML.includes('<dt title="averageOffsetCm">Average offset (cm)</dt><dd>9</dd>'), "the Numbers list");
   assert.ok(box.innerHTML.includes('<p class="aim-an-lead">Most misses pass above.</p>') && box.innerHTML.includes('<div class="aim-an-vis">'), "the full detail and the visual at full size");
   assert.strictEqual(El.focused, box, "focus moves into the dialog");
   // Esc closes it, is kept from the game, and gives focus back to the card
@@ -806,7 +807,7 @@ test("coach visuals: drawn from the evidence a rule has; the modal shows it in f
   assert.ok(withVis.indexOf("<h5>Numbers</h5>") > withVis.indexOf("aim-an-vis"), "Numbers at the bottom");
   assert.strictEqual(coachVisual(kill), "", "kill-time has nothing to draw");
   const noVis = coachHtml([kill], false);
-  assert.ok(!noVis.includes("aim-an-vis") && noVis.includes('<p class="aim-an-lead">Median of 31 kills.</p><div class="aim-an-why"><h5>Numbers</h5><dl><dt>kills</dt><dd>31</dd>'), "no visual: the text and the Numbers list only");
+  assert.ok(!noVis.includes("aim-an-vis") && noVis.includes('<p class="aim-an-lead">Median of 31 kills.</p><div class="aim-an-why"><h5>Numbers</h5><dl><dt title="kills">Kills</dt><dd>31</dd>'), "no visual: the text and the Numbers list only");
   const bare = coachHtml([{ id: "kill-time", title: "You kill in about 0.6 s", detail: "", severity: "info", sample: 3, evidence: {} }], false);
   assert.ok(bare.includes("<h3") && !bare.includes("aim-an-vis") && !bare.includes("aim-an-why") && !/<p[ >]/.test(bare), "no evidence and no text: the head only");
   assert.strictEqual(coachVisual({ id: "fights-lost", evidence: {} }), "", "missing evidence: no visual");
@@ -880,7 +881,7 @@ test("progress nodes: each node's y is the value on the chart's scale, in a box 
   // the same y as the line's vertex, in the same box
   const line = big.match(/<polyline class="aim-an-line" points="([^"]+)"/)[1].split(" ").map((xy) => xy.split(",").map(Number));
   line.forEach(([, y], i) => assert.ok(Math.abs((y / H) * 100 - tops[i]) < 0.1, "on the line"));
-  assert.ok(/<div class="aim-an-plotbox"><svg [^>]*preserveAspectRatio="none"[\s\S]*?<\/svg>(<span class="aim-an-node"[^>]*><\/span>){3}<\/div><span><\/span><div class="aim-an-xaxis"/.test(big), "nodes and svg alone in the plot box");
+  assert.ok(/<div class="aim-an-plotbox" tabindex="0" data-tipnav role="group" aria-label="[^"]+"><svg [^>]*preserveAspectRatio="none"[\s\S]*?<\/svg>(<span class="aim-an-node"[^>]*><\/span>){3}<\/div><span><\/span><div class="aim-an-xaxis"/.test(big), "nodes and svg alone in the plot box");
   const css = load({ analytics: stub() }).document.getElementById("aim-analytics-ui-css").textContent;
   assert.ok(css.includes(".aim-an-plotbox svg { position: absolute; inset: 0; width: 100%; height: 100%; }"), "the svg fills the box the nodes are placed in");
 });
@@ -1113,7 +1114,7 @@ test("drill references: a drill code in coach text is a span with the drill's ti
   const html = ui.render.coachModalHtml(drillFinding());
   const span = `<span class="aim-an-mapref aim-an-drillref" tabindex="0" role="link" data-drill="${CODE}" data-drill-map="ascent" aria-label="Drill Abyss — A Main, pre-aim: show its card; click or Enter plays it">Abyss — A Main, pre-aim</span>`;
   assert.ok(html.includes(`In <span class="aim-an-mapref" tabindex="0" data-map="ascent" aria-label="Map ascent: show its picture">ascent</span> drill ${span} 80 of`), "map span and drill span in the text");
-  assert.ok(html.includes(`<dt>drill</dt><dd>${span}</dd>`), "the Numbers list names the drill by its title too");
+  assert.ok(html.includes(`<dt title="drill">Drill</dt><dd>${span}</dd>`), "the Numbers list names the drill by its title too");
   assert.strictEqual(html.split(CODE).length - 1, 2, "the code is only in data-drill attributes, never shown");
   // the card's text gets the same span; the card visual's labels and titles use the title too
   const card = ui.render.coachHtml([{ ...drillFinding(), evidence: { drill: CODE, map: "ascent", shots: 200 } }], false);
@@ -1424,7 +1425,7 @@ test("a coach card is a focusable article with the same parts in the same order 
   const f = { id: "wasted-swings:abc", title: "35% of your shots hit nothing near an enemy", summary: "35% wasted", detail: "In ascent drill abc 70 of your 200 shots passed far from any enemy. Shoot once the crosshair is on the enemy.", severity: "tip", sample: 200, evidence: { wastedPercent: 35, map: "ascent" } };
   const one = ui.render.coachModalHtml(f);
   assert.ok(one.includes('<p class="aim-an-lead">In <span class="aim-an-mapref" tabindex="0" data-map="ascent"'), "map hover span in the modal text");
-  assert.ok(one.includes('<p class="aim-an-advice">Shoot once the crosshair is on the enemy.</p>') && one.includes('<dt>map</dt><dd><span class="aim-an-mapref" tabindex="0" data-map="ascent"'));
+  assert.ok(one.includes('<p class="aim-an-advice">Shoot once the crosshair is on the enemy.</p>') && one.includes('<dt title="map">Map</dt><dd><span class="aim-an-mapref" tabindex="0" data-map="ascent"'));
   assert.ok(one.includes('<button type="button" class="es-tool-x" data-tipm-close aria-label="Close">'), "a close button");
   const css = document.getElementById("aim-analytics-ui-css").textContent;
   assert.ok(/\.aim-an-card h4 \{ grid-column: 2; grid-row: 1;/.test(css) && /\.aim-an-card > \.aim-an-icon \{ grid-column: 1; grid-row: 1;/.test(css) && /\.aim-an-card > \.aim-an-main \{ grid-column: 2; grid-row: 2;/.test(css), "icon, title and summary in fixed cells");

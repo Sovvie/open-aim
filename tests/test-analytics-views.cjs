@@ -391,7 +391,7 @@ const richStub = () => stub({
 test("panel: the Session tab is the default, reads the rounds once, and the session chips switch the session without a new read", async () => {
   const A = richStub(), p = await openPanel(A, undefined);
   assert.ok(p.content().innerHTML.includes("data-session-tiles"), "session is the first view");
-  assert.strictEqual(p.host.querySelector(".aim-an-tabs").children[0].getAttribute("aria-pressed"), "true");
+  assert.strictEqual(p.host.querySelector(".aim-an-tabs").children[0].getAttribute("aria-selected"), "true");
   assert.strictEqual(A.calls.filter((c) => c[0] === "rounds").length, 1);
   p.click("[data-session]", { session: "0" }); await settle();
   assert.ok(p.content().innerHTML.includes("data-versus-empty"), "the first session has nothing before it");
@@ -648,7 +648,7 @@ test("suggested warm-up: the card on the Drills tab, saved through routines.save
   p.click("[data-warmup-save]", {}); await settle();
   assert.strictEqual(saved.length, 1, "saving again updates the same routine");
   assert.deepStrictEqual(R.warmupRoutine({ steps: [{ code: "x1", runs: 2 }, { code: "y2", runs: 1 }] }, (c) => c.toUpperCase(), (c) => (c === "x1" ? "ball" : "")).steps.map((s) => [s.code, s.name, s.type, s.runs]), [["x1", "X1", "ball", 2], ["y2", "Y2", "", 1]]);
-  assert.ok(R.warmupHtml({ cold: false, steps: [], sessions: null }, (c) => c, false).includes("most played drills"), "no steps: says what is needed");
+  assert.ok(R.warmupHtml({ cold: false, steps: [], sessions: null }, (c) => c, false).includes("at least two drills"), "no steps: says what is needed");
   assert.ok(R.warmupHtml({ cold: true, firstAccuracyPercent: 40, middleAccuracyPercent: 50, sessions: 4, steps: [{ code: "a", runs: 2, accuracyPercent: 50 }, { code: "b", runs: 1, accuracyPercent: 40 }] }, (c) => c, true).includes("Update the routine"));
   assert.strictEqual(R.warmupHtml(null, (c) => c, false), "");
   const q = await openPanel(A, "drills", { win: { __aimRoutines: routines } });
@@ -660,6 +660,52 @@ test("heatmap drill filter shows the drill's name, not its share code", () => {
   const html = R.heatmapHtml([], [rnd(NOW, { code })], { map: "bind", mode: "", code: "", weapon: "", layer: "deaths" }, null, null, 60, { k: 1, tx: 0, ty: 0 });
   assert.ok(html.includes(`<option value="${code}">`), "the option keeps the code as its value");
   assert.ok(/Drill<select data-filter="code">/.test(html) && !html.includes("Drill code"));
+});
+
+// ---- round 3 review (ui-stats): empty states, plain labels, keyboard and density ----
+test("review: plain labels for the coach's Numbers list, and a reachable score-goal hint", () => {
+  assert.strictEqual(R.keyLabel("averageOffsetCm"), "Average offset (cm)");
+  assert.strictEqual(R.keyLabel("winPercent"), "Win (%)");
+  assert.strictEqual(R.keyLabel("medianLockSeconds"), "Median lock (s)");
+  assert.strictEqual(R.keyLabel("minFights"), "Needs at least: fights");
+  assert.strictEqual(R.keyLabel("lost"), "Lost");
+  assert.strictEqual(R.keyLabel("Percent"), "Percent", "a bare unit word stays");
+  assert.strictEqual(R.goalHint({ best: 4000, lower: false }), "4200", "5% above the best");
+  assert.strictEqual(R.goalHint({ best: 20, lower: true }), "19", "5% under the best when less is better");
+  assert.strictEqual(R.goalHint({ best: 62.4, lower: false }), "65.5");
+  assert.strictEqual(R.goalHint({ best: null }), "");
+  const modal = R.coachModalHtml({ id: "angle-win:ascent", title: "t", detail: "d.", evidence: { winPercent: 80, sectors: [{ sector: "the -z direction", fights: 10, won: 8 }] } });
+  assert.ok(modal.includes('<dt title="winPercent">Win (%)</dt><dd>80</dd>'), "plain key, raw key kept as its title");
+  assert.ok(modal.includes("sector the -z direction, fights 10, won 8") && !modal.includes("[{"), "a list of objects reads as lines, not JSON");
+});
+test("review: day one says what to do (compare, heatmap, tracking, session)", () => {
+  const today = [rnd(NOW - 60 * MIN, { n: 40, hits: 20 }), rnd(NOW - 55 * MIN, { n: 40, hits: 22 })];
+  const cmp = R.compareHtml([], today, 7, NOW);
+  assert.ok(cmp.includes("Nothing was recorded in the 7 days before") && cmp.includes("next week"), "one clear line instead of five 'not enough' cards");
+  assert.ok(!cmp.includes("aim-an-cmp-bars"), "no empty comparison bars");
+  const heat = R.heatmapHtml([], today, { map: "", mode: "", code: "", weapon: "", layer: "deaths" }, null, null);
+  assert.ok(heat.includes("No deaths on bind yet") && heat.includes("Pick Fights"), heat);
+  assert.ok(!heat.includes("data-zoom-reset"), "no Reset zoom without a map");
+  const tr = R.trackingHtml([{ sight: true, weapon: "vandal" }], "body");
+  assert.ok(!tr.includes("data-sight-note") && tr.includes("No tracking recorded yet"), "no line-of-sight note when every fight has it");
+  assert.ok(R.trackingHtml([{ sight: true }, { sight: false }], "body").includes("data-sight-note"), "the note when some fights lack it");
+  const s = R.sessionHtml({ rounds: today }, null, NOW, {}, (c) => c);
+  assert.ok(s.includes("This is your first session"), "the first session says why there is no comparison");
+});
+test("review: a long session's strip packs its bars; charts and the strip take keyboard focus", () => {
+  const cell = (i) => ({ at: NOW + i * MIN, end: "cleared", seconds: 30, shots: 10, accuracy: 50, kills: 1, deaths: 0 });
+  assert.ok(!/aim-an-timeline is-/.test(R.timelineHtml(Array.from({ length: 20 }, (_, i) => cell(i)))));
+  assert.ok(R.timelineHtml(Array.from({ length: 50 }, (_, i) => cell(i))).includes('class="aim-an-timeline is-dense"'));
+  assert.ok(R.timelineHtml(Array.from({ length: 150 }, (_, i) => cell(i))).includes('class="aim-an-timeline is-packed"'));
+  assert.ok(/class="aim-an-timeline[^"]*" data-timeline tabindex="0" data-tipnav role="group"/.test(R.timelineHtml([cell(0)])));
+  const m = { id: "accuracy", label: "Accuracy", unit: "%", better: 1 };
+  const big = R.chartHtml(m, [{ day: "2026-11-18", value: 50 }, { day: "2026-11-20", value: 50.2 }], 7, NOW);
+  assert.ok(big.includes('class="aim-an-plotbox" tabindex="0" data-tipnav'), "the large chart is focusable");
+  assert.ok(big.includes('<b class="aim-an-arrow">→</b>'), "50% to 50% reads as flat, not as a rise");
+});
+test("review: drill rows name their trend and consistency columns and say what they need", () => {
+  const row = R.drillsHtml([{ code: "a1", name: "A", unit: "pts", lower: false, runs: 2, goodRuns: 2, died: 0, last: 10, best: 12, bestMedal: null, medals: { bronze: 0, silver: 0, gold: 0 }, lastAt: NOW, spark: [10, 12], trend: null, spread: null, rounds: 0, goals: [] }], "recent");
+  assert.ok(row.includes('title="Needs 6 finished runs">–<small>trend</small>') && row.includes('title="Needs 5 finished runs">–<small>consistency</small>'), row);
 });
 
 (async () => {

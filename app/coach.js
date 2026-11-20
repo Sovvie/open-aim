@@ -408,7 +408,7 @@
       const { cx, cz, x, z } = spot(best[0]);
       out.push({
         id: "death-zone:" + map, severity: "tip", sample: total, title: "You keep dying in one spot on " + map,
-        detail: "On " + map + " you died or fell " + plural(best[1], "time", "times") + " within a metre of x " + x + " m, z " + z + " m (measured from the map's origin), " + pct(best[1] / total) + "% of your " + total + " deaths there" + (mean > 0 ? " and about " + Math.round(best[1] / mean) + " times a typical other spot" : "") + ". Next time you pass there, check the corners first or take another route.",
+        detail: "On " + map + " you died or fell " + plural(best[1], "time", "times") + " within a metre of x " + x + " m, z " + z + " m (measured from the map's origin), " + pct(best[1] / total) + "% of your " + total + " deaths there" + (mean > 0 ? " and about " + Math.round(best[1] / mean) + " times a typical other spot" : "") + ". Next time you pass there, check the corners first or take another route. The Heatmap tab (Deaths, " + map + ") marks the spot.",
         evidence: { map, cellX: cx, cellZ: cz, centreX: x, centreZ: z, deathsInCell: best[1], deathsOnMap: total, usedCells: cells.size, timesAverage: mean > 0 ? r1(best[1] / mean) : null },
       });
     }
@@ -428,7 +428,7 @@
     const tip = fell >= FALL_MIN && fell / total >= FALL_SHARE;
     return [{
       id: "deaths-cause", severity: tip ? "tip" : "info", sample: total, title: tip ? "Many of your deaths are falls" : "Most of your deaths come from enemy shots",
-      detail: "Of your " + total + " deaths, " + shot + " (" + pct(shot / total) + "%) were enemy shots and " + fell + " (" + pct(fell / total) + "%) were falls." + (tip ? " Falls are free deaths: slow down near edges and drops, and check the ground before you jump." : " Work on the fights themselves."),
+      detail: "Of your " + total + " deaths, " + shot + " (" + pct(shot / total) + "%) were enemy shots and " + fell + " (" + pct(fell / total) + "%) were falls." + (tip ? " Falls are free deaths: slow down near edges and drops, and check the ground before you jump." : " Falls are not what costs you rounds: the fights are, so the other cards about aim and fights are where to start."),
       evidence: { deaths: total, byShot: shot, falls: fell, fallPercent: pct(fell / total) },
     }];
   }
@@ -586,15 +586,15 @@
       const gapPoints = (bestWin.won / bestWin.n - worst.won / worst.n) * 100;
       if (worst.k !== bestWin.k && worst.lost / worst.n >= ANGLE_LOSS_SHARE && gapPoints >= ANGLE_WIN_GAP) {
         out.push({
-          id: "angle-lose:" + map, severity: "tip", sample: worst.n, title: "You lose most fights from " + SECTORS[worst.k],
-          detail: "On " + map + " you lost " + worst.lost + " of the " + worst.n + " fights where the enemy was first in " + SECTORS[worst.k] + " of you (" + pct(worst.lost / worst.n) + "%), against a win rate of " + pct(bestWin.won / bestWin.n) + "% when the enemy was in " + SECTORS[bestWin.k] + ". Directions are world directions on the map (yaw 0 looks along -z, it grows toward -x). Think about what you do differently on that side: how you hold it, where you stand, whether you clear it first.",
+          id: "angle-lose:" + map, severity: "tip", sample: worst.n, title: "You lose most fights from " + SECTORS[worst.k] + " on " + map,
+          detail: "On " + map + " you lost " + worst.lost + " of the " + worst.n + " fights where the enemy was first in " + SECTORS[worst.k] + " of you (" + pct(worst.lost / worst.n) + "%), against a win rate of " + pct(bestWin.won / bestWin.n) + "% when the enemy was in " + SECTORS[bestWin.k] + ". Directions are fixed directions on the map, the same in every round (like north on a compass), not left or right of where you were looking. Think about what you do differently on that side: how you hold it, where you stand, whether you clear it first.",
           evidence: { map, sector: SECTORS[worst.k], sectorYawDeg: worst.k * 45, fights: worst.n, lost: worst.lost, won: worst.won, lostPercent: pct(worst.lost / worst.n), bestSector: SECTORS[bestWin.k], bestWinPercent: pct(bestWin.won / bestWin.n), gapPoints: Math.round(gapPoints), bearing: "world", sectors, minFights: ANGLE_FIGHTS_MIN, minLossShare: ANGLE_LOSS_SHARE, minGapPoints: ANGLE_WIN_GAP },
         });
       }
       if (bestWin.won / bestWin.n >= ANGLE_WIN_SHARE) {
         out.push({
-          id: "angle-win:" + map, severity: "info", sample: bestWin.n, title: "You win most fights from " + SECTORS[bestWin.k],
-          detail: "On " + map + " you won " + bestWin.won + " of the " + bestWin.n + " fights where the enemy was first in " + SECTORS[bestWin.k] + " of you (" + pct(bestWin.won / bestWin.n) + "%). Whatever you do on that side works: try to bring the same habits to the other directions. Directions are world directions on the map (yaw 0 looks along -z, it grows toward -x).",
+          id: "angle-win:" + map, severity: "info", sample: bestWin.n, title: "You win most fights from " + SECTORS[bestWin.k] + " on " + map,
+          detail: "On " + map + " you won " + bestWin.won + " of the " + bestWin.n + " fights where the enemy was first in " + SECTORS[bestWin.k] + " of you (" + pct(bestWin.won / bestWin.n) + "%). Whatever you do on that side works: try to bring the same habits to the other directions. Directions are fixed directions on the map, the same in every round (like north on a compass), not left or right of where you were looking.",
           evidence: { map, sector: SECTORS[bestWin.k], sectorYawDeg: bestWin.k * 45, fights: bestWin.n, won: bestWin.won, lost: bestWin.lost, winPercent: pct(bestWin.won / bestWin.n), bearing: "world", sectors, minFights: ANGLE_FIGHTS_MIN, minWinShare: ANGLE_WIN_SHARE },
         });
       }
@@ -1180,7 +1180,7 @@
       const before = rate(a[top], a[bottom]), now = rate(b[top], b[bottom]), change = Math.round((now - before) * 100);
       const v = change >= TREND_FLAT_POINTS ? "improving" : change <= -TREND_FLAT_POINTS ? "dropping" : "flat";
       out.push({
-        id, severity: v === "dropping" ? dropSeverity : "info", sample: a[bottom] + b[bottom], title: "Your " + name + " is " + v,
+        id, severity: v === "dropping" ? dropSeverity : "info", sample: a[bottom] + b[bottom], title: "Your " + name + (v === "flat" ? " is holding steady" : " is " + v),
         detail: "Your " + name + " was " + pct(now) + "% in the last 7 days and " + pct(before) + "% in the 7 days before" + (v === "flat" ? ": no real change." : ", " + (v === "improving" ? "up " : "down ") + Math.abs(change) + " points.") + (v === "dropping" ? " " + advice : ""),
         evidence: { recentPercent: pct(now), previousPercent: pct(before), changePoints: change, recentCount: b[bottom], previousCount: a[bottom], trend: v },
       });
@@ -1313,7 +1313,7 @@
     "kill-time": (e) => (has(e.medianSeconds) ? e.medianSeconds + " s median" + (has(e.kills) ? ", " + e.kills + " kills" : "") : ""),
     "kill-time-trend": (e) => (has(e.previousSeconds, e.recentSeconds) ? e.previousSeconds + " s → " + e.recentSeconds + " s" : ""),
     "death-zone": (e) => (has(e.deathsInCell, e.deathsOnMap) ? e.deathsInCell + " of " + e.deathsOnMap + " deaths in one spot" : ""),
-    "deaths-cause": (e) => (has(e.fallPercent) ? e.fallPercent + "% of deaths were falls" : ""),
+    "deaths-cause": (e) => (has(e.byShot, e.deaths, e.falls) && e.byShot > e.falls ? e.byShot + " of " + e.deaths + " deaths to enemy shots" : has(e.fallPercent) ? e.fallPercent + "% of deaths were falls" : ""),
     "deaths-unanswered": (e) => (has(e.sharePercent) ? e.sharePercent + "% with no shot back" : ""),
     "multi-enemy": (e) => (has(e.deathPercent) ? e.deathPercent + "% of deaths vs 2+ enemies" : has(e.killPercent) ? e.killPercent + "% of kills vs 2+ enemies" : ""),
     "fights-lost": (e) => (has(e.lostPercent) ? e.lostPercent + "% lost" + (has(e.fightsLost, e.fights) ? " (" + e.fightsLost + " of " + e.fights + ")" : "") : ""),
@@ -1341,7 +1341,7 @@
       : has(e.adsMultiplier, e.usualAdsMultiplier) ? "ADS " + r2(e.usualAdsMultiplier) + " → " + r2(e.adsMultiplier) : ""),
     "sens-extreme": (e) => (has(e.medianSensitivity) ? "Median " + r2(e.medianSensitivity) : ""),
     "mouse-accel": (e) => (has(e.sharePercent) ? e.sharePercent + "% of rounds flagged" : ""),
-    "tracking": (e) => (has(e.bodyOnPercent) ? e.bodyOnPercent + "% on body" + (has(e.lagDegrees) && Math.abs(e.lagDegrees) >= 0.1 ? ", " + Math.abs(e.lagDegrees) + "° " + (e.lagDegrees > 0 ? "behind" : "ahead") : "") : ""),
+    "tracking": (e) => (has(e.bodyOnPercent) ? e.bodyOnPercent + "% on body" + (has(e.lagDegrees) && (e.direction === "behind" || e.direction === "ahead") ? ", " + Math.abs(e.lagDegrees) + "° " + (e.lagDegrees > 0 ? "behind" : "ahead") : "") : ""),
     "tracking-lock": (e) => (has(e.medianLockSeconds) ? e.medianLockSeconds + " s to lock on" : ""),
     "warmup": (e) => (has(e.firstRoundsAccuracyPercent, e.middleAccuracyPercent) ? e.firstRoundsAccuracyPercent + "% first rounds vs " + e.middleAccuracyPercent + "% after" : ""),
     "fade": (e) => (has(e.lastRoundsAccuracyPercent, e.middleAccuracyPercent) ? e.lastRoundsAccuracyPercent + "% last rounds vs " + e.middleAccuracyPercent + "% before" : ""),
