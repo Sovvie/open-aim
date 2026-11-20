@@ -1,0 +1,415 @@
+{
+ "item": {
+  "createTime": "2026-11-20 12:00:00",
+  "description": "Five enemies hold different angles on the way into A site, near ones and far ones. Clear one angle at a time, nearest first, and do not let a second one see you while you fight the first. They shoot slowly and do not come back.",
+  "docBytes": 3544,
+  "featured": false,
+  "mapId": "juliett",
+  "name": "Sunset — A site, clear in order (Easy)",
+  "parSeconds": null,
+  "playCount": 0,
+  "sceneKey": "set-5db7d0c3bef3a337",
+  "shareCode": "5db7d0c3bef3a337",
+  "sort": 306,
+  "status": 1,
+  "type": "hold",
+  "updateTime": "2026-11-20 12:00:00"
+ },
+ "scene": {
+  "authorNickname": "openVaim",
+  "authorUid": "workshop",
+  "blockCount": 0,
+  "createTime": "2026-11-20 12:00:00",
+  "description": "Five enemies hold different angles on the way into A site, near ones and far ones. Clear one angle at a time, nearest first, and do not let a second one see you while you fight the first. They shoot slowly and do not come back.",
+  "docBytes": 3544,
+  "name": "Sunset — A site, clear in order (Easy)",
+  "playCount": 0,
+  "sceneHash": "a1ed9f48f1980313",
+  "sceneKey": "set-5db7d0c3bef3a337",
+  "schemaVersion": 2,
+  "shareCode": "5db7d0c3bef3a337",
+  "updateTime": "2026-11-20 12:00:00",
+  "aimShuffle": {
+   "groups": [
+    {
+     "actors": [
+      "actor-1"
+     ]
+    },
+    {
+     "actors": [
+      "actor-2"
+     ]
+    },
+    {
+     "actors": [
+      "actor-3"
+     ]
+    },
+    {
+     "actors": [
+      "actor-4"
+     ]
+    },
+    {
+     "actors": [
+      "actor-5"
+     ]
+    }
+   ]
+  },
+  "doc": {
+   "schemaVersion": 2,
+   "meta": {
+    "id": "studio-afad5ba144cc0127",
+    "name": "Sunset — A site, clear in order (Easy)",
+    "seed": 17895460,
+    "createdAt": 0
+   },
+   "environment": {
+    "skyColor": "#111820",
+    "fogNear": 14,
+    "fogFar": 33,
+    "ambientIntensity": 2,
+    "keyLightIntensity": 3,
+    "fogEnabled": false,
+    "map": "juliett"
+   },
+   "blocks": [],
+   "playerSpawn": {
+    "position": {
+     "x": 28.4,
+     "y": 0.02,
+     "z": 14.2
+    },
+    "yaw": 4.712
+   },
+   "spawners": [
+    {
+     "id": "spawner-1",
+     "name": "Holder 1",
+     "kind": "area",
+     "actorTemplateId": "actor-1",
+     "position": {
+      "x": 43.4,
+      "y": 1.33,
+      "z": -2.6
+     },
+     "size": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+     },
+     "rotationY": 5.554,
+     "faceTarget": true,
+     "groundSnap": true,
+     "maxAlive": 1,
+     "spawnDelay": [
+      0.05,
+      0.05
+     ]
+    },
+    {
+     "id": "spawner-2",
+     "name": "Holder 2",
+     "kind": "area",
+     "actorTemplateId": "actor-2",
+     "position": {
+      "x": 36.1,
+      "y": 1.33,
+      "z": -5.5
+     },
+     "size": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+     },
+     "rotationY": 5.911,
+     "faceTarget": true,
+     "groundSnap": true,
+     "maxAlive": 1,
+     "spawnDelay": [
+      0.05,
+      0.05
+     ]
+    },
+    {
+     "id": "spawner-3",
+     "name": "Holder 3",
+     "kind": "area",
+     "actorTemplateId": "actor-3",
+     "position": {
+      "x": 33.5,
+      "y": 1.33,
+      "z": -10.5
+     },
+     "size": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+     },
+     "rotationY": 6.08,
+     "faceTarget": true,
+     "groundSnap": true,
+     "maxAlive": 1,
+     "spawnDelay": [
+      0.05,
+      0.05
+     ]
+    },
+    {
+     "id": "spawner-4",
+     "name": "Holder 4",
+     "kind": "area",
+     "actorTemplateId": "actor-4",
+     "position": {
+      "x": 26.8,
+      "y": 1.33,
+      "z": -4.7
+     },
+     "size": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+     },
+     "rotationY": 0.084,
+     "faceTarget": true,
+     "groundSnap": true,
+     "maxAlive": 1,
+     "spawnDelay": [
+      0.05,
+      0.05
+     ]
+    },
+    {
+     "id": "spawner-5",
+     "name": "Holder 5",
+     "kind": "area",
+     "actorTemplateId": "actor-5",
+     "position": {
+      "x": 22.7,
+      "y": 1.33,
+      "z": 1.6
+     },
+     "size": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+     },
+     "rotationY": 0.425,
+     "faceTarget": true,
+     "groundSnap": true,
+     "maxAlive": 1,
+     "spawnDelay": [
+      0.05,
+      0.05
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "id": "actor-1",
+     "name": "Holder 1",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "shooter",
+       "difficulty": "easy",
+       "reaction": [
+        0.75,
+        0.9
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 7,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      },
+      {
+       "kind": "respawn",
+       "delay": [
+        0.4,
+        0.9
+       ],
+       "mode": "never"
+      }
+     ],
+     "health": 150
+    },
+    {
+     "id": "actor-2",
+     "name": "Holder 2",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "shooter",
+       "difficulty": "easy",
+       "reaction": [
+        0.75,
+        0.9
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 7,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      },
+      {
+       "kind": "respawn",
+       "delay": [
+        0.4,
+        0.9
+       ],
+       "mode": "never"
+      }
+     ],
+     "health": 150
+    },
+    {
+     "id": "actor-3",
+     "name": "Holder 3",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "shooter",
+       "difficulty": "easy",
+       "reaction": [
+        0.75,
+        0.9
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 7,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      },
+      {
+       "kind": "respawn",
+       "delay": [
+        0.4,
+        0.9
+       ],
+       "mode": "never"
+      }
+     ],
+     "health": 150
+    },
+    {
+     "id": "actor-4",
+     "name": "Holder 4",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "shooter",
+       "difficulty": "easy",
+       "reaction": [
+        0.75,
+        0.9
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 7,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      },
+      {
+       "kind": "respawn",
+       "delay": [
+        0.4,
+        0.9
+       ],
+       "mode": "never"
+      }
+     ],
+     "health": 150
+    },
+    {
+     "id": "actor-5",
+     "name": "Holder 5",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "shooter",
+       "difficulty": "easy",
+       "reaction": [
+        0.75,
+        0.9
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 7,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      },
+      {
+       "kind": "respawn",
+       "delay": [
+        0.4,
+        0.9
+       ],
+       "mode": "never"
+      }
+     ],
+     "health": 150
+    }
+   ],
+   "rules": {
+    "duration": 75,
+    "scoring": "clicking",
+    "weapon": "vandal",
+    "playerMovable": true,
+    "fireMode": "hold"
+   }
+  }
+ }
+}

@@ -1,0 +1,243 @@
+{
+ "item": {
+  "createTime": "2026-11-20 12:00:00",
+  "description": "Two enemies strafe side to side and stop to shoot, like real players. Shoot only when you have stopped: stop on the key press, then fire. Bots shoot slowly.",
+  "docBytes": 1908,
+  "featured": false,
+  "mapId": "rook",
+  "name": "Corrode — A Corner, counter-strafe test (Easy)",
+  "parSeconds": null,
+  "playCount": 0,
+  "sceneKey": "set-ad721043c2e5b24a",
+  "shareCode": "ad721043c2e5b24a",
+  "sort": 323,
+  "status": 1,
+  "type": "hold",
+  "updateTime": "2026-11-20 12:00:00"
+ },
+ "scene": {
+  "authorNickname": "openVaim",
+  "authorUid": "workshop",
+  "blockCount": 0,
+  "createTime": "2026-11-20 12:00:00",
+  "description": "Two enemies strafe side to side and stop to shoot, like real players. Shoot only when you have stopped: stop on the key press, then fire. Bots shoot slowly.",
+  "docBytes": 1908,
+  "name": "Corrode — A Corner, counter-strafe test (Easy)",
+  "playCount": 0,
+  "sceneHash": "3588420d73402536",
+  "sceneKey": "set-ad721043c2e5b24a",
+  "schemaVersion": 2,
+  "shareCode": "ad721043c2e5b24a",
+  "updateTime": "2026-11-20 12:00:00",
+  "aimShuffle": {
+   "groups": [
+    {
+     "actors": [
+      "actor-1"
+     ]
+    },
+    {
+     "actors": [
+      "actor-2"
+     ]
+    }
+   ]
+  },
+  "doc": {
+   "schemaVersion": 2,
+   "meta": {
+    "id": "studio-108bff3ae3f814a0",
+    "name": "Corrode — A Corner, counter-strafe test (Easy)",
+    "seed": 76865098,
+    "createdAt": 0
+   },
+   "environment": {
+    "skyColor": "#111820",
+    "fogNear": 14,
+    "fogFar": 33,
+    "ambientIntensity": 2,
+    "keyLightIntensity": 3,
+    "fogEnabled": false,
+    "map": "rook"
+   },
+   "blocks": [],
+   "playerSpawn": {
+    "position": {
+     "x": -15.1,
+     "y": 6,
+     "z": -58.1
+    },
+    "yaw": 3.986
+   },
+   "spawners": [
+    {
+     "id": "spawner-1",
+     "name": "Strafer 1",
+     "kind": "area",
+     "actorTemplateId": "actor-1",
+     "position": {
+      "x": -8.9,
+      "y": 5.35,
+      "z": -48.2
+     },
+     "size": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+     },
+     "rotationY": 3.701,
+     "faceTarget": true,
+     "groundSnap": true,
+     "maxAlive": 1,
+     "spawnDelay": [
+      0.05,
+      0.05
+     ]
+    },
+    {
+     "id": "spawner-2",
+     "name": "Strafer 2",
+     "kind": "area",
+     "actorTemplateId": "actor-2",
+     "position": {
+      "x": -4.6,
+      "y": 6.3,
+      "z": -59.3
+     },
+     "size": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+     },
+     "rotationY": 4.826,
+     "faceTarget": true,
+     "groundSnap": true,
+     "maxAlive": 1,
+     "spawnDelay": [
+      0.05,
+      0.05
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "id": "actor-1",
+     "name": "Strafer 1",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "strafe",
+       "speed": [
+        5.4,
+        5.4
+       ],
+       "dwell": [
+        0.15,
+        0.6
+       ],
+       "travel": [
+        1.2,
+        2
+       ],
+       "counterStrafe": true
+      },
+      {
+       "kind": "shooter",
+       "difficulty": "easy",
+       "reaction": [
+        0.75,
+        0.9
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 7,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      },
+      {
+       "kind": "respawn",
+       "delay": [
+        2,
+        2.3
+       ],
+       "mode": "reSpawner"
+      }
+     ],
+     "health": 150
+    },
+    {
+     "id": "actor-2",
+     "name": "Strafer 2",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "strafe",
+       "speed": [
+        5.4,
+        5.4
+       ],
+       "dwell": [
+        0.15,
+        0.6
+       ],
+       "travel": [
+        1.2,
+        2
+       ],
+       "counterStrafe": true
+      },
+      {
+       "kind": "shooter",
+       "difficulty": "easy",
+       "reaction": [
+        0.75,
+        0.9
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 7,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      },
+      {
+       "kind": "respawn",
+       "delay": [
+        2,
+        2.3
+       ],
+       "mode": "reSpawner"
+      }
+     ],
+     "health": 150
+    }
+   ],
+   "rules": {
+    "duration": 60,
+    "scoring": "clicking",
+    "weapon": "vandal",
+    "playerMovable": true,
+    "fireMode": "hold"
+   }
+  }
+ }
+}

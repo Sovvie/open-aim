@@ -1,0 +1,263 @@
+{
+ "item": {
+  "createTime": "2026-11-20 12:00:00",
+  "description": "A Marshal duel in mid: the enemy that swings out and strafes also has a Marshal, and a rifleman holds the side angle. Quick-scope them both. One body shot is not a kill, so aim for the head or shoot twice. Dying ends the round.",
+  "docBytes": 2028,
+  "featured": false,
+  "mapId": "ascent",
+  "name": "Ascent — Mid, Marshal quick-scope",
+  "parSeconds": null,
+  "playCount": 0,
+  "sceneKey": "set-6fbe7502e3eb25f1",
+  "shareCode": "6fbe7502e3eb25f1",
+  "sort": 314,
+  "status": 1,
+  "type": "hold",
+  "updateTime": "2026-11-20 12:00:00"
+ },
+ "scene": {
+  "authorNickname": "openVaim",
+  "authorUid": "workshop",
+  "blockCount": 0,
+  "createTime": "2026-11-20 12:00:00",
+  "description": "A Marshal duel in mid: the enemy that swings out and strafes also has a Marshal, and a rifleman holds the side angle. Quick-scope them both. One body shot is not a kill, so aim for the head or shoot twice. Dying ends the round.",
+  "docBytes": 2028,
+  "name": "Ascent — Mid, Marshal quick-scope",
+  "playCount": 0,
+  "sceneHash": "0248a8bc418acf83",
+  "sceneKey": "set-6fbe7502e3eb25f1",
+  "schemaVersion": 2,
+  "shareCode": "6fbe7502e3eb25f1",
+  "updateTime": "2026-11-20 12:00:00",
+  "aimShuffle": {
+   "groups": [
+    {
+     "actors": [
+      "actor-1"
+     ],
+     "keepWeapon": true
+    },
+    {
+     "actors": [
+      "actor-2"
+     ]
+    }
+   ]
+  },
+  "doc": {
+   "schemaVersion": 2,
+   "meta": {
+    "id": "studio-6f0e9f67788550d7",
+    "name": "Ascent — Mid, Marshal quick-scope",
+    "seed": 163753023,
+    "createdAt": 0
+   },
+   "environment": {
+    "skyColor": "#111820",
+    "fogNear": 14,
+    "fogFar": 33,
+    "ambientIntensity": 2,
+    "keyLightIntensity": 3,
+    "fogEnabled": false,
+    "map": "ascent"
+   },
+   "blocks": [],
+   "playerSpawn": {
+    "position": {
+     "x": -58.1,
+     "y": 2.02,
+     "z": -8.2
+    },
+    "yaw": 4.957
+   },
+   "spawners": [
+    {
+     "id": "spawner-2",
+     "name": "Holder 1",
+     "kind": "area",
+     "actorTemplateId": "actor-2",
+     "position": {
+      "x": -41.7,
+      "y": 2.3,
+      "z": -1.1
+     },
+     "size": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+     },
+     "rotationY": 4.304,
+     "faceTarget": true,
+     "groundSnap": true,
+     "maxAlive": 1,
+     "spawnDelay": [
+      0.05,
+      0.05
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "id": "actor-2",
+     "name": "Holder 1",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "shooter",
+       "difficulty": "hard",
+       "reaction": [
+        0.42,
+        0.52
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 3.5,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      },
+      {
+       "kind": "respawn",
+       "delay": [
+        2.5,
+        2.8
+       ],
+       "mode": "inPlace"
+      }
+     ],
+     "health": 150
+    },
+    {
+     "id": "actor-1",
+     "name": "Peeker 1",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "marshal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "cross",
+       "waypoints": [
+        {
+         "x": -38.4,
+         "y": 2,
+         "z": -20.24
+        },
+        {
+         "x": -38.48,
+         "y": 2.03,
+         "z": -13.04
+        },
+        {
+         "x": -38.767,
+         "y": 2.03,
+         "z": -14.205
+        },
+        {
+         "x": -38.275,
+         "y": 2.03,
+         "z": -12.208
+        },
+        {
+         "x": -38.4,
+         "y": 2,
+         "z": -20.24
+        }
+       ],
+       "speed": 5.4,
+       "respawn": true,
+       "interval": [
+        0.6,
+        1.1
+       ],
+       "killImmediate": false,
+       "counterStrafe": true,
+       "killDelay": [
+        1.5,
+        1.8
+       ],
+       "pauses": [
+        {
+         "at": 1,
+         "wait": 0.1
+        },
+        {
+         "at": 2,
+         "wait": 0.15
+        },
+        {
+         "at": 3,
+         "wait": 0.25
+        }
+       ]
+      },
+      {
+       "kind": "shooter",
+       "difficulty": "hard",
+       "reaction": [
+        0.42,
+        0.52
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 3.5,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      }
+     ],
+     "health": 150
+    }
+   ],
+   "rules": {
+    "duration": 75,
+    "scoring": "clicking",
+    "weapon": "marshal",
+    "playerMovable": true,
+    "fireMode": "hold",
+    "playerDeath": "endRound"
+   },
+   "dispatchers": [
+    {
+     "id": "dispatcher-1",
+     "name": "Peeker 1",
+     "routes": [
+      {
+       "templateId": "actor-1",
+       "streak": [
+        1,
+        1
+       ]
+      }
+     ],
+     "order": "sequence",
+     "maxAlive": 1,
+     "interval": [
+      0.6,
+      1.8
+     ],
+     "faceTarget": true,
+     "killDelay": [
+      1.5,
+      1.8
+     ]
+    }
+   ]
+  }
+ }
+}

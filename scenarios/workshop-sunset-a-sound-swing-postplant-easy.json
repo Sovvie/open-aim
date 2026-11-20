@@ -1,0 +1,316 @@
+{
+ "item": {
+  "createTime": "2026-11-20 12:00:00",
+  "description": "You defend the site after the plant. Two attackers wait out of sight and swing when they hear you shoot or run within about 7 metres of where you stand, about 7 times in 10. Crouch-walk or stand still to stay quiet.",
+  "docBytes": 2359,
+  "featured": false,
+  "mapId": "juliett",
+  "name": "Sunset — A site, they swing on sound (Easy)",
+  "parSeconds": null,
+  "playCount": 0,
+  "sceneKey": "set-1bab9082e0631635",
+  "shareCode": "1bab9082e0631635",
+  "sort": 308,
+  "status": 1,
+  "type": "hold",
+  "updateTime": "2026-11-20 12:00:00"
+ },
+ "scene": {
+  "authorNickname": "openVaim",
+  "authorUid": "workshop",
+  "blockCount": 0,
+  "createTime": "2026-11-20 12:00:00",
+  "description": "You defend the site after the plant. Two attackers wait out of sight and swing when they hear you shoot or run within about 7 metres of where you stand, about 7 times in 10. Crouch-walk or stand still to stay quiet.",
+  "docBytes": 2359,
+  "name": "Sunset — A site, they swing on sound (Easy)",
+  "playCount": 0,
+  "sceneHash": "fe099279ceba7587",
+  "sceneKey": "set-1bab9082e0631635",
+  "schemaVersion": 2,
+  "shareCode": "1bab9082e0631635",
+  "updateTime": "2026-11-20 12:00:00",
+  "aimShuffle": {
+   "groups": [
+    {
+     "actors": [
+      "actor-1"
+     ]
+    },
+    {
+     "actors": [
+      "actor-2"
+     ]
+    }
+   ]
+  },
+  "doc": {
+   "schemaVersion": 2,
+   "meta": {
+    "id": "studio-925cf308b1bcadd7",
+    "name": "Sunset — A site, they swing on sound (Easy)",
+    "seed": 155962305,
+    "createdAt": 0
+   },
+   "environment": {
+    "skyColor": "#111820",
+    "fogNear": 14,
+    "fogFar": 33,
+    "ambientIntensity": 2,
+    "keyLightIntensity": 3,
+    "fogEnabled": false,
+    "map": "juliett"
+   },
+   "blocks": [],
+   "playerSpawn": {
+    "position": {
+     "x": 45.4,
+     "y": 1.04,
+     "z": -13.2
+    },
+    "yaw": 0.855
+   },
+   "spawners": [],
+   "actors": [
+    {
+     "id": "actor-1",
+     "name": "Peeker 1",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "cross",
+       "waypoints": [
+        {
+         "x": 30.2,
+         "y": 1.03,
+         "z": -10.8
+        },
+        {
+         "x": 31.1,
+         "y": 1.03,
+         "z": -13.3
+        },
+        {
+         "x": 30.2,
+         "y": 1.03,
+         "z": -10.8
+        }
+       ],
+       "speed": 5.4,
+       "respawn": true,
+       "interval": [
+        1,
+        1.5
+       ],
+       "killImmediate": false,
+       "counterStrafe": true,
+       "killDelay": [
+        4,
+        4.3
+       ],
+       "pauses": [
+        {
+         "at": 1,
+         "wait": 2
+        }
+       ]
+      },
+      {
+       "kind": "shooter",
+       "difficulty": "easy",
+       "reaction": [
+        0.75,
+        0.9
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 7,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      }
+     ],
+     "health": 150
+    },
+    {
+     "id": "actor-2",
+     "name": "Peeker 2",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "cross",
+       "waypoints": [
+        {
+         "x": 38.7,
+         "y": 1.03,
+         "z": -27.5
+        },
+        {
+         "x": 41.6,
+         "y": 1.03,
+         "z": -27.6
+        },
+        {
+         "x": 38.7,
+         "y": 1.03,
+         "z": -27.5
+        }
+       ],
+       "speed": 5.4,
+       "respawn": true,
+       "interval": [
+        1,
+        1.5
+       ],
+       "killImmediate": false,
+       "counterStrafe": true,
+       "killDelay": [
+        4,
+        4.3
+       ],
+       "pauses": [
+        {
+         "at": 1,
+         "wait": 2
+        }
+       ]
+      },
+      {
+       "kind": "shooter",
+       "difficulty": "easy",
+       "reaction": [
+        0.75,
+        0.9
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 7,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      }
+     ],
+     "health": 150
+    }
+   ],
+   "rules": {
+    "duration": 90,
+    "scoring": "clicking",
+    "weapon": "vandal",
+    "playerMovable": true,
+    "fireMode": "hold"
+   },
+   "dispatchers": [
+    {
+     "id": "dispatcher-1",
+     "name": "Peeker 1",
+     "routes": [
+      {
+       "templateId": "actor-1",
+       "streak": [
+        1,
+        1
+       ]
+      }
+     ],
+     "order": "sequence",
+     "maxAlive": 1,
+     "interval": [
+      1,
+      1
+     ],
+     "faceTarget": true,
+     "killDelay": [
+      4,
+      4.3
+     ],
+     "hear": {
+      "area": {
+       "x0": 38.4,
+       "z0": -20.2,
+       "x1": 52.4,
+       "z1": -6.2
+      },
+      "sources": [
+       "shot",
+       "footstep"
+      ],
+      "delay": [
+       0.8,
+       1.6
+      ],
+      "swingChance": 0.7
+     },
+     "spawnDelay": [
+      0.8,
+      1.6
+     ],
+     "swingChance": 0.7
+    },
+    {
+     "id": "dispatcher-2",
+     "name": "Peeker 2",
+     "routes": [
+      {
+       "templateId": "actor-2",
+       "streak": [
+        1,
+        1
+       ]
+      }
+     ],
+     "order": "sequence",
+     "maxAlive": 1,
+     "interval": [
+      1,
+      1
+     ],
+     "faceTarget": true,
+     "killDelay": [
+      4,
+      4.3
+     ],
+     "hear": {
+      "area": {
+       "x0": 38.4,
+       "z0": -20.2,
+       "x1": 52.4,
+       "z1": -6.2
+      },
+      "sources": [
+       "shot",
+       "footstep"
+      ],
+      "delay": [
+       1.2,
+       2.2
+      ],
+      "swingChance": 0.7
+     },
+     "spawnDelay": [
+      1.2,
+      2.2
+     ],
+     "swingChance": 0.7
+    }
+   ]
+  }
+ }
+}
