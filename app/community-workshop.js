@@ -1170,8 +1170,59 @@
     }).catch((error) => scoreToast(reason(error, "Your score could not be sent to the leaderboard."), false));
   });
 
+  // workshop-offline-v1 (20 Nov 2026): with the workshop service out of reach (no internet, service down) the
+  // catalog is empty and the page said "Nothing here yet ... Yours could be the first", which is wrong. main.js
+  // marks that answer "offline"; the empty state is then replaced by a plain note with a Try again button.
+  // The note sits next to the page's own empty block (which html.es-workshop-offline hides), so Vue's DOM is untouched.
+  const HOME = "/prod-api/api/v1/public/val/aimlab/pw/items/home";
+  let offline = { at: 0, value: false, busy: false };
+  function checkOffline(force) {
+    if (offline.busy || (!force && Date.now() - offline.at < 8000)) return;
+    offline.busy = true;
+    fetch(HOME).then((response) => response.json()).catch(() => null).then((answer) => {
+      offline = { at: Date.now(), value: answer?.data?.offline === true, busy: false };
+      paintOffline();
+    });
+  }
+  function paintOffline() {
+    const empty = active() ? document.querySelector(".pw .pw-empty") : null;
+    const on = !!empty && offline.value;
+    document.documentElement.classList.toggle("es-workshop-offline", on);
+    const note = document.querySelector(".es-offline-note");
+    if (!on) { note?.remove(); return; }
+    if (note && note.nextElementSibling === empty) return;
+    note?.remove();
+    const box = document.createElement("div");
+    box.className = "es-offline-note";
+    box.setAttribute("role", "status");
+    const title = document.createElement("b");
+    title.textContent = "Can't reach the Community Workshop";
+    const text = document.createElement("p");
+    text.textContent = "Community creations need an internet connection. Everything else in openVaim works offline. Check your connection, then try again.";
+    const retry = document.createElement("button");
+    retry.type = "button";
+    retry.textContent = "Try again";
+    retry.onclick = async () => {
+      if (retry.disabled) return;
+      retry.disabled = true;
+      retry.textContent = "Checking…";
+      try { await api.refresh?.(); } catch {}
+      offline.at = 0;
+      if (typeof window.__aimPwReload === "function") window.__aimPwReload();
+      setTimeout(() => { checkOffline(true); retry.disabled = false; retry.textContent = "Try again"; }, 900);
+    };
+    box.append(title, text, retry);
+    empty.before(box);
+  }
+  function syncOffline() {
+    if (!active() || !document.querySelector(".pw .pw-empty")) { if (offline.value || document.querySelector(".es-offline-note")) paintOffline(); return; }
+    checkOffline(false);
+    paintOffline();
+  }
+
   api.onAuth(() => checkIdentity());
   window.__aimWatchPage?.((records) => {
+    syncOffline();
     syncSortMenu();
     syncDrawer();
     syncCardLikes();

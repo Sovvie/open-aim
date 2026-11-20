@@ -8,19 +8,28 @@
 
   // ---------- shared panel ----------
   let currentPanel = null;
+  // Keyboard focus: the panel takes it when it opens, Tab stays inside, and closing hands it
+  // back to the button that opened the panel (ui-settings review, 20 Nov 2026).
+  let returnFocus = null;
+  const FOCUSABLE = 'button:not(:disabled), input:not(:disabled), select:not(:disabled), [tabindex="0"]';
 
   function closePanel() {
-    currentPanel?.remove();
+    if (!currentPanel) return;
+    currentPanel.remove();
     currentPanel = null;
+    if (returnFocus?.isConnected) returnFocus.focus({ preventScroll: true });
+    returnFocus = null;
   }
 
   function showPanel(title, subtitle) {
+    const opener = currentPanel ? returnFocus : document.activeElement;
     closePanel();
+    returnFocus = opener && opener !== document.body ? opener : null;
     const shade = document.createElement("div");
     shade.className = "es-tool-shade";
-    shade.innerHTML = `<section class="es-tool" role="dialog" aria-label="${title}">
-      <header class="es-tool-head"><div><h2>${title}</h2><p>${subtitle}</p></div>
-      <button type="button" class="es-tool-x" aria-label="Close">✕</button></header>
+    shade.innerHTML = `<section class="es-tool" role="dialog" aria-modal="true" aria-labelledby="es-tool-title">
+      <header class="es-tool-head"><div><h2 id="es-tool-title">${escapeHtml(title)}</h2><p>${escapeHtml(subtitle)}</p></div>
+      <button type="button" class="es-tool-x" aria-label="Close" title="Close (Esc)">✕</button></header>
       <div class="es-tool-body"></div></section>`;
     shade.addEventListener("mousedown", (event) => { if (event.target === shade) closePanel(); });
     shade.querySelector(".es-tool-x").addEventListener("click", closePanel);
@@ -28,12 +37,26 @@
     for (const type of ["keydown", "keyup", "keypress"]) {
       shade.addEventListener(type, (event) => {
         if (type === "keydown" && event.key === "Escape") closePanel();
+        if (type === "keydown" && event.key === "Tab") {
+          const targets = [...shade.querySelectorAll(FOCUSABLE)].filter((el) => el.getClientRects().length);
+          const first = targets[0], last = targets[targets.length - 1];
+          if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+          else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+        }
         event.stopPropagation();
       });
     }
     document.body.appendChild(shade);
     currentPanel = shade;
+    shade.querySelector(".es-tool-x").focus({ preventScroll: true });
     return shade.querySelector(".es-tool-body");
+  }
+
+  // Feedback goes right under the control that was used, so it is seen even when the
+  // panel is scrolled (the status line used to sit at the very bottom).
+  function placeStatus(status, button) {
+    const anchor = button.closest(".es-tool-actions, .es-sens-convert, .es-tool-row") || button;
+    if (anchor.nextElementSibling !== status) anchor.after(status);
   }
 
   // In-panel confirmation (instead of the browser's confirm popup).
@@ -189,8 +212,8 @@
       <div class="es-sens-convert"><span>VALORANT equivalent</span><b data-o="conv">–</b><button type="button" class="es-tool-primary" data-act="use-conv">Use in trainer</button></div>
       <h3>Your VALORANT sensitivity in other games</h3>
       <div class="es-tool-list es-sens-table"></div>
-      <div class="es-tool-actions"><button type="button" class="es-tool-primary" data-act="use-val">Use this sensitivity in the trainer</button></div>
-      <p class="es-tool-status" role="status"></p>`;
+      <div class="es-tool-actions"><button type="button" class="es-tool-primary" data-act="use-val">Use this VALORANT sensitivity in the trainer</button></div>
+      <p class="es-tool-status" role="status" aria-live="polite"></p>`;
     const field = (name) => body.querySelector(`[data-f="${name}"]`);
     const output = (name) => body.querySelector(`[data-o="${name}"]`);
     const status = body.querySelector(".es-tool-status");
@@ -212,12 +235,14 @@
         .join("");
     }
 
-    body.addEventListener("input", updateResults);
+    body.addEventListener("input", () => { status.textContent = ""; updateResults(); });
     body.addEventListener("change", updateResults);
+    field("dpi").focus({ preventScroll: true });
     body.addEventListener("click", (event) => {
       const button = event.target.closest("button[data-act]");
       if (!button) return;
       const value = button.dataset.act === "use-conv" ? parseFloat(output("conv").textContent) : parseFloat(field("val").value);
+      placeStatus(status, button);
       if (!(value > 0)) { status.textContent = "Enter a sensitivity first."; status.classList.add("is-bad"); return; }
       const rounded = +value.toFixed(3);
       if (setTrainerSens(rounded)) {

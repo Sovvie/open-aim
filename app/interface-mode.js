@@ -34,10 +34,12 @@
 
   apply(current());
 
-  // A row like the game's own (copied from Frame mode, including its scoped-style
-  // attribute), placed first under the Smoothness heading.
+  // A row like the game's own (copied from Frame rate, including its scoped-style
+  // attribute), placed first under the Smoothness heading. The game renamed "frameMode" to
+  // "frameRate"; without the new name the row was never added and Performance could not be
+  // switched back off (ui-settings review, 20 Nov 2026).
   function addRow() {
-    const frameMode = document.querySelector('[data-setting="frameMode"]');
+    const frameMode = document.querySelector('[data-setting="frameRate"], [data-setting="frameMode"]');
     const list = frameMode ? frameMode.parentElement : null;
     if (!list || list.querySelector(".es-ui-mode")) return;
     const heading = [...list.children].find((el) => el.matches("h3.hall-dialog-section") && /Smoothness/.test(el.textContent));
@@ -45,6 +47,7 @@
     const row = document.createElement("div");
     row.className = "hall-field hall-choice es-ui-mode";
     row.dataset.setting = "esUiMode";
+    row.dataset.focus = "esUiMode"; // the settings search's entry for this row (tools/patch-settings-wording.cjs)
     for (const a of scoped) row.setAttribute(a, "");
     row.innerHTML =
       '<span class="hall-field-text"><span class="hall-field-head"><b>Interface</b>' +
@@ -68,6 +71,13 @@
     (heading ? heading.nextElementSibling : frameMode).before(row);
   }
 
+  // html.es-on-settings while the lobby's Settings page is shown: theme-esports.css hides the
+  // Discord dock there, which otherwise covered the right-hand controls (toggles, slider values).
+  function markSettings() {
+    const on = !!document.querySelector(".hall-body > .st-view");
+    if (document.documentElement.classList.contains("es-on-settings") !== on) document.documentElement.classList.toggle("es-on-settings", on);
+  }
+
   let queued = false;
   window.__aimWatchPage(() => {
     if (queued) return;
@@ -75,7 +85,9 @@
     requestAnimationFrame(() => {
       queued = false;
       addRow();
+      markSettings();
     });
   }, { childList: true, subtree: true });
   addRow();
+  markSettings();
 })();

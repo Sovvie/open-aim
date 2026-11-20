@@ -11,7 +11,7 @@
     const previousFocus = document.activeElement;
     shade = document.createElement("div"); shade.className = "es-tool-shade valorant-import-shade";
     shade.innerHTML = String.raw`<section class="es-tool valorant-import" role="dialog" aria-modal="true" aria-labelledby="valorant-import-title">
-      <header class="es-tool-head"><div><h2 id="valorant-import-title">Import VALORANT settings</h2><p>Choose your files, review the changes, then apply.</p></div><button type="button" class="es-tool-x" aria-label="Close">×</button></header>
+      <header class="es-tool-head"><div><h2 id="valorant-import-title">Import VALORANT settings</h2><p>Choose your files, review the changes, then apply.</p></div><button type="button" class="es-tool-x" aria-label="Close" title="Close (Esc)">✕</button></header>
       <div class="es-tool-body">
         <details open><summary>Where to find your settings</summary><ol>
           <li>Close VALORANT so its latest settings are saved.</li>
@@ -162,7 +162,9 @@
     for (const settings of document.querySelectorAll(".sd-searchrow, .st-searchrow")) {
       if (settings.querySelector(".valorant-import-button")) continue;
       const button = document.createElement("button"); button.type = "button"; button.className = "hall-dialog-btn valorant-import-button";
-      button.textContent = "Import VALORANT settings"; button.onclick = open; settings.appendChild(button);
+      // Short label so it stays on one line in the narrow settings rail (it wrapped to two and pushed the categories down).
+      button.textContent = "Import from VALORANT"; button.title = "Import your sensitivity, crosshair, key binds and display settings from VALORANT's own files";
+      button.onclick = open; settings.appendChild(button);
     }
     // Not over the startup screen, a drill's loading screen or a round.
     if (!startupDone && document.querySelector(".hall-root") &&
