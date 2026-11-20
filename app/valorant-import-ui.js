@@ -11,7 +11,7 @@
     const previousFocus = document.activeElement;
     shade = document.createElement("div"); shade.className = "es-tool-shade valorant-import-shade";
     shade.innerHTML = String.raw`<section class="es-tool valorant-import" role="dialog" aria-modal="true" aria-labelledby="valorant-import-title">
-      <header class="es-tool-head"><div><h2 id="valorant-import-title">Import VALORANT settings</h2><p>Choose your files, review the changes, then apply.</p></div><button type="button" class="es-tool-x" aria-label="Close">×</button></header>
+      <header class="es-tool-head"><div><h2 id="valorant-import-title">Import VALORANT settings</h2><p>Choose your files, review the changes, then apply.</p></div><button type="button" class="es-tool-x" aria-label="Close" title="Close (Esc)">✕</button></header>
       <div class="es-tool-body">
         <details open><summary>Where to find your settings</summary><ol>
           <li>Close VALORANT so its latest settings are saved.</li>

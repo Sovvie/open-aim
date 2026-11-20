@@ -390,6 +390,8 @@ async function loadCommunityCards() {
   const items = [];
   for (let page = 1; page <= 50; page++) {
     const batch = await workshopRead("/v1/workshop?page=" + page);
+    // workshop-offline-v1: the service was not reached at all; the lobby says so instead of "Nothing here yet".
+    if (!Array.isArray(batch) && page === 1) return Object.assign([], { offline: true });
     if (!Array.isArray(batch)) break;
     items.push(...batch);
     if (batch.length < 100) break;

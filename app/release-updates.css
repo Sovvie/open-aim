@@ -1,76 +1,82 @@
 /* Update panel and notice (release-updates-ui.js), in the esports look of the
    app's other dialogs (.es-tool in theme-esports.css). */
-.aim-update-shade { position: fixed; inset: 0; z-index: 10050; display: grid; place-items: center; padding: 24px; background: rgba(5, 7, 10, 0.6); color: #f4f5f7; font: 14px/1.5 "Bahnschrift", "Segoe UI", sans-serif; }
+.aim-update-shade { position: fixed; inset: 0; z-index: 10050; display: grid; place-items: center; padding: 24px; background: rgba(5, 7, 10, 0.6); color: var(--es-text); font: 14px/1.5 var(--es-head); }
 .aim-update-panel {
   width: min(640px, 100%);
   max-height: 90vh;
   overflow: auto;
   padding: 18px 20px 20px;
   background: rgba(14, 17, 23, 0.94);
-  border-top: 4px solid #ff4655;
+  border-top: 4px solid var(--es-red);
   outline: 1px solid rgba(255, 255, 255, 0.1);
   outline-offset: -1px;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
-  animation: es-tool-in 0.32s cubic-bezier(0.2, 0.9, 0.2, 1.15) both;
+  animation: es-tool-in 0.2s var(--es-ease) both;
   scrollbar-width: thin;
-  scrollbar-color: #343b4a transparent;
+  scrollbar-color: var(--es-line-2) transparent;
 }
 .aim-update-panel header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
 .aim-update-panel h2 { margin: 0; font-size: 26px; font-weight: 800; font-style: italic; font-stretch: 75%; text-transform: uppercase; letter-spacing: 0.03em; }
-.aim-update-panel p { margin: 10px 0; color: #9aa1ae; font-size: 13px; }
-.aim-update-panel [data-version] { color: #d6d9df; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.aim-update-panel p { margin: 10px 0; color: var(--es-muted); font-size: 13px; }
+.aim-update-panel [data-version] { color: var(--es-soft); font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .aim-update-panel button, .aim-update-toast button {
   height: 34px;
   padding: 0 14px;
-  color: #f4f5f7;
+  color: var(--es-text);
   cursor: pointer;
-  background: #1e232d;
+  background: var(--es-raised-2);
   border: none;
   border-left: 3px solid transparent;
   border-radius: 0;
-  font: 700 13px "Bahnschrift", sans-serif;
+  font: 700 13px var(--es-head);
   font-stretch: 75%;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   transition: background-color 0.15s, border-color 0.15s;
 }
-.aim-update-panel button:hover, .aim-update-toast button:hover { background: #272d39; border-left-color: #ff4655; }
-.aim-update-panel [data-close] { flex: none; width: 32px; height: 32px; padding: 0; color: #9aa1ae; background: transparent; border: 1px solid #343b4a; font-size: 16px; }
-.aim-update-panel [data-close]:hover { color: #fff; background: transparent; border-color: #ff4655; }
-.aim-update-panel button:focus-visible, .aim-update-toast button:focus-visible { outline: 2px solid #ff6b77; outline-offset: 2px; }
+.aim-update-panel button:hover, .aim-update-toast button:hover { background: var(--es-line); border-left-color: var(--es-red); }
+.aim-update-panel [data-close] { flex: none; width: 32px; height: 32px; padding: 0; color: var(--es-muted); background: transparent; border: 1px solid var(--es-line-2); font-size: 16px; }
+.aim-update-panel [data-close]:hover { color: #fff; background: transparent; border-color: var(--es-red); }
+.aim-update-panel button:focus-visible, .aim-update-toast button:focus-visible { outline: 2px solid var(--es-red-2); outline-offset: 2px; }
 .aim-update-panel button:disabled { opacity: 0.45; cursor: wait; }
-.aim-update-panel .aim-update-primary, .aim-update-toast button:first-of-type { background: #ff4655; border-left: none; clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%); padding: 0 20px; font-style: italic; }
-.aim-update-panel .aim-update-primary:hover, .aim-update-toast button:first-of-type:hover { background: #ff6b77; }
-.aim-update-panel label { display: block; margin-top: 14px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #9aa1ae; }
+.aim-update-panel .aim-update-primary, .aim-update-toast button:first-of-type { background: var(--es-red); border-left: none; clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%); padding: 0 20px; font-style: italic; }
+.aim-update-panel .aim-update-primary:hover, .aim-update-toast button:first-of-type:hover { background: var(--es-red-2); }
+.aim-update-panel label { display: block; margin-top: 14px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--es-muted); }
 .aim-update-folder { display: flex; gap: 8px; align-items: center; margin-top: 6px; }
-.aim-update-folder output { flex: 1; min-width: 0; overflow-wrap: anywhere; padding: 7px 10px; color: #d6d9df; background: #10131a; border: 1px solid #343b4a; font-size: 13px; user-select: text; }
+.aim-update-folder output { flex: 1; min-width: 0; overflow-wrap: anywhere; padding: 7px 10px; color: var(--es-soft); background: var(--es-panel); border: 1px solid var(--es-line-2); font-size: 13px; user-select: text; }
 .aim-update-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.aim-update-panel progress { width: 100%; height: 6px; margin: 8px 0 0; border: none; background: #1e232d; accent-color: #ff4655; appearance: none; }
-.aim-update-panel progress::-webkit-progress-bar { background: #1e232d; }
-.aim-update-panel progress::-webkit-progress-value { background: #ff4655; transition: width 0.2s; }
-.aim-update-panel [role="status"] { min-height: 18px; color: #4ade80; }
+.aim-update-panel progress { width: 100%; height: 6px; margin: 8px 0 0; border: none; background: var(--es-raised-2); accent-color: var(--es-red); appearance: none; }
+.aim-update-panel progress::-webkit-progress-bar { background: var(--es-raised-2); }
+.aim-update-panel progress::-webkit-progress-value { background: var(--es-red); transition: width 0.2s; }
+.aim-update-panel [role="status"] { min-height: 18px; color: var(--es-green); }
+.aim-update-panel [role="status"].is-bad { color: var(--es-red-2); }
+.aim-update-panel [role="status"].is-busy { color: var(--es-soft); }
 .aim-update-panel [hidden] { display: none; }
+/* Top right, under the lobby's top bar: at the bottom right it covered the Discord panel and the
+   bottom bar (ui-settings review, 20 Nov 2026). */
 .aim-update-toast {
   position: fixed;
-  bottom: 24px;
+  top: 76px;
   right: 24px;
   z-index: 9000;
   max-width: min(440px, calc(100vw - 48px));
   padding: 14px 16px;
-  color: #f4f5f7;
+  color: var(--es-text);
   background: rgba(14, 17, 23, 0.94);
-  border-left: 4px solid #ff4655;
+  border-left: 4px solid var(--es-red);
   outline: 1px solid rgba(255, 255, 255, 0.1);
   outline-offset: -1px;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
-  font: 14px/1.5 "Bahnschrift", "Segoe UI", sans-serif;
-  animation: es-tool-in 0.32s cubic-bezier(0.2, 0.9, 0.2, 1.15) both;
+  font: 14px/1.5 var(--es-head);
+  animation: es-tool-in 0.2s var(--es-ease) both;
 }
-.aim-update-toast p { margin: 0 0 10px; font-size: 15px; font-weight: 700; }
+.aim-update-toast p { margin: 0 34px 10px 0; font-size: 15px; font-weight: 700; }
 .aim-update-toast button { margin: 4px 6px 0 0; }
+.aim-update-toast button.aim-update-toast-x { position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; margin: 0; padding: 0; color: var(--es-muted); background: transparent; border: 1px solid var(--es-line-2); clip-path: none !important; font-size: 13px; }
+.aim-update-toast button.aim-update-toast-x:hover { color: #fff; background: transparent; border-color: var(--es-red); }
 /* Updates button in the lobby bar (lobby-bar.js): a red dot while an update is available. */
 html[data-aim-update-available] .es-bar-updates { position: relative; color: #fff !important; }
-html[data-aim-update-available] .es-bar-updates::after { content: ""; position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; background: #ff4655; box-shadow: 0 0 0 2px #090b0f; }
+html[data-aim-update-available] .es-bar-updates::after { content: ""; position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; background: var(--es-red); box-shadow: 0 0 0 2px var(--es-bg); }
 
 /* "What's new": the release's notes from GitHub. Each "## Heading" becomes a section
    under a slanted red bar, e.g. "## New map", "## New skins", "## Fixes". */
@@ -80,12 +86,12 @@ html[data-aim-update-available] .es-bar-updates::after { content: ""; position: 
   margin: 6px 0 8px;
   padding: 12px 14px;
   background: rgba(0, 0, 0, 0.28);
-  border-left: 3px solid #ff4655;
+  border-left: 3px solid var(--es-red);
   font-size: 13px;
   line-height: 1.5;
-  color: #d6d9df;
+  color: var(--es-soft);
   scrollbar-width: thin;
-  scrollbar-color: #343b4a transparent;
+  scrollbar-color: var(--es-line-2) transparent;
 }
 .aim-update-notes h3 { margin: 0 0 10px; font-size: 18px; font-weight: 800; font-style: italic; font-stretch: 75%; text-transform: uppercase; letter-spacing: 0.03em; color: #fff; }
 .aim-update-notes h4 {
@@ -93,7 +99,7 @@ html[data-aim-update-available] .es-bar-updates::after { content: ""; position: 
   margin: 12px 0 6px;
   padding: 2px 14px;
   color: #fff;
-  background: #ff4655;
+  background: var(--es-red);
   clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
   font-size: 12px;
   font-weight: 700;
@@ -104,7 +110,7 @@ html[data-aim-update-available] .es-bar-updates::after { content: ""; position: 
 .aim-update-notes h3 + h4 { margin-top: 0; }
 .aim-update-notes ul { margin: 2px 0 6px; padding-left: 18px; }
 .aim-update-notes li { margin: 3px 0; }
-.aim-update-notes li::marker { color: #ff4655; }
+.aim-update-notes li::marker { color: var(--es-red); }
 .aim-update-notes strong { color: #fff; }
-.aim-update-notes p { margin: 4px 0; color: #d6d9df; }
+.aim-update-notes p { margin: 4px 0; color: var(--es-soft); }
 .aim-update-notes code { padding: 1px 5px; background: rgba(255, 70, 85, 0.12); color: #ff9aa2; font-size: 12px; }

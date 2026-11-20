@@ -23,7 +23,13 @@
   }
   async function run(action) {
     try { const next = await action(); if (next?.status) receive(next); return true; }
-    catch (error) { if (!panel) open(); panel.querySelector("[role=status]").textContent = error.message; return false; }
+    catch (error) {
+      if (!panel) open();
+      const status = panel.querySelector("[role=status]");
+      status.textContent = String(error.message || error).replace(/^Error invoking remote method '[^']+': (Error: )?/, "");
+      status.className = "is-bad";
+      return false;
+    }
   }
   function close() {
     if (!panel) return;
@@ -36,7 +42,7 @@
     panel = document.createElement("div"); panel.className = "aim-update-shade";
     panel.previousFocus = document.activeElement;
     panel.innerHTML = `<section role="dialog" aria-modal="true" aria-labelledby="aim-update-title" class="aim-update-panel">
-      <header><h2 id="aim-update-title">openVaim updates</h2><button type="button" data-close aria-label="Close">×</button></header>
+      <header><h2 id="aim-update-title">openVaim updates</h2><button type="button" data-close aria-label="Close" title="Close (Esc)">✕</button></header>
       <p data-version></p><p data-description></p>
       <div class="aim-update-notes" data-notes hidden></div>
       <div data-folder><label>Installation folder</label><div class="aim-update-folder"><output></output><button type="button" data-browse>Change folder…</button></div>
@@ -65,8 +71,8 @@
     const busy = ["downloading", "installing", "checking"].includes(state.status);
     panel.querySelector("[data-version]").textContent = `Installed version: ${state.currentVersion}${state.release ? ` · Available: ${state.release.version}` : ""}`;
     panel.querySelector("[data-description]").textContent = state.supported
-      ? "Updates come from published releases on the official open-aim GitHub repository. Installing closes the app and opens the new version."
-      : "Portable and development builds can check for updates here. Download their replacement from the official releases page. In-app installation is available in the installed Windows app.";
+      ? "Updates come from the official openVaim releases on GitHub. Installing closes the app and opens the new version."
+      : "This copy (a portable or development build) cannot update itself. Check for a newer version here, then download it from the releases page. The installed Windows app updates in place.";
     const notes = panel.querySelector("[data-notes]");
     const body = state.release && state.release.notes;
     notes.hidden = !body;
@@ -75,7 +81,10 @@
     panel.querySelector("output").textContent = state.directory;
     panel.querySelector("[data-browse]").disabled = busy;
     const progress = panel.querySelector("progress"); progress.hidden = state.status !== "downloading"; progress.value = state.progress;
-    panel.querySelector("[role=status]").textContent = state.error || ({ checking: "Checking GitHub…", latest: "No newer release is available.", downloading: `Downloading and verifying installer… ${state.progress}%`, installing: "Opening the installer. openVaim will close to finish updating." }[state.status] || "");
+    const status = panel.querySelector("[role=status]");
+    status.textContent = state.error || ({ checking: "Checking GitHub…", latest: `You have the latest version (${state.currentVersion}).`, downloading: `Downloading and verifying the installer… ${state.progress}%`, installing: "Opening the installer. openVaim will close to finish updating." }[state.status] || "");
+    // Errors in red, work in progress in grey, results in green (errors used to show green too).
+    status.className = state.error || state.status === "error" ? "is-bad" : busy ? "is-busy" : "";
     const actions = panel.querySelector(".aim-update-actions");
     // Leave focused action buttons intact when download progress changes.
     const mode = `${state.status}:${!!state.release}:${state.supported}`;
@@ -103,7 +112,10 @@
     if (toast) return;
     toast = document.createElement("aside"); toast.className = "aim-update-toast"; toast.setAttribute("aria-label", "Update available");
     const text = document.createElement("p"); text.textContent = `openVaim ${state.release.version} is available.`;
-    toast.append(text, button("Update now…", open), button("Remind me in 7 days", () => run(api.snooze)), button("Skip this version", () => run(api.skip)));
+    // ✕ hides the notice until the next start (the Updates button in the top bar still shows the dot).
+    const later = button("✕", () => { dismissed = true; toast?.remove(); toast = null; });
+    later.className = "aim-update-toast-x"; later.setAttribute("aria-label", "Hide for now"); later.title = "Hide for now";
+    toast.append(text, button("Update now…", open), button("Remind me in 7 days", () => run(api.snooze)), button("Skip this version", () => run(api.skip)), later);
     lobby.appendChild(toast);
   }
   function receive(next) {

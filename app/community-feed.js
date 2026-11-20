@@ -1,4 +1,6 @@
 // Translate approved uploads into the player-workshop catalog used by the lobby.
+// "offline" in home() and page() answers: the workshop service could not be reached (main.js marks the
+// empty list), so the lobby can say that instead of "Nothing here yet".
 const OK = (data) => ({ code: "00000", data, msg: "", local: true });
 
 function card(item, scene) {
@@ -48,7 +50,7 @@ function home(cards) {
   // the shelf "Picks of the week" and badges those cards.
   const lead = cards.slice().sort((a, b) => b.featured - a.featured);
   return OK({ stage: lead.slice(0, 9).map((item) => ({ item, source: item.featured ? "featured" : "new" })),
-    fresh: cards, freshTotal: cards.length, hot, quality, local: true,
+    fresh: cards, freshTotal: cards.length, hot, quality, local: true, offline: cards.offline === true,
     capturedAt: new Date().toISOString() });
 }
 
@@ -80,7 +82,7 @@ function page(cards, params) {
   for (const item of cards) if (item.mapId) byMap[item.mapId] = (byMap[item.mapId] || 0) + 1;
   return OK({ list: filtered.slice((number - 1) * size, number * size), total: filtered.length,
     countAll: cards.length, countMap: cards.filter((item) => item.category === "map").length,
-    countBall: cards.filter((item) => item.category === "ball").length, countByMap: byMap,
+    countBall: cards.filter((item) => item.category === "ball").length, countByMap: byMap, offline: cards.offline === true,
     localCoverage: { sourceTotal: cards.length, captured: cards.length, complete: true } });
 }
 
