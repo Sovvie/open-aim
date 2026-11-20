@@ -196,9 +196,31 @@
       link.tabIndex = collapsed ? -1 : 0;
     };
     let saved = false;
-    try { saved = localStorage.getItem("es-discord-collapsed") === "1"; } catch {}
+    // No choice saved yet: small windows (under 1400 px) start with the panel tucked to its tab, where it would
+    // otherwise cover the map strip and the sort buttons.
+    try { const stored = localStorage.getItem("es-discord-collapsed"); saved = stored === "1" || (stored == null && innerWidth < 1400); } catch {}
     setCollapsed(saved);
+    // ui-lobby-v1: while the drill list is scrolled down, an open panel tucks away to its tab (not saved), so it
+    // never sits on top of a card's Start button. Back at the top it comes out again; the tab opens it any time.
+    let tucked = false, peek = false;
+    const setTucked = (value) => {
+      if (tucked === value) return;
+      tucked = value;
+      dock.classList.toggle("is-tucked", value);
+      const shownCollapsed = value || dock.classList.contains("is-collapsed");
+      toggle.setAttribute("aria-expanded", String(!shownCollapsed));
+      toggle.setAttribute("aria-label", shownCollapsed ? "Show Discord support" : "Hide Discord support");
+      toggle.title = shownCollapsed ? "Show Discord support" : "Hide";
+      link.tabIndex = shownCollapsed ? -1 : 0;
+    };
+    document.addEventListener("scroll", (event) => {
+      const scroller = event.target;
+      if (!scroller?.classList?.contains("hall-board-body") && !scroller?.classList?.contains("tw-root")) return;
+      if (scroller.scrollTop < 120) { peek = false; setTucked(false); }
+      else if (!peek && !dock.classList.contains("is-collapsed")) setTucked(true);
+    }, { capture: true, passive: true });
     toggle.addEventListener("click", () => {
+      if (tucked) { peek = true; setTucked(false); return; }
       const collapsed = !dock.classList.contains("is-collapsed");
       setCollapsed(collapsed);
       try { localStorage.setItem("es-discord-collapsed", collapsed ? "1" : "0"); } catch {}
@@ -224,16 +246,51 @@
       quitTab.textContent = "Quit";
       quitTab.addEventListener("click", (event) => {
         event.stopPropagation();
-        if (window.confirm("Quit Open Aim?")) window.__aimDesktop.quit();
+        if (window.confirm("Quit openVaim?")) window.__aimDesktop.quit();
       });
     }
     if (settings.nextElementSibling !== quitTab) settings.after(quitTab);
   }
 
+  // ui-lobby-v1: tab row that scrolls sideways when the window is too narrow for every tab (theme-esports.css).
+  // The mouse wheel scrolls it sideways, the active tab is kept in view, and a soft edge marks hidden tabs.
+  let tabsRow = null, lastActiveTab = null;
+  function markTabsOverflow() {
+    if (!tabsRow) return;
+    const max = tabsRow.scrollWidth - tabsRow.clientWidth;
+    tabsRow.classList.toggle("es-tabs-more-left", max > 1 && tabsRow.scrollLeft > 1);
+    tabsRow.classList.toggle("es-tabs-more-right", max > 1 && tabsRow.scrollLeft < max - 1);
+  }
+  function syncTabsRow() {
+    const row = document.querySelector(".hall-topnav .hall-tabs");
+    if (row && row !== tabsRow) {
+      tabsRow = row;
+      row.addEventListener("wheel", (event) => {
+        if (row.scrollWidth <= row.clientWidth + 1 || event.ctrlKey) return;
+        const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+        if (!delta) return;
+        event.preventDefault();
+        row.scrollLeft += delta;
+      }, { passive: false });
+      row.addEventListener("scroll", markTabsOverflow, { passive: true });
+      lastActiveTab = null;
+    }
+    if (!tabsRow) return;
+    const active = tabsRow.querySelector(".hall-tab.is-active");
+    if (active && active !== lastActiveTab) {
+      lastActiveTab = active;
+      const a = active.offsetLeft, b = a + active.offsetWidth;
+      if (a < tabsRow.scrollLeft || b > tabsRow.scrollLeft + tabsRow.clientWidth) tabsRow.scrollLeft = a - (tabsRow.clientWidth - active.offsetWidth) / 2;
+    }
+    markTabsOverflow();
+  }
+  addEventListener("resize", () => { lastActiveTab = null; syncTabsRow(); }, { passive: true });
+
   function syncBar() {
 
     syncDiscordContact();
     syncQuitTab();
+    syncTabsRow();
     const topnavRight = document.querySelector(".hall-topnav > .hall-topnav-right");
     if (!topnavRight) return;
     const previousElement = topnavRight.previousElementSibling;

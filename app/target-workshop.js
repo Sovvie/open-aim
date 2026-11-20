@@ -100,7 +100,33 @@
 .tw-help{color:#6b7280;font-size:12px;line-height:1.5;margin:14px 0 0}
 .tw-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:16px 26px;border-top:1px solid #272d39}
 .tw-foot span{color:#9aa1ae;font-size:13px}.tw-foot div{display:flex;gap:10px}
-@media (max-width:1300px){.tw-grid{grid-template-columns:1fr}.tw-tune{grid-template-columns:1fr 440px}.tw-rows{grid-template-columns:1fr}}
+@media (max-width:1300px){.tw-tune{grid-template-columns:1fr 440px}.tw-rows{grid-template-columns:1fr}}
+/* ui-lobby-v1: two columns from about 1200 px wide (was 1340), rows sized by their content (one search
+   result no longer grows to fill the page), long names held to two lines, Easy / Hard as a badge and a filter,
+   a visible keyboard focus, and buttons that wrap instead of running out of a narrow card. */
+.tw-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,540px),1fr));grid-auto-rows:minmax(330px,auto);align-content:start}
+.tw-filters{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.tw-chips button{min-height:32px;box-sizing:border-box}
+.tw-chips button:focus-visible,.tw-fav:focus-visible,.tw-btn:focus-visible,.tw-note button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.tw-card:focus-visible{outline:none;border-color:#fff;box-shadow:0 0 0 1px #fff inset}
+.tw-card.is-on:focus-visible{border-color:#ff4655;box-shadow:0 0 0 1px #ff4655 inset,0 0 0 3px #fff}
+.tw-name h2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.tw-fav{display:grid;place-items:center;width:32px;height:32px;margin:-6px -6px 0 0;flex:none}
+.tw-pv .tw-tier{position:absolute;right:12px;top:12px;font:800 11px var(--es-head,"Bahnschrift");letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%)}
+.tw-tier.is-easy{background:#1f3b2e;color:#7ee2a8}.tw-tier.is-hard{background:#ff4655;color:#fff}
+.tw-actions{flex-wrap:wrap;gap:8px}
+.tw-actions .tw-btn{padding:11px 18px}.tw-actions .tw-btn.is-ghost{padding:11px 14px}
+.tw-card{content-visibility:auto;contain-intrinsic-size:auto 330px}
+button.tw-back{display:inline-flex;align-items:center;min-height:32px;align-self:flex-start;margin:-8px 0 -4px}
+button.tw-back:focus-visible,.tw-tabs button:focus-visible,.tw-seg button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+/* The list scrolls inside the tab, like VALORANT Training (it scrolled the whole window, so the top bar and the
+   search bar scrolled away with it). */
+.tw-root{height:100%;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-gutter:stable}
+.tw-root>.tw-page{min-height:100%}
+.tw-empty{min-height:200px;align-content:center;gap:12px;text-align:center;background:#10131a;border-top:2px solid #ff4655;clip-path:var(--es-cut,none);padding:30px 24px}
+.tw-empty b{display:block;margin-bottom:8px;font:italic 800 22px var(--es-head,"Bahnschrift");letter-spacing:.04em;text-transform:uppercase;color:#fff}
+@media (max-width:1400px){.tw-page{padding:22px 24px 26px}.tw-name h2{font-size:22px}.tw-body{padding:18px 18px 16px}}
+@media (prefers-reduced-motion:reduce){.tw-card,.tw-btn,.tw-row{transition:none}}
 `;
 
   const ICON = {
@@ -122,8 +148,23 @@
 .tw-warn{color:#ffd23d!important}
 `;
   let api = null, root = null, state = null;
-  let filter = "all";
+  // ui-lobby-v1: the skill filter and the Easy / Hard filter are remembered between visits.
+  const FILTER_KEY = "tw-filter-v1";
+  let filter = "all", level = "any";
+  try { const saved = JSON.parse(localStorage.getItem(FILTER_KEY) || "{}"); if (typeof saved.filter === "string") filter = saved.filter; if (["any", "easy", "hard"].includes(saved.level)) level = saved.level; } catch {}
+  const saveFilters = () => { try { localStorage.setItem(FILTER_KEY, JSON.stringify({ filter, level })); } catch {} };
+  // Generated pairs are named "Easy-Flick — Gridshot 3×3" / "Hard-…" (tools/make-workshop-scenes.mjs); Studio
+  // and community drills may use "Name (Easy)". The card shows the plain name and an Easy / Hard badge.
+  function tierOf(name) {
+    const text = String(name ?? "");
+    let m = /^(easy|hard)\s*-\s*(.+)$/i.exec(text);
+    if (m) return { tier: m[1].toLowerCase(), title: m[2].trim() };
+    m = /^(.+?)\s*[([]\s*(easy|hard)\s*[)\]]$/i.exec(text);
+    if (m) return { tier: m[2].toLowerCase(), title: m[1].trim() };
+    return { tier: null, title: text };
+  }
   let tune = null; // lobby Tune controller
+  let listScroll = null; // list scroll position while Tune is open
   const requested = new Set();
   let resizeObs = null, drawQueued = 0;
 
@@ -412,35 +453,60 @@
     const t = api.tunables(code);
     return !!t && t.rows.some((r) => t.values[r.key] != null && Math.abs(t.values[r.key] - r.def) > 1e-9);
   }
+  const levelOk = (it) => level === "any" || tierOf(it.name).tier === level;
+  const skillOk = (it) => filter === "all" || (filter === FAV ? state.favorites.includes(it.shareCode) : it.facts?.skill === filter);
   function visibleItems() {
-    return state.items.filter((it) => it.match && (filter === "all" || (filter === FAV ? state.favorites.includes(it.shareCode) : it.facts?.skill === filter)));
+    return state.items.filter((it) => it.match && skillOk(it) && levelOk(it));
   }
   function renderList() {
     const skills = [...new Set(state.items.map((it) => it.facts?.skill).filter(Boolean))];
-    if (filter !== "all" && filter !== FAV && !skills.includes(filter)) filter = "all";
-    const chip = (key, label, n) => `<button type="button" data-filter="${esc(key)}" aria-pressed="${filter === key}">${esc(label)}${n != null ? `<i>${n}</i>` : ""}</button>`;
+    // A remembered skill is kept while the list is still loading (no skills known yet).
+    if (filter !== "all" && filter !== FAV && skills.length && !skills.includes(filter)) filter = "all";
+    const hasTiers = state.items.some((it) => tierOf(it.name).tier);
+    if (!hasTiers && state.items.length) level = "any";
+    // Counts follow the other filter, so "Hard 32" and "Flicking 12" always say what a click will show.
+    const matching = state.items.filter((it) => it.match);
+    const inLevel = matching.filter(levelOk), inSkill = matching.filter(skillOk);
+    const chip = (key, label, n, attr = "data-filter", current = filter) => `<button type="button" ${attr}="${esc(key)}" aria-pressed="${current === key}">${esc(label)}${n != null ? `<i>${n}</i>` : ""}</button>`;
     const items = visibleItems(), q = state.query.trim();
     let body;
     if (state.status === "loading") body = `<div class="tw-empty">Loading target tasks…</div>`;
     else if (state.status === "error") body = `<div class="tw-empty"><p class="tw-note">Could not load target tasks. <button type="button" data-act="retry">Try again</button></p></div>`;
-    else if (!items.length) body = `<div class="tw-empty">${q ? "No matching target tasks." : filter === FAV ? "No favorites yet: click the bookmark on a task." : "No target tasks yet."}</div>`;
+    else if (!items.length) {
+      const narrowed = filter !== "all" || level !== "any";
+      const what = q ? `No target tasks match "${esc(q)}"${narrowed ? " with these filters" : ""}.` : filter === FAV && level === "any" ? "No favorites yet: click the bookmark on a task." : narrowed ? "No target tasks with these filters." : "No target tasks yet.";
+      const fixes = [q ? `<button type="button" data-act="clear">Clear search</button>` : "", narrowed ? `<button type="button" data-act="show-all">Show all tasks</button>` : ""].join("");
+      body = `<div class="tw-empty"><div><b>Nothing here</b><p class="tw-note" style="justify-content:center">${what} ${fixes}</p></div></div>`;
+    }
     else body = items.map(card).join("");
+    // The rebuild below replaces every element: note the focused control so keyboard focus survives it
+    // (selecting a card with Space, a favourite toggled with Enter, a filter chip).
+    const had = document.activeElement && root.contains(document.activeElement) ? document.activeElement : null;
+    const focusSel = !had ? null
+      : had.dataset.filter != null ? `[data-filter="${CSS.escape(had.dataset.filter)}"]`
+      : had.dataset.level != null ? `[data-level="${CSS.escape(had.dataset.level)}"]`
+      : had.closest("[data-code]") ? `.tw-card[data-code="${CSS.escape(had.closest("[data-code]").dataset.code)}"]${had.classList.contains("tw-card") ? "" : had.dataset.act ? ` [data-act="${CSS.escape(had.dataset.act)}"]` : ""}`
+      : null;
     root.innerHTML = `<div class="tw-page">
       <div class="tw-head"><div><div class="tw-kicker">Train the basics · precision, reactions, tracking</div><h1 class="tw-title">Target Workshop</h1></div>
-        <div class="tw-chips" role="group" aria-label="Filter">${chip("all", "All", state.items.length)}${skills.map((s) => chip(s, s, state.items.filter((it) => it.facts?.skill === s).length)).join("")}${chip(FAV, "Favorites", state.favorites.filter((c) => state.items.some((it) => it.shareCode === c)).length)}</div></div>
-      ${q ? `<p class="tw-note">Search "${esc(q)}" · ${items.length} tasks <button type="button" data-act="clear">Clear search</button></p>` : ""}
+        <div class="tw-filters"><div class="tw-chips" role="group" aria-label="Filter by skill">${chip("all", "All", inLevel.length)}${skills.map((s) => chip(s, s, inLevel.filter((it) => it.facts?.skill === s).length)).join("")}${chip(FAV, "Favorites", inLevel.filter((it) => state.favorites.includes(it.shareCode)).length)}</div>
+        ${hasTiers ? `<div class="tw-chips" role="group" aria-label="Filter by difficulty">${chip("any", "Any level", null, "data-level", level)}${chip("easy", "Easy", inSkill.filter((it) => tierOf(it.name).tier === "easy").length, "data-level", level)}${chip("hard", "Hard", inSkill.filter((it) => tierOf(it.name).tier === "hard").length, "data-level", level)}</div>` : ""}</div></div>
+      ${q ? `<p class="tw-note">Search "${esc(q)}" · ${items.length} ${items.length === 1 ? "task" : "tasks"} <button type="button" data-act="clear">Clear search</button></p>` : ""}
       <div class="tw-grid">${body}</div></div>`;
+    if (focusSel) root.querySelector(focusSel)?.focus({ preventScroll: true });
     queueDraw();
   }
   function card(it) {
     const f = it.facts, fav = state.favorites.includes(it.shareCode);
     const custom = it.doc === "ready" && isCustom(it.shareCode);
-    return `<article class="tw-card${it.shareCode === state.selected ? " is-on" : ""}" data-code="${esc(it.shareCode)}" tabindex="0" aria-label="${esc(it.name)}">
+    const { tier, title } = tierOf(it.name);
+    return `<article class="tw-card${it.shareCode === state.selected ? " is-on" : ""}" data-code="${esc(it.shareCode)}" tabindex="0" aria-label="${esc(tier ? `${title} (${tier === "easy" ? "Easy" : "Hard"})` : it.name)}">
       <div class="tw-pv"><canvas data-pv="${esc(it.shareCode)}"></canvas>
         ${f ? `<span class="tw-tag">${esc(f.skill)} / ${esc(f.form)}</span><span class="tw-len">${esc(f.length)}</span>` : ""}
+        ${tier ? `<span class="tw-tier is-${tier}">${tier === "easy" ? "Easy" : "Hard"}</span>` : ""}
         ${custom ? `<span class="tw-custom" title="You changed this drill's settings">Tuned</span>` : ""}</div>
       <div class="tw-body">
-        <div class="tw-name"><h2>${esc(it.name)}</h2><button type="button" class="tw-fav${fav ? " is-on" : ""}" data-act="fav" title="${fav ? "Remove from favorites" : "Add to favorites"}" aria-pressed="${fav}">${fav ? ICON.markOn : ICON.mark}</button></div>
+        <div class="tw-name"><h2 title="${esc(title)}">${esc(title)}</h2><button type="button" class="tw-fav${fav ? " is-on" : ""}" data-act="fav" title="${fav ? "Remove from favorites" : "Add to favorites"}" aria-label="${fav ? "Remove from favorites" : "Add to favorites"}" aria-pressed="${fav}">${fav ? ICON.markOn : ICON.mark}</button></div>
         <p class="tw-desc">${esc(it.description || f?.summary || "")}</p>
         <div class="tw-stats"><div><span>Best</span><b class="${it.best == null ? "is-none" : ""}">${num(it.best)}</b></div>
           <div><span>Accuracy</span><b class="${it.accuracy == null ? "is-none" : ""}">${it.accuracy == null ? "—" : Math.round(it.accuracy) + "%"}</b></div>
@@ -454,27 +520,49 @@
     if (drawQueued) return;
     drawQueued = requestAnimationFrame(() => { drawQueued = 0; drawAll(); });
   }
+  // ui-lobby-v1: only the previews on (or near) the screen are drawn; the others are drawn when they scroll
+  // in. Drawing all 70+ previews took about 130 ms after every click (favourite, select, filter).
+  let pvObs = null;
+  const onScreen = new Set();
+  function paintCard(cv) {
+    const code = cv.dataset.pv, it = state?.items.find((x) => x.shareCode === code);
+    if (!it || it.doc !== "ready") return;
+    const tn = api.tunables(code);
+    paint(cv, (v, w, h) => api.project(code, v, w, h, state.backdrop), api.draw, tn ? tn.values : {}, state.ballColor, state.backdrop);
+  }
+  function watchPreviews() {
+    if (!("IntersectionObserver" in window)) return false;
+    if (!pvObs) pvObs = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (e.isIntersecting) { if (!onScreen.has(e.target)) { onScreen.add(e.target); if (!tune && state) paintCard(e.target); } }
+        else onScreen.delete(e.target);
+      }
+    }, { rootMargin: "300px 0px" });
+    pvObs.disconnect(); onScreen.clear();
+    for (const cv of root.querySelectorAll("canvas[data-pv]")) pvObs.observe(cv);
+    return true;
+  }
   function drawAll() {
     if (!root || !state) return;
     if (tune) { tune.redraw(); return; }
-    for (const cv of root.querySelectorAll("canvas[data-pv]")) {
-      const code = cv.dataset.pv, it = state.items.find((x) => x.shareCode === code);
-      if (!it || it.doc !== "ready") continue;
-      const tn = api.tunables(code);
-      paint(cv, (v, w, h) => api.project(code, v, w, h, state.backdrop), api.draw, tn ? tn.values : {}, state.ballColor, state.backdrop);
-    }
+    const canvases = root.querySelectorAll("canvas[data-pv]");
+    if (canvases.length && ![...canvases].some((cv) => onScreen.has(cv)) && watchPreviews()) return; // new list: the observer draws
+    for (const cv of canvases) if (!pvObs || onScreen.has(cv)) paintCard(cv);
   }
 
   // ---- lobby Tune page ----------------------------------------------------------------------
   function openTune(code) {
     const tn = api.tunables(code), it = state.items.find((x) => x.shareCode === code);
     if (!tn) return;
+    // Back from Tune returns to the same place in the list (the list is rebuilt from the top).
+    listScroll = { el: root, top: root.scrollTop };
     api.select(code);
     root.innerHTML = "";
     const host = document.createElement("div");
     root.appendChild(host);
+    const named = tierOf(it?.name), tierLabel = named.tier ? (named.tier === "easy" ? "Easy" : "Hard") : "";
     tune = createTune(host, {
-      title: it?.name, tag: it?.facts ? `${it.facts.skill} / ${it.facts.form} · ${it.facts.length}` : "",
+      title: named.title, tag: [it?.facts ? `${it.facts.skill} / ${it.facts.form} · ${it.facts.length}` : "", tierLabel].filter(Boolean).join(" · "),
       rows: tn.rows, values: tn.values, h: lobbyHelpers(code), fitBars,
       ballColor: () => state.ballColor, setBallColor: (c) => { api.setBallColor(c); state.ballColor = c; },
       live: (v) => api.tunables(code)?.set(v),
@@ -489,15 +577,22 @@
     if (!tune) return;
     const t = tune; tune = null;
     t.destroy();
-    if (root) renderList();
+    if (root) {
+      renderList();
+      const back = listScroll; listScroll = null;
+      if (back?.el.isConnected) back.el.scrollTop = back.top;
+      root.querySelector(`.tw-card[data-code="${CSS.escape(t.code)}"]`)?.focus({ preventScroll: true });
+    }
   }
 
   function onClick(e) {
     if (tune) return;
     const t = e.target.closest("button, [data-code]");
     if (!t || !root.contains(t)) return;
-    if (t.matches("[data-filter]")) { filter = t.dataset.filter; renderList(); return; }
+    if (t.matches("[data-filter]")) { filter = t.dataset.filter; saveFilters(); renderList(); return; }
+    if (t.matches("[data-level]")) { level = t.dataset.level; saveFilters(); renderList(); return; }
     const act = t.dataset.act;
+    if (act === "show-all") { filter = "all"; level = "any"; saveFilters(); renderList(); return; }
     if (act === "retry") return api.retry();
     if (act === "clear") return api.clearQuery();
     const cardEl = t.closest("[data-code]");
@@ -510,7 +605,17 @@
   }
   function onKey(e) {
     if (tune || !root?.isConnected) return;
-    if (e.key === "Enter" && e.target.classList?.contains("tw-card") && root.contains(e.target)) api.play(e.target.dataset.code);
+    const cardEl = e.target.classList?.contains("tw-card") && root.contains(e.target) ? e.target : null;
+    if (!cardEl) return;
+    if (e.key === "Enter") { e.preventDefault(); if (!state.paused) api.play(cardEl.dataset.code); return; }
+    if (e.key === " ") { e.preventDefault(); if (cardEl.dataset.code !== state.selected) api.select(cardEl.dataset.code); return; }
+    // Arrow keys move between cards in reading order (the grid has one or two columns).
+    const step = { ArrowRight: 1, ArrowDown: "row", ArrowLeft: -1, ArrowUp: "-row" }[e.key];
+    if (!step) return;
+    const cards = [...root.querySelectorAll(".tw-card")], i = cards.indexOf(cardEl);
+    const cols = Math.max(1, cards.filter((c) => c.offsetTop === cards[0].offsetTop).length);
+    const next = cards[i + (step === "row" ? cols : step === "-row" ? -cols : step)];
+    if (next) { e.preventDefault(); next.focus(); next.scrollIntoView({ block: "nearest" }); }
   }
 
   // ---- lifecycle ----------------------------------------------------------------------------
@@ -531,6 +636,7 @@
     if (!root) return;
     if (tune) { const t = tune; tune = null; t.destroy(); }
     resizeObs?.disconnect(); resizeObs = null;
+    pvObs?.disconnect(); onScreen.clear();
     window.removeEventListener("keydown", onKey, true);
     root.removeEventListener("click", onClick);
     root = null;
@@ -597,7 +703,7 @@
     };
   }
 
-  window.__aimTargetWorkshop = { mount, update, dialog };
+  window.__aimTargetWorkshop = { mount, update, dialog, tierOf };
   // The lobby may have mounted the tab before this script ran.
   const late = document.querySelector(".tw-root");
   if (late && window.__aimTWApi) mount(late, window.__aimTWApi);
