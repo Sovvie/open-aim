@@ -745,7 +745,7 @@ html[data-aim-local]:not(#es) body .aim-rt-btn:hover { background: var(--es-red-
       const e = runs[code], th = thresholds(e), unit = e.unit ? " " + esc(e.unit) : "", ok = e.runs.filter((r) => !r.died), next = th && ok.length ? nextMedal(ok[ok.length - 1].score, th, e.lower) : null;
       const ths = th ? MEDAL_ORDER.map((m) => '<span class="es-rt-medal is-' + m + '">' + medalIcon(m) + fmtNum(th[m]) + "</span>").join("") + (th.source === "custom" ? " <small>(yours)</small>" : "") : "<small>after " + MIN_RUNS + " runs (" + ok.length + " done)</small>";
       const editing = v.medalEdit === code;
-      const form = editing ? '<tr class="es-rt-medalform"><td colspan="6"><div class="es-rt-row" data-medal-form="' + esc(code) + '">' + MEDAL_ORDER.map((m) => '<label class="is-' + m + '"><span>' + medalIcon(m) + MEDAL_LABEL[m] + '</span><input type="number" step="any" data-rt-field="medal-' + m + '" value="' + (th ? esc(th[m]) : "") + '"></label>').join("")
+      const form = editing ? '<tr class="es-rt-medalform"><td colspan="6"><div class="es-rt-row" data-medal-form="' + esc(code) + '">' + MEDAL_ORDER.map((m) => '<label class="is-' + m + '"><span>' + medalIcon(m) + MEDAL_LABEL[m] + '</span><input type="number" step="any" data-rt-field="medal-' + m + '" value="' + (v.medalDraft && v.medalDraft[m] != null ? esc(v.medalDraft[m]) : th ? esc(th[m]) : "") + '"></label>').join("")
         + '<button type="button" class="es-rt-primary" data-rt="medal-save" data-code="' + esc(code) + '">Save</button>' + (th && th.source === "custom" ? '<button type="button" data-rt="medal-auto" data-code="' + esc(code) + '">Back to automatic</button>' : "") + '<button type="button" data-rt="medal-cancel">Cancel</button></div>'
         + (v.medalError ? '<p class="es-rt-err" role="alert">' + esc(v.medalError) + "</p>" : '<p class="es-rt-note">' + (e.lower ? "Less is better here: gold is the smallest number. " : "") + "Enter performs Save, Esc cancels.</p>") + "</td></tr>" : "";
       return '<tr data-medal-row="' + esc(code) + '"' + (editing ? ' class="is-editing"' : "") + '><td class="es-rt-tdname">' + esc(label(code, e, book)) + "</td><td>" + e.runs.length + "</td><td>" + (e.best === null ? "–" : fmtNum(e.best) + unit) + "</td><td>" + MEDAL_ORDER.map((m) => medalDot(m, e.medals && e.medals[m])).join("") + "</td>"
@@ -800,7 +800,9 @@ html[data-aim-local]:not(#es) body .aim-rt-btn:hover { background: var(--es-red-
     const nav = doc.querySelector(".hall-topnav"), bar = doc.querySelector(".hall-bottombar");
     const top = nav && nav.getBoundingClientRect().height ? Math.max(0, Math.round(nav.getBoundingClientRect().bottom)) : 64;
     const barTop = bar && bar.getBoundingClientRect().height ? bar.getBoundingClientRect().top : innerHeight - 48;
-    page.style.top = top + "px"; page.style.bottom = Math.max(0, Math.round(innerHeight - barTop)) + "px";
+    const t = top + "px", b = Math.max(0, Math.round(innerHeight - barTop)) + "px";
+    if (page.style.top !== t) page.style.top = t; // only written when it changed: fit() also runs on every lobby change (check)
+    if (page.style.bottom !== b) page.style.bottom = b;
   }
   function render() {
     if (!page) return;
@@ -824,6 +826,8 @@ html[data-aim-local]:not(#es) body .aim-rt-btn:hover { background: var(--es-red-
         if ("rtQ" in el.dataset) try { el.setSelectionRange(el.value.length, el.value.length); } catch {}
       }
     }
+    const flash = page.querySelector(".es-rt-card.is-flash"); // a routine just saved: bring its card into view
+    if (flash && flash.scrollIntoView) try { flash.scrollIntoView({ block: "nearest" }); } catch {}
     if (opening) { const pick = page.querySelector("[data-rt-pick]"); if (pick && pick.scrollIntoView) try { pick.scrollIntoView({ block: "nearest" }); } catch {} }
   }
   // A line at the top of the page after an action (saved, deleted...), with Undo when the action can be taken back. It goes away by itself.
@@ -862,7 +866,7 @@ html[data-aim-local]:not(#es) body .aim-rt-btn:hover { background: var(--es-red-
     if (a !== "delete") disarm();
     if (a === "tab") {
       const t = el.dataset.tab === "medals" ? "medals" : "routines";
-      if (t !== view.tab) { view.tab = t; view.medalEdit = null; view.medalError = null; view.animBody = true; try { localStorage.setItem(TAB_KEY, t); } catch {} render(); page.scrollTop = 0; }
+      if (t !== view.tab) { view.tab = t; view.medalEdit = null; view.medalError = null; view.medalDraft = null; view.animBody = true; try { localStorage.setItem(TAB_KEY, t); } catch {} render(); page.scrollTop = 0; }
       return;
     }
     if (a === "play") { playStep({ code: el.dataset.code, name: "", type: el.dataset.type || "", rank: el.dataset.rank || "" }); return; }
@@ -941,16 +945,17 @@ html[data-aim-local]:not(#es) body .aim-rt-btn:hover { background: var(--es-red-
       if (r) notify("Deleted " + r.name + ".", { undo: () => { const x = loadRoutines(); if (!x.routines.some((y) => y.id === r.id) && x.routines.length < MAX_ROUTINES) { x.routines.splice(Math.min(at, x.routines.length), 0, r); if (wasActive && !x.active) x.active = wasActive; saveRoutines(x); } } });
       view.focusAfter = '[data-rt="undo"]'; render(); return;
     }
-    if (a === "medal-edit") { view.medalEdit = view.medalEdit === el.dataset.code ? null : el.dataset.code; view.medalError = null; view.focusAfter = '[data-rt-field="medal-bronze"]'; render(); return; }
-    if (a === "medal-cancel") { const c = view.medalEdit; view.medalEdit = null; view.medalError = null; view.focusAfter = '[data-rt="medal-edit"][data-code="' + c + '"]'; render(); return; }
-    if (a === "medal-auto") { api.setCustom(el.dataset.code, null); view.medalEdit = null; view.medalError = null; notify("Medal scores are automatic again."); view.focusAfter = '[data-rt="medal-edit"][data-code="' + el.dataset.code + '"]'; render(); return; }
+    if (a === "medal-edit") { view.medalEdit = view.medalEdit === el.dataset.code ? null : el.dataset.code; view.medalError = null; view.medalDraft = null; view.focusAfter = '[data-rt-field="medal-bronze"]'; render(); return; }
+    if (a === "medal-cancel") { const c = view.medalEdit; view.medalEdit = null; view.medalError = null; view.medalDraft = null; view.focusAfter = '[data-rt="medal-edit"][data-code="' + c + '"]'; render(); return; }
+    if (a === "medal-auto") { api.setCustom(el.dataset.code, null); view.medalEdit = null; view.medalError = null; view.medalDraft = null; notify("Medal scores are automatic again."); view.focusAfter = '[data-rt="medal-edit"][data-code="' + el.dataset.code + '"]'; render(); return; }
     if (a === "medal-save") {
       const code = el.dataset.code, form = page.querySelector('[data-medal-form="' + code + '"]'), val = (m) => { const x = form && form.querySelector('[data-rt-field="medal-' + m + '"]'); return x ? x.value : ""; };
       const th = { bronze: val("bronze"), silver: val("silver"), gold: val("gold") }, e = loadRuns()[code], sign = e && e.lower ? -1 : 1;
       if (![th.bronze, th.silver, th.gold].every((x) => x !== "" && isFinite(Number(x)))) view.medalError = "Enter a number for each medal.";
       else if (!(sign * th.bronze <= sign * th.silver && sign * th.silver <= sign * th.gold)) view.medalError = e && e.lower ? "Less is better here: gold needs the smallest number, bronze the largest." : "Bronze needs the lowest score, gold the highest.";
-      else if (api.setCustom(code, th)) { view.medalEdit = null; view.medalError = null; notify("Medal scores saved."); view.focusAfter = '[data-rt="medal-edit"][data-code="' + code + '"]'; }
+      else if (api.setCustom(code, th)) { view.medalEdit = null; view.medalError = null; view.medalDraft = null; notify("Medal scores saved."); view.focusAfter = '[data-rt="medal-edit"][data-code="' + code + '"]'; }
       else view.medalError = "Could not save. Check the numbers.";
+      if (view.medalError) { view.medalDraft = th; view.focusAfter = '[data-rt-field="medal-bronze"]'; } // keep what was typed
       render();
     }
   }
@@ -1015,7 +1020,7 @@ html[data-aim-local]:not(#es) body .aim-rt-btn:hover { background: var(--es-red-
   function closePage() {
     if (!page) return;
     page.remove(); page = null;
-    view.picker.open = false; view.notice = null; view.medalEdit = null; view.medalError = null; view.error = null; undoFn = null; disarm(); clearTimeout(noticeTimer);
+    view.picker.open = false; view.notice = null; view.medalEdit = null; view.medalError = null; view.medalDraft = null; view.error = null; undoFn = null; disarm(); clearTimeout(noticeTimer);
     tabButton?.classList.remove("is-active");
     for (const b of deactivated || []) if (b.isConnected) b.classList.add("is-active");
     deactivated = null;
@@ -1222,7 +1227,8 @@ html[data-aim-local]:not(#es) body .es-rt-table .es-rt-tdact button { margin-lef
    goes in the card's footer line (VALORANT Training) or the picture's free bottom-left corner (Target Workshop) instead of over the tags */
 html[data-aim-local]:not(#es) body .es-rt-addcard:not(.tw-btn) { top: 74px; right: 20px; width: 26px; height: 26px; }
 html[data-aim-local]:not(#es) body .es-rt-addcard:not(.tw-btn):focus-visible { outline: 2px solid #fff !important; outline-offset: -4px !important; }
-html[data-aim-local]:not(#es) body .es-rt-chip.is-inline { position: static; margin-left: auto; padding: 3px 12px 3px 8px; flex: none; }
+html[data-aim-local]:not(#es) body .es-rt-chip.is-inline { position: static; margin: -2px 0 -2px auto; padding: 2px 12px 2px 8px; flex: none; }
+html[data-aim-local]:not(#es) body .es-rt-chip.is-inline .es-rt-badge { width: 16px; height: 18px; }
 html[data-aim-local]:not(#es) body .tw-pv > .es-rt-chip { top: auto; left: 12px; bottom: 12px; }
 .es-rt-tabn { display: inline-grid; place-items: center; min-width: 18px; height: 18px; margin-left: 7px; padding: 0 5px; box-sizing: border-box; background: #fff; color: var(--es-red, #ff4655); font: 800 11px/1 var(--es-head); clip-path: var(--es-slant-sm); vertical-align: 1px; }
 .hall-tab:not(.is-active) .es-rt-tabn { background: var(--es-red, #ff4655); color: #fff; }
@@ -1298,13 +1304,14 @@ html[data-aim-local]:not(#es) body .tw-pv > .es-rt-chip { top: auto; left: 12px;
       mountTab();
       decorateCards();
       if (page && (!doc.querySelector(".hall-root") || doc.querySelector(".al-trainer-shell.al-session-active"))) closePage();
+      if (page) fit(); // the lobby's bars settle after the page opened
     } catch {}
   }
   if (doc) {
     addEventListener("keydown", (e) => {
       if (e.key !== "Escape" || !page) return;
       if (view.picker.open) { view.picker.open = false; view.focusAfter = '[data-rt="picker-open"]'; render(); return; }
-      if (view.medalEdit) { const c = view.medalEdit; view.medalEdit = null; view.medalError = null; view.focusAfter = '[data-rt="medal-edit"][data-code="' + c + '"]'; render(); return; }
+      if (view.medalEdit) { const c = view.medalEdit; view.medalEdit = null; view.medalError = null; view.medalDraft = null; view.focusAfter = '[data-rt="medal-edit"][data-code="' + c + '"]'; render(); return; }
       if (!(e.target && /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName))) closePage();
     });
     window.addEventListener("aim-routines-change", () => { try { markTab(); } catch {} });
