@@ -1,0 +1,25 @@
+# Studio (Creator) UI review, round 3, for 1.6.0
+
+## What players get
+- **Esc closes any Studio window** (New drill, Templates, Save your changes?, Delete?, Rename, Play with warnings) and skips the first-run tour. Delete questions start on Cancel, so a stray Enter never deletes.
+- **First-run tour** puts a red frame around the part each step talks about and no longer covers the 2D / 3D / Preview / Timeline buttons. It follows the window when it is resized.
+- **Map buttons in one row** (2D, 3D, Detailed, Preview moves, Timeline) that wraps on a narrow map instead of sitting at fixed spots. Fit view ("Show everything" and new drills) leaves room for that row, the zoom buttons and the hint, so nothing starts hidden under them.
+- **Hint bar** under the map wraps to a second line instead of cutting off the end. With the Timeline open, the timeline takes its place.
+- **Hover and grab feedback on the map:** a soft ring shows what a click would pick, the cursor closes to a fist while you drag, and the selected bot has a clear white ring that also shows on light map floors.
+- **Undo / redo say what happened** ("Undone. 3 more to undo.", "Nothing to undo."), and deleting says "Removed Holder 1. Ctrl+Z brings it back."
+- **Keyboard placing:** Tab to a button on the left and press Enter: it is put in the middle of the map, selected, ready for the arrow keys. Listed in the shortcut sheet.
+- **Fits small windows:** at 1024 to 1180 px wide, Snap and Export in the header show only their icon (tooltip kept) and "Unsaved changes" no longer wraps. On windows up to 900 px tall the tray shows names only (tips stay as tooltips), so Build, Utility and Your start are not far below the fold. With nothing saved yet, "Saved bots" is one line instead of six empty rows. Wide screens (1800 px and up) get a slightly wider settings panel.
+- **Drill list:** the three steps stay side by side down to small windows, so your drills stay above the fold; long names with no spaces wrap; coming back from a drill keeps your place in a long list.
+- **Checks box:** a brand-new empty drill says "Empty so far: add a bot or a target zone" instead of a red "Fix before playing"; warnings-only gets an amber edge; "Show" is a proper small button.
+- **Timeline rows** always have the dash between the bot name and what it does (it was missing on unselected rows and on "Round starts").
+- **Smaller things:** the settings panel is filled at once instead of staying blank while a map loads; dialogs keep their title in view and their buttons stay visible at the bottom on short windows; toasts in the editor sit above the hint instead of on it; "Detailed" is uppercase like 2D / 3D; template and starter names use the condensed uppercase heading style; the last rounded inputs (size number boxes, colour picker, swatches) are square; the no-desktop message says openVaim, not AimTrainer.
+
+## Technical
+- Files: `app/studio/studio.js`, `app/studio/studio.css` (one appended block marked "ui-studio review", plus one edited timeline rule), `app/studio/layout-tools.js` (two shortcut-sheet rows). No drill format change, no compiler change, no new storage keys (`S.libScroll` and `S.hover` are in-memory only).
+- `studio.js`: global capture-phase Esc handler (clicks the top `.scrim`, which runs its own close; the help sheet keeps its own handler); `confirmBox` focuses the first button when a button is labelled "Delete"; dialog focus uses `preventScroll`; `undo`/`redo` toasts; `removeSelected(quiet)` toast (Cut passes `true`); `.stage-bar` wrapper around the view switch, Preview and Timeline buttons (old absolute `left:` offsets are overridden with `position: static`); `fitView` uses W-128 / H-116 instead of 0.94 of the canvas; hover ring from `hitTest` in `pointermove` (redraw only when the hovered id changes); `grabbing` cursor on item drags; `trayKey` (click with `detail === 0`) places at the view centre in 2D; `renderSavedBots` early return when empty; `checksBox` neutral state for an item-less drill; `openDrill` stores the library scroll and calls `renderSide` before loading the map; coach ring + `relayout` on resize (no animation replay).
+- `node tests/run-all.cjs`: 14 files green.
+
+## Not verified / limits
+- Checked in the browser pane against the worktree's `app/studio` with a stubbed desktop API (drills in localStorage), at 1024x640, 1280x720, 1366x768, 1536x864 and 2560x1440: library (0, 1 and 101 drills, 60-character names), new drill on the range and on Ascent, placing, hover ring, selection ring, undo/redo toasts, templates, timeline, warnings, shortcut sheet, Esc on every dialog type, keyboard placing, library scroll memory, 3D view with Preview.
+- Not checked: the real Electron app, Play / record round trips, the Export save dialog and Import file picker, frame rate of the 3D view (the pane was not displayed, so it does not composite reliably), touch input.
+- Keyboard placing on a map drops the thing at the view centre; if that is off the floor the existing "outside the map" toast shows.
