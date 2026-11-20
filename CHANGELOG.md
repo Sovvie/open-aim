@@ -11,19 +11,24 @@ All notable changes to openVaim (formerly AimTrainer). Newest first.
 - Export your stats as CSV or JSON from any Stats tab.
 - Hit report: a heat glow under the hits and a "How you fire" block (first shots vs follow-ups, taps vs sprays).
 - Two new coach tips: cold starts and fading late in a session.
+- Goals per drill (reach a medal, a score, or an on-body percentage in tracking drills), with progress bars and a small toast when you reach one.
+- A suggested warm-up playlist built from your own stats, saved to Routines in one click.
+- The Session view shows, for each drill, how it went compared with the last session that had it.
+- Fixed: the heatmap drill filter showed share codes instead of names, and Compare could say there was nothing recorded when there was.
 
 ### Target Workshop
-- 22 new drills, each with an Easy and a Hard version: flick grids, target switching, micro and long-range precision, blink and pop-up reaction, strafing at walk, run and sprint speed, counter-strafe stops, a jumping ball, zig-zag bounce, burst control, and vertical, depth and orbit tracking.
+- 32 new drills, each with an Easy and a Hard version, including Light chain and Light scatter (points light up in turn), sway and player-strafe tracking, stop-and-shoot, sprint peek, bounce wall and Vandal and Phantom spray control. The first 22 are: flick grids, target switching, micro and long-range precision, blink and pop-up reaction, strafing at walk, run and sprint speed, counter-strafe stops, a jumping ball, zig-zag bounce, burst control, and vertical, depth and orbit tracking.
 
 ### VALORANT Workshop
-- 30 new drills on 8 maps (Sunset, Ascent, Haven, Bind, Corrode, Split, Lotus, Summit): wide-swing duels, jiggle-peek bait, crossfire with trade timing, clearing a site angle by angle, post-plant defence with sound-triggered swings, spray transfer, Operator and Marshal duels, flash timing and more. Easy bots are Bronze; Hard bots are Diamond or better.
+- 71 new drills on 11 maps (Sunset, Ascent, Haven, Bind, Corrode, Split, Lotus, Summit, Pearl, Icebox, Abyss), including shoulder-peek reads, off-angle chains, lurkers behind you, trade partners with different delays and staggered retakes. The first 30 were also corrected so the bots stand on real floor and face you. The first set: wide-swing duels, jiggle-peek bait, crossfire with trade timing, clearing a site angle by angle, post-plant defence with sound-triggered swings, spray transfer, Operator and Marshal duels, flash timing and more. Easy bots are Bronze; Hard bots are Diamond or better.
 - Switch difficulty now also works for Target Workshop drills.
 
 ### Studio
 - Templates for common situations (hold an angle, jiggle peek, wide swing, off-angles, trade fight, retake, post-plant crossfire).
 - Arrow keys nudge, Ctrl+C / X / V / A / D copy, cut, paste, select all and duplicate, and a Line up row for aligning a selection.
 - About 12 new checks in the warnings box, and a "What it will do" summary on every bot.
-- Export a drill to a file and import it again; press ? for the shortcut list.
+- Export a drill to a file and import it again (drop a file on the drill list too); press ? for the shortcut list.
+- Snapping and guide lines while dragging (Snap toggle in the header, Alt for free movement), and a timeline of what each bot will do after the round starts.
 
 ### Speed
 - The first window opens about a second sooner, big map files are streamed instead of loaded whole, and the stats recorder does less work per tick.
