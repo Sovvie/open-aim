@@ -675,7 +675,14 @@
   // so a ternary search finds the minimum. Returns { dist, t }; for a segment that crosses the box (dist 0) t is the point
   // nearest the box centre instead, so the vertical offset still says where in the box the line went.
   function segmentBox(o, d, tEnd, box) {
-    const f = (t) => pointBox([o[0] + d[0] * t, o[1] + d[1] * t, o[2] + d[2] * t], box);
+    // Same arithmetic as pointBox([o + d * t], box), written out so the 120 evaluations of a search allocate nothing.
+    const o0 = o[0], o1 = o[1], o2 = o[2], d0 = d[0], d1 = d[1], d2 = d[2];
+    const n0 = box.min[0], n1 = box.min[1], n2 = box.min[2], x0 = box.max[0], x1 = box.max[1], x2 = box.max[2];
+    const f = (t) => {
+      const p0 = o0 + d0 * t, p1 = o1 + d1 * t, p2 = o2 + d2 * t;
+      const e0 = p0 < n0 ? n0 - p0 : p0 > x0 ? p0 - x0 : 0, e1 = p1 < n1 ? n1 - p1 : p1 > x1 ? p1 - x1 : 0, e2 = p2 < n2 ? n2 - p2 : p2 > x2 ? p2 - x2 : 0;
+      return Math.sqrt(0 + e0 * e0 + e1 * e1 + e2 * e2);
+    };
     let lo = 0, hi = tEnd;
     for (let k = 0; k < 60; k++) { const m1 = lo + (hi - lo) / 3, m2 = hi - (hi - lo) / 3; if (f(m1) <= f(m2)) hi = m2; else lo = m1; }
     let t = (lo + hi) / 2;
