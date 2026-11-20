@@ -7,6 +7,7 @@ const fs = require("fs");
 const http = require("http");
 const path = require("path");
 const crypto = require("crypto");
+const { pipeline } = require("stream");
 // AIM_STARTUP_TRACE=1 prints how many ms after process start each startup step happened (measurement only).
 const trace = process.env.AIM_STARTUP_TRACE === "1" ? (label) => console.log(`STARTUP +${Math.round(process.uptime() * 1000)} ms ${label}`) : () => {};
 trace("main.js start");
@@ -583,6 +584,20 @@ function resolve(reqUrl) {
   return [urlPath, isFile(p) ? p : null];
 }
 
+// big-files-streamed-v1: a map (up to 92 MB) used to be read whole into memory on the main thread (a 40-50 ms stall
+// and ~130 MB of extra memory per map load) before being sent. Files of 1 MB or more are streamed in 1 MB chunks
+// instead; same headers and bytes. Returns true when it handled the response.
+const STREAM_FROM = 1 << 20;
+function streamBigFile(req, res, file, status, headers) {
+  let size;
+  try { size = fs.statSync(file).size; } catch { return false; }
+  if (size < STREAM_FROM) return false;
+  res.writeHead(status, { ...headers, "Content-Length": size });
+  if (req.method === "HEAD") { res.end(); return true; }
+  pipeline(fs.createReadStream(file, { highWaterMark: STREAM_FROM }), res, () => {});
+  return true;
+}
+
 async function handle(req, res) {
   if (req.method !== "GET" && req.method !== "HEAD") {
     // Online features (scores, accounts) don't exist offline.
@@ -835,9 +850,11 @@ async function handle(req, res) {
   }
   const mod = safeJoin(MODS, requested, ""); // path-guard-v1
   if (mod && isFile(mod)) {
+    const modType = MIME[path.extname(mod).toLowerCase()] || "application/octet-stream";
+    if (streamBigFile(req, res, mod, 200, { "Content-Type": modType, "Cache-Control": "no-cache" })) return;
     const body = fs.readFileSync(mod);
     res.writeHead(200, {
-      "Content-Type": MIME[path.extname(mod).toLowerCase()] || "application/octet-stream",
+      "Content-Type": modType,
       "Content-Length": body.length,
       "Cache-Control": "no-cache",
     });
@@ -857,6 +874,7 @@ async function handle(req, res) {
   const info = meta[urlPath] || {};
   let mime = info.mime || MIME[path.extname(file).toLowerCase()];
   if (!mime) mime = path.basename(urlPath).includes(".") ? "application/octet-stream" : "text/html";
+  if (streamBigFile(req, res, file, 200, { "Content-Type": mime, "Cache-Control": "no-cache", ...(info.headers || {}) })) return;
   let data = fs.readFileSync(file);
   if (/^\/aim\/?$/.test(urlPath) && mime.startsWith("text/html") && !/Electron\//.test(req.headers["user-agent"] || "")) {
     data = Buffer.from(themedForBrowser(data.toString("utf-8")), "utf-8");
