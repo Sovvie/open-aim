@@ -135,7 +135,7 @@ function confirmBox(title, text, buttons, { wide = false } = {}) {
     document.body.append(scrim);
     // ui-studio: for a Delete question the keyboard starts on Cancel, so a stray Enter never deletes.
     const destructive = buttons.some(([label]) => label === "Delete");
-    scrim.querySelector(destructive ? ".foot .btn:first-child" : ".foot .btn:last-child")?.focus();
+    scrim.querySelector(destructive ? ".foot .btn:first-child" : ".foot .btn:last-child")?.focus({ preventScroll: true });
   });
 }
 // ui-studio: Esc closes the top dialog (same as clicking outside it) or skips the first-run tour.
@@ -691,7 +691,7 @@ function newDrillDialog() {
       h("div", { class: "foot" }, h("button", { class: "btn", onclick: close }, "Cancel"), h("button", { class: "btn primary", onclick: create }, "Create"))));
   render();
   document.body.append(scrim);
-  scrim.querySelector(".foot .primary")?.focus(); // Enter creates, Esc cancels
+  scrim.querySelector(".foot .primary")?.focus({ preventScroll: true }); // Enter creates, Esc cancels
 }
 
 // ---------- editor ----------
@@ -765,6 +765,7 @@ function buildEditor() {
     const btn = h("button", { class: "tool", "data-tool": move || kind, title: text },
       ic(iconName, cls), h("div", {}, h("b", {}, title), h("span", {}, text)));
     btn.addEventListener("pointerdown", (e) => trayDown(e, { kind, move }));
+    btn.addEventListener("click", (e) => trayKey(e, { kind, move }));
     return btn;
   };
   const tray = h("aside", { class: "tray", "data-coach": "tray", "aria-label": "Add to the map" },
@@ -2702,6 +2703,17 @@ function trayDown(e, tool) {
   addEventListener("pointerup", up);
 }
 
+// ui-studio: Enter or Space on a tray button (a click with no pointer) places it in the middle of the 2D view,
+// selected, so keyboard players can add things and move them with the arrow keys. In 3D it picks the tool.
+function trayKey(e, tool) {
+  if (e.detail !== 0 || !S.drill) return;
+  if (S.mode3d || !S.view) { setTool(S.tool && toolKey(S.tool) === toolKey(tool) ? null : tool); return; }
+  const before = S.drill.items.length;
+  place(tool, { x: S.view.cx, z: S.view.cz });
+  setTool(null);
+  if (S.drill.items.length > before || tool.kind === "start") toast("Placed in the middle of the map. Arrow keys move it.");
+}
+
 // Which tray button a tool belongs to (a saved bot has its own button).
 const toolKey = (tool) => (tool.saved ? `saved:${tool.saved.id}` : tool.move || tool.kind);
 
@@ -2993,7 +3005,7 @@ function helpDialog() {
       h("div", { class: "foot" }, h("button", { class: "btn primary", onclick: close }, "Close"))));
   addEventListener("keydown", onKey, true);
   document.body.append(scrim);
-  scrim.querySelector(".foot .btn")?.focus();
+  scrim.querySelector(".foot .btn")?.focus({ preventScroll: true });
 }
 
 // ---------- drill files ----------
@@ -3734,6 +3746,7 @@ function renderSavedBots() {
         const btn = h("button", { class: "tool saved-tool", "data-tool": `saved:${p.id}`, title: `${p.name}: ${savedBotSummary(p)}. Click, then click the map, or drag it onto the map.` },
           h("div", {}, h("b", {}, p.name), h("span", {}, savedBotSummary(p))));
         btn.addEventListener("pointerdown", (e) => trayDown(e, { kind: "bot", move, saved: p }));
+        btn.addEventListener("click", (e) => trayKey(e, { kind: "bot", move, saved: p }));
         return h("div", { class: "saved-bot" }, btn,
           h("div", { class: "saved-acts" },
             h("button", { class: "btn small icon", title: "Rename", "aria-label": `Rename ${p.name}`, onclick: () => renameSavedBot(p) }, ic("edit")),

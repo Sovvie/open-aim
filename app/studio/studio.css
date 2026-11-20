@@ -466,3 +466,5 @@ body:has(.editor) .toast { bottom: 76px; }
 .checks:not(.ok):not(.bad):not(.start) { border-left: 3px solid var(--amber); }
 .checks button.link { margin-left: 2px; padding: 1px 5px; border: 1px solid var(--line); background: var(--panel); color: var(--text); text-decoration: none; font: 700 11px var(--head); font-stretch: 75%; text-transform: uppercase; letter-spacing: 0.06em; }
 .checks button.link:hover { border-color: var(--red); color: #fff; }
+/* Long dialogs on short windows: the buttons stay in view at the bottom while the content scrolls. */
+.dialog .foot { position: sticky; bottom: -22px; margin: 20px -22px -22px; padding: 12px 22px 22px; background: var(--panel); border-top: 1px solid var(--line); }
