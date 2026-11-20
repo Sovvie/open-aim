@@ -217,7 +217,7 @@
     // settles (debounced, no frame loop), the panel's spot is sampled with elementsFromPoint; when anything under it
     // is a control (button, link, field, tab, clickable card) or content (text, chart, picture), the panel tucks to
     // its tab on every screen. A click on the tab while tucked shows it anyway until the next page change.
-    let checkTimer = 0, pageKey = "";
+    let checkTimer = 0, checkAgain = false, pageKey = "";
     const interactive = (node) => {
       for (let n = node, i = 0; n && n !== document.body && i < 8; n = n.parentElement, i++) {
         if (n.matches("button, a[href], input, select, textarea, label, summary, canvas, img, svg, video, [role=button], [role=tab], [role=link], [role=checkbox], [role=switch], [tabindex]:not([tabindex='-1'])")) return true;
@@ -241,14 +241,16 @@
     }
     function checkDock() {
       checkTimer = 0;
+      if (checkAgain) { checkAgain = false; scheduleDockCheck(); } // events came in meanwhile: one more check after they settle
       if (!dock.isConnected || dock.classList.contains("is-collapsed") || document.pointerLockElement) return;
       const key = location.pathname + "|" + (document.querySelector(".hall-tabs .hall-tab.is-active, .hall-tabs .hall-tab.active")?.textContent || "");
       if (key !== pageKey) { pageKey = key; peek = false; }
       if (peek) return;
       setTucked(covers());
     }
-    // At most one pending check (a busy page that changes all the time cannot postpone it forever).
-    const scheduleDockCheck = () => { if (!checkTimer) checkTimer = setTimeout(checkDock, 180); };
+    // At most one pending check (a busy page that changes all the time cannot postpone it forever), plus one trailing
+    // check after the last scroll or change, so the end position of a smooth scroll is always looked at.
+    const scheduleDockCheck = () => { if (dock.classList.contains("is-collapsed")) return; if (checkTimer) checkAgain = true; else checkTimer = setTimeout(checkDock, 180); };
     document.addEventListener("scroll", scheduleDockCheck, { capture: true, passive: true });
     addEventListener("resize", scheduleDockCheck, { passive: true });
     dockCheck = scheduleDockCheck;
