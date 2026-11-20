@@ -136,6 +136,16 @@ function confirmBox(title, text, buttons, { wide = false } = {}) {
     scrim.querySelector(".foot .btn:last-child")?.focus();
   });
 }
+// ui-studio: Esc closes the top dialog (same as clicking outside it) or skips the first-run tour.
+// The shortcut sheet has its own Esc / ? handler.
+addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  const scrims = document.querySelectorAll(".scrim:not(.help-dialog)");
+  const top = scrims[scrims.length - 1];
+  if (top) { e.preventDefault(); e.stopPropagation(); top.click(); return; }
+  const coach = document.querySelector(".coach");
+  if (coach) { e.preventDefault(); e.stopPropagation(); coach.querySelector(".btn.ghost")?.click(); }
+}, true);
 
 // ---------- state ----------
 const S = {
@@ -392,7 +402,8 @@ function edit(fn, { key = null, quiet = false } = {}) {
   draw();
 }
 function undo() {
-  if (!S.hist.length) return;
+  if (!S.hist.length) { toast("Nothing to undo."); return; }
+  toast(S.hist.length > 1 ? `Undone. ${S.hist.length - 1} more to undo.` : "Undone. Nothing more to undo.");
   S.fut.push(JSON.stringify(S.drill));
   S.drill = JSON.parse(S.hist.pop());
   S.histKey = null;
@@ -401,7 +412,8 @@ function undo() {
   renderSide(); updateTop(); draw();
 }
 function redo() {
-  if (!S.fut.length) return;
+  if (!S.fut.length) { toast("Nothing to redo."); return; }
+  toast("Redone.");
   S.hist.push(JSON.stringify(S.drill));
   S.drill = JSON.parse(S.fut.pop());
   S.histKey = null;
@@ -675,6 +687,7 @@ function newDrillDialog() {
       h("div", { class: "foot" }, h("button", { class: "btn", onclick: close }, "Cancel"), h("button", { class: "btn primary", onclick: create }, "Create"))));
   render();
   document.body.append(scrim);
+  scrim.querySelector(".foot .primary")?.focus(); // Enter creates, Esc cancels
 }
 
 // ---------- editor ----------
@@ -735,9 +748,9 @@ function buildEditor() {
   app.append(h("header", { class: "top" },
     h("button", { class: "btn ghost", onclick: leaveEditor, title: "Back to your drills" }, ic("back"), "Drills"),
     nameInput, undoBtn, redoBtn, h("div", { class: "grow" }), topState,
-    snapBtn = h("button", { class: "btn small snap-btn" + (S.snap ? " on" : ""), "aria-pressed": String(S.snap), title: "Snap: things you drag click onto a 0.5 m grid and line up with other things (a red guide line shows). Hold Alt while dragging to turn it off.", onclick: toggleSnap }, ic("snap"), "Snap"),
+    snapBtn = h("button", { class: "btn small snap-btn" + (S.snap ? " on" : ""), "aria-pressed": String(S.snap), "aria-label": "Snap", title: "Snap: things you drag click onto a 0.5 m grid and line up with other things (a red guide line shows). Hold Alt while dragging to turn it off.", onclick: toggleSnap }, ic("snap"), h("span", { class: "lbl" }, "Snap")),
     h("button", { class: "btn icon ghost", title: "Keyboard shortcuts (?)", "aria-label": "Keyboard shortcuts", onclick: helpDialog }, ic("help")),
-    h("button", { class: "btn small ghost", title: "Save this drill as a file to share or back up", onclick: exportCurrent }, ic("download"), "Export"),
+    h("button", { class: "btn small ghost", "aria-label": "Export", title: "Export: save this drill as a file to share or back up", onclick: exportCurrent }, ic("download"), h("span", { class: "lbl" }, "Export")),
     h("button", { class: "btn", onclick: () => saveCurrent() }, "Save"),
     h("button", { class: "btn primary", "data-coach": "play", onclick: () => saveCurrent(true) }, ic("play"), "Play")));
 
@@ -774,16 +787,19 @@ function buildEditor() {
   const previewBtn = h("button", { class: "btn small preview-btn", title: "Show how the bots move", onclick: () => { S.preview = !S.preview; S.previewT0 = performance.now() / 1000; previewBtn.classList.toggle("on", S.preview); previewBtn.lastChild.textContent = S.preview ? "Stop preview" : "Preview moves"; draw(); } }, ic("eye"), "Preview moves");
   tlBtn = h("button", { class: "btn small preview-btn timeline-btn" + (S.tl ? " on" : ""), title: "What each bot will do after the round starts, in time order, worked out from your triggers", "aria-pressed": String(S.tl), onclick: toggleTimeline }, ic("timeline"), "Timeline");
   tlPanel = h("div", { class: "timeline", "aria-label": "What happens when", hidden: !S.tl });
+  // ui-studio: the view switch, Preview and Timeline sit in one row that wraps on a narrow map (no fixed offsets).
   stage = h("section", { class: "stage", "data-coach": "map" }, canvas,
     h("div", { class: "zoom" },
-      h("button", { class: "btn icon", title: "Zoom in", "aria-label": "Zoom in", onclick: () => zoomBy(1.3) }, ic("plus")),
-      h("button", { class: "btn icon", title: "Zoom out", "aria-label": "Zoom out", onclick: () => zoomBy(1 / 1.3) }, ic("minus")),
+      h("button", { class: "btn icon", title: "Zoom in (scroll up)", "aria-label": "Zoom in", onclick: () => zoomBy(1.3) }, ic("plus")),
+      h("button", { class: "btn icon", title: "Zoom out (scroll down)", "aria-label": "Zoom out", onclick: () => zoomBy(1 / 1.3) }, ic("minus")),
       h("button", { class: "btn icon", title: "Show everything", "aria-label": "Show everything", onclick: () => { fitView(); draw(); } }, ic("fit"))),
-    previewBtn, tlBtn, tlPanel, hintEl,
-    h("div", { class: "view-switch", role: "radiogroup", "aria-label": "View" },
-      h("button", { "data-view": "2d", onclick: () => setView(false) }, "2D"),
-      h("button", { "data-view": "3d", onclick: () => setView(true) }, "3D"),
-      h("button", { "data-view": "detailed", title: "The real map with textures and lighting. Loads the full map", onclick: () => setView(true, false, true) }, "Detailed")));
+    tlPanel, hintEl,
+    h("div", { class: "stage-bar" },
+      h("div", { class: "view-switch", role: "group", "aria-label": "View" },
+        h("button", { "data-view": "2d", title: "Top-down map", onclick: () => setView(false) }, "2D"),
+        h("button", { "data-view": "3d", title: "Walk around a 3D blockout", onclick: () => setView(true) }, "3D"),
+        h("button", { "data-view": "detailed", title: "The real map with textures and lighting. Loads the full map", onclick: () => setView(true, false, true) }, "Detailed")),
+      previewBtn, tlBtn));
   side = h("aside", { class: "inspector", "data-coach": "side", "aria-label": "Settings" });
   app.append(h("div", { class: "editor" }, tray, stage, side));
   renderSavedBots();
@@ -965,7 +981,8 @@ function fitView() {
   if (!W) sizeCanvas();
   const b = worldBounds();
   const [w, d] = turns() % 2 ? [b.z1 - b.z0, b.x1 - b.x0] : [b.x1 - b.x0, b.z1 - b.z0];
-  const k = Math.min(W / w, H / d) * 0.94;
+  // ui-studio: keep clear of the button row on top, the zoom buttons on the right and the hint at the bottom.
+  const k = Math.min(Math.max(40, W - 128) / w, Math.max(40, H - 116) / d);
   S.view = { k: k || 10, cx: (b.x0 + b.x1) / 2, cz: (b.z0 + b.z1) / 2 };
   // On a map, start zoomed in around your start spot.
   if (onMap() && S.map) S.view = { k: Math.max(k, 10), cx: S.drill.start.x, cz: S.drill.start.z };
@@ -1281,7 +1298,7 @@ function setView(on, first = false, detailed = on && first ? S.detailed : false)
   stage.querySelector(".zoom").style.display = on ? "none" : "";
   if (view3d) view3d.status.style.display = on ? "" : "none";
   const current = S.detailed ? "detailed" : on ? "3d" : "2d";
-  for (const b of stage.querySelectorAll(".view-switch button")) b.classList.toggle("on", b.dataset.view === current);
+  for (const b of stage.querySelectorAll(".view-switch button")) { b.classList.toggle("on", b.dataset.view === current); b.setAttribute("aria-pressed", String(b.dataset.view === current)); }
   if (!first) draw();
 }
 
@@ -1690,6 +1707,17 @@ function paint(t) {
     ctx.globalAlpha = 1;
   }
 
+  // ui-studio: hover ring, so you can see what a click would pick before you click.
+  if (S.hover && S.hover !== sel && !inGroup(S.hover) && !drag && !S.tool && !S.preview) {
+    const it = S.hover === "start" ? null : d.items.find((i) => i.id === S.hover);
+    const o = it || (S.hover === "start" ? st : null);
+    if (o) {
+      const m = !it || it.kind === "bot" ? 0.6 : it.kind === "smoke" ? 4.6 : it.kind === "wall" ? (it.length || 4) / 2 : it.kind === "targets" ? (it.width || 6) / 2 : Math.max(it.w || 1, it.d || 1) / 2 + 0.3;
+      const [qx, qy] = pt(o.x, o.z);
+      ctx.save(); ctx.strokeStyle = "rgba(255,255,255,.55)"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(qx, qy, Math.max(it ? 14 : 18, 0.45 * k + 6, m * k), 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+    }
+  }
   // Things selected together: a dashed white ring around each one.
   if (S.group.length > 1) {
     ctx.save(); ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 2; ctx.setLineDash([5, 4]);
@@ -2366,10 +2394,16 @@ function bindCanvas() {
     const r = canvas.getBoundingClientRect();
     pointer.x = e.clientX - r.left; pointer.y = e.clientY - r.top; pointer.inside = true;
     if (drag) dragMove(e);
-    else { const hov = S.tool || S.addPoint || S.addSpot ? null : hitTest(pointer.x, pointer.y); canvas.style.cursor = hov ? hov.cursor || "grab" : ""; }
+    else {
+      const hov = S.tool || S.addPoint || S.addSpot ? null : hitTest(pointer.x, pointer.y);
+      canvas.style.cursor = hov ? hov.cursor || "grab" : "";
+      // ui-studio: a soft ring shows what a click would grab.
+      const id = hov && hov.type === "item" ? hov.item.id : hov && hov.type === "start" ? "start" : null;
+      if (id !== S.hover) { S.hover = id; draw(); }
+    }
     if (S.tool || drag) draw();
   });
-  canvas.addEventListener("pointerleave", () => { pointer.inside = false; draw(); });
+  canvas.addEventListener("pointerleave", () => { pointer.inside = false; S.hover = null; draw(); });
   canvas.addEventListener("pointerdown", (e) => {
     canvas.setPointerCapture(e.pointerId);
     const r = canvas.getBoundingClientRect();
@@ -2421,6 +2455,8 @@ function bindCanvas() {
       ...(hit.trigLine ? { ax: at.x, az: at.z, orig: structuredClone(hit.item.trigger) } : {}),
       ...(hit.type === "soundArea" ? { ax: at.x, az: at.z, orig: orderedArea(hit.item.soundRule.area) } : {}),
       ...(hit.type === "blockSide" ? { original: structuredClone(hit.item) } : {}) };
+    if (!hit.cursor) canvas.style.cursor = "grabbing"; // ui-studio: a held thing shows the closed hand
+    S.hover = null;
     draw();
   });
   const end = () => {
@@ -2435,6 +2471,7 @@ function bindCanvas() {
       setGroup([drag.item.id]); renderSide();
     } else if (drag && drag.moved) renderSide();
     const handleDrag = drag && (drag.type === "arenaEdge" || drag.type === "blockSide");
+    if (drag && canvas.style.cursor === "grabbing") canvas.style.cursor = "grab";
     drag = null;
     S.guides = [];
     stage.classList.remove("panning");
@@ -3216,6 +3253,8 @@ function head(iconName, cls, title, sub) {
 function checksBox() {
   const list = allProblems(S.drill, floorCheck());
   if (!list.length) return h("div", { class: "checks ok" }, "Ready to play.");
+  // ui-studio: a brand-new empty drill is not an error yet; say what to do instead of a red "Fix before playing".
+  if (!S.drill.items.length) return h("div", { class: "checks start" }, h("b", {}, "Empty so far"), h("p", {}, "Add a bot or a target zone from the left, then press Play."));
   const hard = list.filter((p) => !p.soft).length;
   return h("div", { class: "checks" + (hard ? " bad" : "") },
     h("b", {}, hard ? "Fix before playing" : "Good to go, but:"),
@@ -3661,6 +3700,8 @@ function setSavedOpen(move, open) {
 function renderSavedBots() {
   if (!savedBotsEl) return;
   savedBotsEl.textContent = "";
+  // ui-studio: with nothing saved yet, just the note (six empty "0" rows only pushed Targets and Build down).
+  if (!savedBots.length) { savedBotsEl.append(h("p", { class: "saved-note" }, "None yet. Select a bot, then press Save to library in its settings.")); return; }
   for (const [move, m] of Object.entries(MOVES)) {
     const mine = savedBots.filter((p) => p.move === move);
     const open = mine.length > 0 && savedOpen.has(move);
@@ -3680,7 +3721,6 @@ function renderSavedBots() {
             h("button", { class: "btn small icon danger", title: "Delete", "aria-label": `Delete ${p.name}`, onclick: () => deleteSavedBot(p) }, ic("trash"))));
       })));
   }
-  if (!savedBots.length) savedBotsEl.append(h("p", { class: "saved-note" }, "Select a bot, then press Save to library in its settings."));
 }
 
 async function saveBotToLibrary(b) {
@@ -4082,15 +4122,20 @@ function maybeCoach() {
       h("div", { class: "row" },
         h("button", { class: "btn small ghost", onclick: done }, "Skip"),
         h("button", { class: "btn small primary", onclick: () => (i < steps.length - 1 ? (i++, show()) : done()) }, i < steps.length - 1 ? "Next" : "Got it")));
-    layer.append(tip);
+    // ui-studio: a red frame around the part the step talks about (the rest is dimmed by its shadow).
+    const ring = h("div", { class: "ring", style: `left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px` });
+    layer.append(ring, tip);
     const left = anchor === "side" || anchor === "play" ? Math.max(12, r.left - 296) : anchor === "tray" ? r.right + 12 : r.left + r.width / 2 - 140;
-    const top = anchor === "play" ? r.bottom + 12 : anchor === "map" ? r.top + r.height / 2 - 60 : anchor === "side" ? r.top + 220 : r.top + 40;
+    // The tray tip sits below the map's button row so it doesn't hide 2D / 3D / Preview / Timeline.
+    const top = anchor === "play" ? r.bottom + 12 : anchor === "map" ? r.top + r.height / 2 - 60 : anchor === "side" ? r.top + 220 : r.top + 64;
     tip.style.left = `${Math.min(innerWidth - 292, left)}px`;
     tip.style.top = `${top}px`;
     tip.querySelector(".primary").focus();
   };
-  const done = () => { layer.remove(); try { localStorage.setItem(COACH_KEY, "1"); } catch {} };
+  const relayout = () => { show(); const t = layer.querySelector(".tip"); if (t) t.style.animation = "none"; };
+  const done = () => { layer.remove(); removeEventListener("resize", relayout); try { localStorage.setItem(COACH_KEY, "1"); } catch {} };
   document.body.append(layer);
+  addEventListener("resize", relayout); // ui-studio: keep the tip and frame on their part when the window changes size
   show();
 }
 
@@ -4100,7 +4145,7 @@ if (new URLSearchParams(location.search).has("probe")) window.__studioProbe = { 
 // ---------- start ----------
 (async () => {
   if (!api) {
-    app.append(h("p", { style: "padding:24px" }, "The Studio only works inside the AimTrainer app."));
+    app.append(h("p", { style: "padding:24px" }, "The Studio only works inside the openVaim app."));
     return;
   }
   const wanted = new URLSearchParams(location.hash.slice(1)).get("edit");

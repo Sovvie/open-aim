@@ -417,3 +417,43 @@ textarea.text { height: 64px; padding: 8px 10px; resize: vertical; }
 .tl-what small { display: block; color: var(--muted); font-size: 11px; margin-top: 2px; }
 .library.drop::after { content: attr(data-drop); position: fixed; inset: 64px 16px 16px; display: flex; align-items: center; justify-content: center; border: 2px dashed var(--red); background: rgba(9, 11, 15, 0.82); color: #fff; font: 800 28px var(--head); font-stretch: 75%; text-transform: uppercase; letter-spacing: 0.05em; pointer-events: none; z-index: 20; }
 @media (max-width: 900px) { .tl-row { grid-template-columns: 66px 1fr; } .tl-track { display: none; } }
+
+/* ---------- ui-studio review (1.6.0 round 3): fit, feedback, consistency ---------- */
+/* Map buttons in one row (2D / 3D / Detailed, Preview, Timeline) that wraps on a narrow map, instead of fixed offsets. */
+.stage-bar { position: absolute; left: 12px; top: 12px; right: 64px; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; pointer-events: none; }
+.stage-bar > * { position: static !important; pointer-events: auto; }
+.stage-bar .btn.small { height: 34px; }
+.view-switch button { text-transform: uppercase; transition: background 0.15s, color 0.15s; }
+.view-switch button:not(.on):hover { color: var(--text); background: var(--raised-2); }
+/* The hint wraps to a second line instead of cutting off the end. */
+.hint { display: block; white-space: normal; text-align: center; width: max-content; line-height: 1.5; text-overflow: clip; }
+/* Header: never wrap "Unsaved changes"; on narrow windows Snap and Export keep only their icon (tooltip and label stay). */
+.top > * { flex-shrink: 0; }
+.top .name-input { flex-shrink: 1; min-width: 120px; }
+.save-state { white-space: nowrap; min-width: 0; }
+@media (max-width: 1180px) {
+  .top .lbl { display: none; }
+  .top .snap-btn, .top .btn.small.ghost { width: 34px; padding: 0; justify-content: center; }
+}
+/* Drill library: keep the three steps side by side down to small windows, so your drills stay above the fold. */
+@media (max-width: 1100px) { .steps { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 760px) { .steps { grid-template-columns: 1fr; } }
+.card h3 { overflow-wrap: anywhere; }
+/* Short windows (768p, 864p): the tray shows names only, the one-line tips stay in the tooltips, so Build, Utility
+   and Your start are not pushed far below the fold by the bot descriptions. */
+@media (max-height: 900px) {
+  .tool:not(.saved-tool) span { display: none; }
+  .tool { padding-top: 7px; padding-bottom: 7px; }
+}
+/* Wide screens: a little more room for the settings panel. */
+@media (min-width: 1800px) { .editor { grid-template-columns: 230px 1fr 370px; } }
+/* Sharp corners everywhere, like the lobby. */
+.slider.free input.num, .surface-color-picker input[type="color"], .surface-color-swatch { border-radius: 0; }
+/* Empty new drill: a neutral nudge instead of a red error. */
+.checks.start { border-left: 3px solid var(--muted); }
+.checks.start p { margin: 4px 0 0; color: var(--muted); }
+/* First-run tour: a red frame on the part each step talks about; the frame's shadow dims the rest. */
+.coach { background: transparent; }
+.coach .ring { position: absolute; box-shadow: 0 0 0 200vmax rgba(5, 10, 15, 0.55); outline: 2px solid var(--red); outline-offset: -2px; pointer-events: none; }
+/* Toasts in the editor sit above the map hint instead of on top of it. */
+body:has(.editor) .toast { bottom: 76px; }
