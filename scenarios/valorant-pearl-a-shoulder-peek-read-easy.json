@@ -1,0 +1,293 @@
+{
+ "item": {
+  "createTime": "2026-11-20 12:00:00",
+  "description": "Pearl A: an enemy shows only a shoulder for a quarter of a second, again and again. When you shoot, a partner swings out about a second later. Do not chase the shoulder: hold your crosshair at the corner and wait for the swing. Bots shoot slowly.",
+  "docBytes": 2174,
+  "featured": false,
+  "mapId": "pitt",
+  "name": "Pearl — A site, shoulder-peek read (Easy)",
+  "parSeconds": null,
+  "playCount": 0,
+  "sceneKey": "set-35944bfd4b62a44a",
+  "shareCode": "35944bfd4b62a44a",
+  "sort": 330,
+  "status": 1,
+  "type": "hold",
+  "updateTime": "2026-11-20 12:00:00"
+ },
+ "scene": {
+  "authorNickname": "openVaim",
+  "authorUid": "workshop",
+  "blockCount": 0,
+  "createTime": "2026-11-20 12:00:00",
+  "description": "Pearl A: an enemy shows only a shoulder for a quarter of a second, again and again. When you shoot, a partner swings out about a second later. Do not chase the shoulder: hold your crosshair at the corner and wait for the swing. Bots shoot slowly.",
+  "docBytes": 2174,
+  "name": "Pearl — A site, shoulder-peek read (Easy)",
+  "playCount": 0,
+  "sceneHash": "f5fd6547e8546514",
+  "sceneKey": "set-35944bfd4b62a44a",
+  "schemaVersion": 2,
+  "shareCode": "35944bfd4b62a44a",
+  "updateTime": "2026-11-20 12:00:00",
+  "aimShuffle": {
+   "groups": [
+    {
+     "actors": [
+      "actor-1"
+     ]
+    },
+    {
+     "actors": [
+      "actor-2"
+     ]
+    }
+   ]
+  },
+  "doc": {
+   "schemaVersion": 2,
+   "meta": {
+    "id": "studio-cc51abb05c5c854e",
+    "name": "Pearl — A site, shoulder-peek read (Easy)",
+    "seed": 125429774,
+    "createdAt": 0
+   },
+   "environment": {
+    "skyColor": "#111820",
+    "fogNear": 14,
+    "fogFar": 33,
+    "ambientIntensity": 2,
+    "keyLightIntensity": 3,
+    "fogEnabled": false,
+    "map": "pitt"
+   },
+   "blocks": [],
+   "playerSpawn": {
+    "position": {
+     "x": 50.5,
+     "y": 3,
+     "z": -79.9
+    },
+    "yaw": 2.985
+   },
+   "spawners": [],
+   "actors": [
+    {
+     "id": "actor-1",
+     "name": "Peeker 1",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "cross",
+       "waypoints": [
+        {
+         "x": 44.2,
+         "y": 3,
+         "z": -64.1
+        },
+        {
+         "x": 42.2,
+         "y": 3,
+         "z": -66.2
+        },
+        {
+         "x": 44.2,
+         "y": 3,
+         "z": -64.1
+        }
+       ],
+       "speed": 5.4,
+       "respawn": true,
+       "interval": [
+        1,
+        1.5
+       ],
+       "killImmediate": false,
+       "counterStrafe": true,
+       "killDelay": [
+        1.5,
+        1.8
+       ],
+       "pauses": [
+        {
+         "at": 1,
+         "wait": 0.28
+        }
+       ]
+      },
+      {
+       "kind": "shooter",
+       "difficulty": "easy",
+       "reaction": [
+        0.75,
+        0.9
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 7,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      }
+     ],
+     "health": 150
+    },
+    {
+     "id": "actor-2",
+     "name": "Peeker 2",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "cross",
+       "waypoints": [
+        {
+         "x": 45.7,
+         "y": 3.16,
+         "z": -63.3
+        },
+        {
+         "x": 49.1,
+         "y": 3,
+         "z": -65.2
+        },
+        {
+         "x": 45.7,
+         "y": 3.16,
+         "z": -63.3
+        }
+       ],
+       "speed": 5.4,
+       "respawn": true,
+       "interval": [
+        1,
+        1.5
+       ],
+       "killImmediate": false,
+       "counterStrafe": true,
+       "killDelay": [
+        4,
+        4.3
+       ],
+       "pauses": [
+        {
+         "at": 1,
+         "wait": 2.2
+        }
+       ]
+      },
+      {
+       "kind": "shooter",
+       "difficulty": "easy",
+       "reaction": [
+        0.75,
+        0.9
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 7,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      }
+     ],
+     "health": 150
+    }
+   ],
+   "rules": {
+    "duration": 60,
+    "scoring": "clicking",
+    "weapon": "vandal",
+    "playerMovable": true,
+    "fireMode": "hold"
+   },
+   "dispatchers": [
+    {
+     "id": "dispatcher-1",
+     "name": "Peeker 1",
+     "routes": [
+      {
+       "templateId": "actor-1",
+       "streak": [
+        1,
+        1
+       ]
+      }
+     ],
+     "order": "sequence",
+     "maxAlive": 1,
+     "interval": [
+      1,
+      2.8
+     ],
+     "faceTarget": true,
+     "killDelay": [
+      1.5,
+      1.8
+     ]
+    },
+    {
+     "id": "dispatcher-2",
+     "name": "Peeker 2",
+     "routes": [
+      {
+       "templateId": "actor-2",
+       "streak": [
+        1,
+        1
+       ]
+      }
+     ],
+     "order": "sequence",
+     "maxAlive": 1,
+     "interval": [
+      1,
+      1
+     ],
+     "faceTarget": true,
+     "killDelay": [
+      4,
+      4.3
+     ],
+     "hear": {
+      "area": {
+       "x0": 42.5,
+       "z0": -87.9,
+       "x1": 58.5,
+       "z1": -71.9
+      },
+      "sources": [
+       "shot"
+      ],
+      "delay": [
+       0.7,
+       1.2
+      ],
+      "swingChance": 0.8
+     },
+     "spawnDelay": [
+      0.7,
+      1.2
+     ],
+     "swingChance": 0.8
+    }
+   ]
+  }
+ }
+}

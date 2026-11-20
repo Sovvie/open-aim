@@ -1,0 +1,404 @@
+{
+ "item": {
+  "createTime": "2026-11-20 12:00:00",
+  "description": "Split A retake: the first defender is already holding. Three more reach their angles one after another, every second or so (some walk in, some swing out of cover), so you are in a fight while the next one arrives. Fast, accurate bots; dying ends the round.",
+  "docBytes": 3320,
+  "featured": false,
+  "mapId": "bonsai",
+  "name": "Split — A retake, staggered defenders (Hard)",
+  "parSeconds": null,
+  "playCount": 0,
+  "sceneKey": "set-dc3b5f71e4abcd5f",
+  "shareCode": "dc3b5f71e4abcd5f",
+  "sort": 370,
+  "status": 1,
+  "type": "hold",
+  "updateTime": "2026-11-20 12:00:00"
+ },
+ "scene": {
+  "authorNickname": "openVaim",
+  "authorUid": "workshop",
+  "blockCount": 0,
+  "createTime": "2026-11-20 12:00:00",
+  "description": "Split A retake: the first defender is already holding. Three more reach their angles one after another, every second or so (some walk in, some swing out of cover), so you are in a fight while the next one arrives. Fast, accurate bots; dying ends the round.",
+  "docBytes": 3320,
+  "name": "Split — A retake, staggered defenders (Hard)",
+  "playCount": 0,
+  "sceneHash": "dc183cde9f06a949",
+  "sceneKey": "set-dc3b5f71e4abcd5f",
+  "schemaVersion": 2,
+  "shareCode": "dc3b5f71e4abcd5f",
+  "updateTime": "2026-11-20 12:00:00",
+  "aimShuffle": {
+   "groups": [
+    {
+     "actors": [
+      "actor-1"
+     ]
+    },
+    {
+     "actors": [
+      "actor-2"
+     ]
+    },
+    {
+     "actors": [
+      "actor-3"
+     ]
+    },
+    {
+     "actors": [
+      "actor-4"
+     ]
+    }
+   ]
+  },
+  "doc": {
+   "schemaVersion": 2,
+   "meta": {
+    "id": "studio-40032302e0dd8652",
+    "name": "Split — A retake, staggered defenders (Hard)",
+    "seed": 865781,
+    "createdAt": 0
+   },
+   "environment": {
+    "skyColor": "#111820",
+    "fogNear": 14,
+    "fogFar": 33,
+    "ambientIntensity": 2,
+    "keyLightIntensity": 3,
+    "fogEnabled": false,
+    "map": "bonsai"
+   },
+   "blocks": [],
+   "playerSpawn": {
+    "position": {
+     "x": -81.3,
+     "y": 5.08,
+     "z": 4.1
+    },
+    "yaw": 4.515
+   },
+   "spawners": [
+    {
+     "id": "spawner-1",
+     "name": "Holder 1",
+     "kind": "area",
+     "actorTemplateId": "actor-1",
+     "position": {
+      "x": -64.6,
+      "y": 4.38,
+      "z": 21.6
+     },
+     "size": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+     },
+     "rotationY": 3.904,
+     "faceTarget": true,
+     "groundSnap": true,
+     "maxAlive": 1,
+     "spawnDelay": [
+      0.05,
+      0.05
+     ]
+    },
+    {
+     "id": "spawner-2",
+     "name": "Peeker 1",
+     "kind": "area",
+     "actorTemplateId": "actor-2",
+     "position": {
+      "x": -68.9,
+      "y": 4.3,
+      "z": 8
+     },
+     "size": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+     },
+     "rotationY": 4.408,
+     "faceTarget": true,
+     "groundSnap": true,
+     "maxAlive": 1,
+     "spawnDelay": [
+      2.2,
+      2.2
+     ]
+    },
+    {
+     "id": "spawner-3",
+     "name": "Holder 2",
+     "kind": "area",
+     "actorTemplateId": "actor-3",
+     "position": {
+      "x": -64.8,
+      "y": 9.55,
+      "z": 7.1
+     },
+     "size": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+     },
+     "rotationY": 4.533,
+     "faceTarget": true,
+     "groundSnap": true,
+     "maxAlive": 1,
+     "spawnDelay": [
+      3,
+      3
+     ]
+    },
+    {
+     "id": "spawner-4",
+     "name": "Holder 3",
+     "kind": "area",
+     "actorTemplateId": "actor-4",
+     "position": {
+      "x": -58.4,
+      "y": 9.55,
+      "z": 4.3
+     },
+     "size": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+     },
+     "rotationY": 4.704,
+     "faceTarget": true,
+     "groundSnap": true,
+     "maxAlive": 1,
+     "spawnDelay": [
+      4.5,
+      4.5
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "id": "actor-1",
+     "name": "Holder 1",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "shooter",
+       "difficulty": "hard",
+       "reaction": [
+        0.34,
+        0.44
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 2.8,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      },
+      {
+       "kind": "respawn",
+       "delay": [
+        0.4,
+        0.9
+       ],
+       "mode": "never"
+      }
+     ],
+     "health": 150
+    },
+    {
+     "id": "actor-2",
+     "name": "Peeker 1",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "path",
+       "waypoints": [
+        {
+         "x": -68.9,
+         "y": 4,
+         "z": 8
+        },
+        {
+         "x": -70.3,
+         "y": 4.08,
+         "z": 8.8
+        },
+        {
+         "x": -70.025,
+         "y": 4.08,
+         "z": 8.156
+        },
+        {
+         "x": -70.496,
+         "y": 4.08,
+         "z": 9.26
+        },
+        {
+         "x": -70.064,
+         "y": 4.08,
+         "z": 8.248
+        }
+       ],
+       "loop": true,
+       "speed": 5.4,
+       "counterStrafe": true,
+       "pauses": [
+        {
+         "at": 0,
+         "wait": 1
+        },
+        {
+         "at": 1,
+         "wait": 0.1
+        },
+        {
+         "at": 2,
+         "wait": 0.15
+        },
+        {
+         "at": 3,
+         "wait": 0.25
+        },
+        {
+         "at": 4,
+         "wait": 0.2
+        }
+       ]
+      },
+      {
+       "kind": "shooter",
+       "difficulty": "hard",
+       "reaction": [
+        0.34,
+        0.44
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 2.8,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      },
+      {
+       "kind": "respawn",
+       "delay": [
+        1.5,
+        1.8
+       ],
+       "mode": "reSpawner"
+      }
+     ],
+     "health": 150
+    },
+    {
+     "id": "actor-3",
+     "name": "Holder 2",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "motion": "crouch",
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "shooter",
+       "difficulty": "hard",
+       "reaction": [
+        0.34,
+        0.44
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 2.8,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      },
+      {
+       "kind": "respawn",
+       "delay": [
+        0.4,
+        0.9
+       ],
+       "mode": "never"
+      }
+     ],
+     "health": 150
+    },
+    {
+     "id": "actor-4",
+     "name": "Holder 3",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "shooter",
+       "difficulty": "hard",
+       "reaction": [
+        0.34,
+        0.44
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 2.8,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      },
+      {
+       "kind": "respawn",
+       "delay": [
+        0.4,
+        0.9
+       ],
+       "mode": "never"
+      }
+     ],
+     "health": 150
+    }
+   ],
+   "rules": {
+    "duration": 75,
+    "scoring": "clicking",
+    "weapon": "vandal",
+    "playerMovable": true,
+    "fireMode": "hold",
+    "playerDeath": "endRound"
+   }
+  }
+ }
+}

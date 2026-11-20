@@ -24,7 +24,7 @@
   "docBytes": 2479,
   "name": "Sunset — A site, spray transfer (Hard)",
   "playCount": 0,
-  "sceneHash": "59cc5de1992941b6",
+  "sceneHash": "7ecdcaee1ea6b85e",
   "sceneKey": "set-2f130f0001e22fbc",
   "schemaVersion": 2,
   "shareCode": "2f130f0001e22fbc",
@@ -72,7 +72,7 @@
      "y": 0.02,
      "z": 14.2
     },
-    "yaw": 4.712
+    "yaw": 6.065
    },
    "spawners": [
     {

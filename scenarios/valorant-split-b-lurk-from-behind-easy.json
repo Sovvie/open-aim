@@ -1,0 +1,264 @@
+{
+ "item": {
+  "createTime": "2026-11-20 12:00:00",
+  "description": "Split B main: you fight an enemy in front while a lurker waits out of sight behind you. When you shoot, it may swing in from behind about two seconds later (7 times in 10). Finish the front fight fast, then check your back. Bots shoot slowly.",
+  "docBytes": 2011,
+  "featured": false,
+  "mapId": "bonsai",
+  "name": "Split — B main, lurker from behind (Easy)",
+  "parSeconds": null,
+  "playCount": 0,
+  "sceneKey": "set-6143a6081454e7ae",
+  "shareCode": "6143a6081454e7ae",
+  "sort": 352,
+  "status": 1,
+  "type": "hold",
+  "updateTime": "2026-11-20 12:00:00"
+ },
+ "scene": {
+  "authorNickname": "openVaim",
+  "authorUid": "workshop",
+  "blockCount": 0,
+  "createTime": "2026-11-20 12:00:00",
+  "description": "Split B main: you fight an enemy in front while a lurker waits out of sight behind you. When you shoot, it may swing in from behind about two seconds later (7 times in 10). Finish the front fight fast, then check your back. Bots shoot slowly.",
+  "docBytes": 2011,
+  "name": "Split — B main, lurker from behind (Easy)",
+  "playCount": 0,
+  "sceneHash": "6d6bc49b0ead20df",
+  "sceneKey": "set-6143a6081454e7ae",
+  "schemaVersion": 2,
+  "shareCode": "6143a6081454e7ae",
+  "updateTime": "2026-11-20 12:00:00",
+  "aimShuffle": {
+   "groups": [
+    {
+     "actors": [
+      "actor-1"
+     ]
+    },
+    {
+     "actors": [
+      "actor-2"
+     ]
+    }
+   ]
+  },
+  "doc": {
+   "schemaVersion": 2,
+   "meta": {
+    "id": "studio-9125c3b375a7076e",
+    "name": "Split — B main, lurker from behind (Easy)",
+    "seed": 77974559,
+    "createdAt": 0
+   },
+   "environment": {
+    "skyColor": "#111820",
+    "fogNear": 14,
+    "fogFar": 33,
+    "ambientIntensity": 2,
+    "keyLightIntensity": 3,
+    "fogEnabled": false,
+    "map": "bonsai"
+   },
+   "blocks": [],
+   "playerSpawn": {
+    "position": {
+     "x": -27,
+     "y": 3.08,
+     "z": 12.8
+    },
+    "yaw": 1.74
+   },
+   "spawners": [
+    {
+     "id": "spawner-1",
+     "name": "Holder 1",
+     "kind": "area",
+     "actorTemplateId": "actor-1",
+     "position": {
+      "x": -57.5,
+      "y": 3.38,
+      "z": 18
+     },
+     "size": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+     },
+     "rotationY": 1.74,
+     "faceTarget": true,
+     "groundSnap": true,
+     "maxAlive": 1,
+     "spawnDelay": [
+      0.05,
+      0.05
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "id": "actor-1",
+     "name": "Holder 1",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "shooter",
+       "difficulty": "easy",
+       "reaction": [
+        0.75,
+        0.9
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 7,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      },
+      {
+       "kind": "respawn",
+       "delay": [
+        3,
+        3.3
+       ],
+       "mode": "inPlace"
+      }
+     ],
+     "health": 150
+    },
+    {
+     "id": "actor-2",
+     "name": "Peeker 1",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "cross",
+       "waypoints": [
+        {
+         "x": -25,
+         "y": 3,
+         "z": 16.3
+        },
+        {
+         "x": -15,
+         "y": 3.08,
+         "z": 10.5
+        },
+        {
+         "x": -25,
+         "y": 3,
+         "z": 16.3
+        }
+       ],
+       "speed": 5.4,
+       "respawn": true,
+       "interval": [
+        1,
+        1.5
+       ],
+       "killImmediate": false,
+       "counterStrafe": true,
+       "killDelay": [
+        3,
+        3.3
+       ],
+       "pauses": [
+        {
+         "at": 1,
+         "wait": 2.2
+        }
+       ]
+      },
+      {
+       "kind": "shooter",
+       "difficulty": "easy",
+       "reaction": [
+        0.75,
+        0.9
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 7,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      }
+     ],
+     "health": 150
+    }
+   ],
+   "rules": {
+    "duration": 90,
+    "scoring": "clicking",
+    "weapon": "vandal",
+    "playerMovable": true,
+    "fireMode": "hold"
+   },
+   "dispatchers": [
+    {
+     "id": "dispatcher-2",
+     "name": "Peeker 1",
+     "routes": [
+      {
+       "templateId": "actor-2",
+       "streak": [
+        1,
+        1
+       ]
+      }
+     ],
+     "order": "sequence",
+     "maxAlive": 1,
+     "interval": [
+      1,
+      1
+     ],
+     "faceTarget": true,
+     "killDelay": [
+      3,
+      3.3
+     ],
+     "hear": {
+      "area": {
+       "x0": -35,
+       "z0": 4.8,
+       "x1": -19,
+       "z1": 20.8
+      },
+      "sources": [
+       "shot"
+      ],
+      "delay": [
+       1.4,
+       2.4
+      ],
+      "swingChance": 0.7
+     },
+     "spawnDelay": [
+      1.4,
+      2.4
+     ],
+     "swingChance": 0.7
+    }
+   ]
+  }
+ }
+}

@@ -2,7 +2,7 @@
  "item": {
   "createTime": "2026-11-20 12:00:00",
   "description": "One attacker flashes you and a second swings in about a second after the pop, straight into your blind. Look away on the flash, then clear the entry angle. Bots shoot slowly. The timing is exact in the first moments of a round and drifts as they come back.",
-  "docBytes": 2337,
+  "docBytes": 2333,
   "featured": false,
   "mapId": "triad",
   "name": "Haven — A site, flash and swing (Easy)",
@@ -21,10 +21,10 @@
   "blockCount": 0,
   "createTime": "2026-11-20 12:00:00",
   "description": "One attacker flashes you and a second swings in about a second after the pop, straight into your blind. Look away on the flash, then clear the entry angle. Bots shoot slowly. The timing is exact in the first moments of a round and drifts as they come back.",
-  "docBytes": 2337,
+  "docBytes": 2333,
   "name": "Haven — A site, flash and swing (Easy)",
   "playCount": 0,
-  "sceneHash": "7d9be5403153235b",
+  "sceneHash": "30566a53fe7b9acf",
   "sceneKey": "set-abb2d0f8a48e9927",
   "schemaVersion": 2,
   "shareCode": "abb2d0f8a48e9927",
@@ -101,16 +101,16 @@
      "kind": "area",
      "actorTemplateId": "actor-2",
      "position": {
-      "x": -80.6,
-      "y": 2.56,
-      "z": -68.6
+      "x": -81,
+      "y": 3.33,
+      "z": -60.7
      },
      "size": {
       "x": 0,
       "y": 0,
       "z": 0
      },
-     "rotationY": 5.916,
+     "rotationY": 5.721,
      "faceTarget": true,
      "groundSnap": true,
      "maxAlive": 1,
@@ -241,14 +241,14 @@
        "kind": "path",
        "waypoints": [
         {
-         "x": -80.6,
-         "y": 2.26,
-         "z": -68.6
+         "x": -81,
+         "y": 3.03,
+         "z": -60.7
         },
         {
-         "x": -85.2,
+         "x": -85.1,
          "y": 3.03,
-         "z": -68.5
+         "z": -59.6
         }
        ],
        "loop": true,

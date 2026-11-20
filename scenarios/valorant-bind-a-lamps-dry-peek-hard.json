@@ -2,7 +2,7 @@
  "item": {
   "createTime": "2026-11-20 12:00:00",
   "description": "Three accurate defenders on A site as you come out of Lamps. When you kill the first, the third swings in within half a second to trade you. Dying ends the round. Peek with a plan for the trade.",
-  "docBytes": 3456,
+  "docBytes": 3455,
   "featured": false,
   "mapId": "duality",
   "name": "Bind — A Lamps, dry peek (Hard)",
@@ -21,10 +21,10 @@
   "blockCount": 0,
   "createTime": "2026-11-20 12:00:00",
   "description": "Three accurate defenders on A site as you come out of Lamps. When you kill the first, the third swings in within half a second to trade you. Dying ends the round. Peek with a plan for the trade.",
-  "docBytes": 3456,
+  "docBytes": 3455,
   "name": "Bind — A Lamps, dry peek (Hard)",
   "playCount": 0,
-  "sceneHash": "29033389c0c9317d",
+  "sceneHash": "bcf1c33efb44d731",
   "sceneKey": "set-155ed45a48a5dbd2",
   "schemaVersion": 2,
   "shareCode": "155ed45a48a5dbd2",
@@ -72,7 +72,7 @@
      "y": 2.05,
      "z": -105.2
     },
-    "yaw": 3.815
+    "yaw": 4.039
    },
    "spawners": [
     {
@@ -129,16 +129,16 @@
      "kind": "area",
      "actorTemplateId": "actor-3",
      "position": {
-      "x": 14.7,
+      "x": 23.1,
       "y": 1.35,
-      "z": -106.7
+      "z": -99.2
      },
      "size": {
       "x": 0,
       "y": 0,
       "z": 0
      },
-     "rotationY": 4.825,
+     "rotationY": 4.443,
      "faceTarget": true,
      "groundSnap": true,
      "maxAlive": 1,

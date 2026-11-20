@@ -5,6 +5,9 @@
 //  - the game's own scene validator (app/site/next/js/D_iGclxB.js, the "Not a valid scene file" check) accepts each doc
 //  - positions are finite numbers and stand on the map's walkable floor (app/studio/map-data.js, the Studio's own floor data)
 //  - spawners and dispatcher routes name actor templates that exist, behaviours are known, trigger fields point at real actors
+//  - round 2: bots stand on real floor (not over a box top the scenario does not have), the player can see where each bot (not a sound-gated
+//    lurker) shows up, lurkers are really behind the player, off-angle chains and trade pairs have the structure their names promise,
+//    and the 30 round-1 scenarios keep their names, share codes and sort numbers
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
@@ -16,6 +19,39 @@ const ROOT = path.join(__dirname, "..");
 const SCEN = path.join(ROOT, "scenarios");
 const KNOWN_BEHAVIORS = ["replay", "strafe", "sway", "jump", "path", "cross", "shooter", "respawn", "blink", "decay"]; // `et` in the game validator
 const HEAR_SOURCES = ["shot", "footstep", "land"];
+// Round 1 (sort, share code, name): these must never change.
+const ROUND1 = [
+  [300,"0a4f1580bb95603f","Sunset — Wide-swing duel (Easy)"],
+  [301,"621c797a8c125103","Sunset — Wide-swing duel (Hard)"],
+  [302,"50502c7246533aa3","Sunset — Jiggle bait (Easy)"],
+  [303,"ee4211ee5e40c6f0","Sunset — Jiggle bait (Hard)"],
+  [304,"defd98e5275a319b","Sunset — Crossfire and trade (Easy)"],
+  [305,"6efd70822b3a6717","Sunset — Crossfire and trade (Hard)"],
+  [306,"5db7d0c3bef3a337","Sunset — A site, clear in order (Easy)"],
+  [307,"a88c5035db4d3b6b","Sunset — A site, clear in order (Hard)"],
+  [308,"1bab9082e0631635","Sunset — A site, they swing on sound (Easy)"],
+  [309,"2485b356d72afe77","Sunset — A site, they swing on sound (Hard)"],
+  [310,"fe2d962776efec53","Sunset — A site, spray transfer (Easy)"],
+  [311,"2f130f0001e22fbc","Sunset — A site, spray transfer (Hard)"],
+  [312,"b0231054306b0014","Ascent — Mid, Operator hold (Easy)"],
+  [313,"7058fa2ec2e8787f","Ascent — Mid, Operator hold (Hard)"],
+  [314,"6fbe7502e3eb25f1","Ascent — Mid, Marshal quick-scope"],
+  [315,"82502e803af13f27","Ascent — Dock, flash timing (Easy)"],
+  [316,"c6fd3a9ca4b25d9c","Ascent — Dock, flash timing (Hard)"],
+  [317,"abb2d0f8a48e9927","Haven — A site, flash and swing (Easy)"],
+  [318,"f53eaff69e001b56","Haven — A site, flash and swing (Hard)"],
+  [319,"d567b6e26c77ed21","Haven — C Long, sniper duel (Easy)"],
+  [320,"ef2eb6c65d50511e","Haven — C Long, sniper duel (Hard)"],
+  [321,"f4feb8ab9013da1a","Bind — A Lamps, dry peek (Easy)"],
+  [322,"155ed45a48a5dbd2","Bind — A Lamps, dry peek (Hard)"],
+  [323,"ad721043c2e5b24a","Corrode — A Corner, counter-strafe test (Easy)"],
+  [324,"c40a281d1337c5d3","Corrode — A Corner, counter-strafe test (Hard)"],
+  [325,"04c4214e80bc99fd","Split — B retake, staggered defenders (Easy)"],
+  [326,"c6fec8b576e3e154","Split — B retake, staggered defenders (Hard)"],
+  [327,"a95041df2d7530a5","Lotus — C Long, two-angle crossfire (Easy)"],
+  [328,"04b1d6019da50daf","Lotus — C Long, two-angle crossfire (Hard)"],
+  [329,"9e2726858fd1fc9e","Summit — B Main, lurk timing"],
+];
 const FLASH_AGENTS = ["phoenix", "kayo", "reyna", "breach", "skye", "yoru", "vyse"];
 
 const readJson = (file) => JSON.parse(fs.readFileSync(file, "utf8").replace(/^﻿/, ""));
@@ -41,7 +77,13 @@ async function main() {
     const onDisk = readJson(path.join(SCEN, b.file));
     assert.deepStrictEqual(onDisk, JSON.parse(JSON.stringify(b.data)), b.file + " is out of date: run node tools/make-valorant-scenes.mjs");
   }
-  assert.ok(files.length >= 25, "expected about 25 or more Workshop scenarios, got " + files.length);
+  assert.ok(files.length >= 70, "expected 70 or more Workshop scenarios, got " + files.length);
+  // sort numbers run 300, 301, ... without gaps, in generator order; round 1 keeps its names, codes and numbers
+  built.forEach((b, i) => assert.strictEqual(b.data.item.sort, 300 + i, b.file + " sort"));
+  for (const [sort, code, name] of ROUND1) {
+    const b = built.find((x) => x.data.item.sort === sort);
+    assert.ok(b && b.data.item.name === name && b.data.item.shareCode === code, "round-1 scenario " + sort + " (" + name + ") changed name or share code");
+  }
 
   // ---- every other scenario, to catch name / code collisions
   const others = fs.readdirSync(SCEN).filter((f) => f.endsWith(".json") && !files.includes(f)).map((f) => readJson(path.join(SCEN, f)).item);
@@ -62,8 +104,9 @@ async function main() {
     assert.strictEqual(scene.shareCode, item.shareCode, at("scene.shareCode"));
     assert.strictEqual(scene.name, item.name, at("scene.name"));
     assert.ok(item.sort >= 300 && item.sort <= 399, at("sort in 300-399"));
+    assert.ok(!/\s{2,}/.test(item.description), at("description spacing"));
     assert.ok(["hold", "flash"].includes(item.type), at("type is hold or flash, got " + item.type));
-    assert.ok(typeof item.mapId === "string" && kitMod.MAPS_WITH_DATA.includes(item.mapId), at("map " + item.mapId + " has floor data"));
+    assert.ok(typeof item.mapId === "string" && (kitMod.MAPS_WITH_DATA.includes(item.mapId) || kitMod.MAPS_WITHOUT_DATA.includes(item.mapId)), at("map " + item.mapId + " is a map of the app"));
     assert.strictEqual(scene.schemaVersion, 2, at("schemaVersion"));
     assert.strictEqual(scene.blockCount, doc.blocks.length, at("blockCount"));
     assert.strictEqual(item.docBytes, Buffer.byteLength(JSON.stringify(doc), "utf8"), at("docBytes"));
@@ -81,7 +124,9 @@ async function main() {
     const bad = [];
     walkNumbers(doc, "doc", bad);
     assert.deepStrictEqual(bad, [], at("non-finite numbers at " + bad.join(", ")));
-    const kit = kits[item.mapId] || (kits[item.mapId] = await kitMod.loadMapKit(item.mapId));
+    const kit = kits[item.mapId] || (kits[item.mapId] = kitMod.MAPS_WITHOUT_DATA.includes(item.mapId) ? kitMod.loadPointKit(item.mapId, gen.pointsOnMap(item.mapId)) : await kitMod.loadMapKit(item.mapId));
+    // a bot stands on a real floor: the game drops a spawner (0.3 m above its floor) onto what is under it, so a spot over a box top that this scenario does not contain would end up on the floor below
+    const realFloor = (p, lift, tol) => (kit.dataless ? kit.standsOn({ x: p.x, y: p.y - lift, z: p.z }) : kit.levelsAt(p.x, p.z).some((l) => Math.abs(p.y - lift - l) <= tol));
     const stand = (p, what) => assert.ok(kit.standsOn(p), at(`${what} (${p.x}, ${p.y}, ${p.z}) is not on the walkable floor of ${item.mapId}`));
     stand(doc.playerSpawn.position, "player start");
 
@@ -109,6 +154,7 @@ async function main() {
     for (const s of doc.spawners) {
       assert.ok(actorIds.has(s.actorTemplateId), at(`spawner ${s.id} names a missing actor ${s.actorTemplateId}`));
       stand({ x: s.position.x, y: s.groundSnap ? s.position.y - 0.3 : s.position.y, z: s.position.z }, "spawner " + s.id);
+      assert.ok(realFloor(s.position, s.groundSnap ? 0.3 : 0, 0.2), at("spawner " + s.id + " (" + s.position.x + ", " + s.position.y + ", " + s.position.z + ") is not over a real floor of " + item.mapId));
       if (s.afterKill) {
         stats.trade++;
         assert.ok(s.afterKill.some((id) => actorIds.has(id)), at(`spawner ${s.id} trades on a kill of an actor that exists`));
@@ -121,7 +167,10 @@ async function main() {
       assert.ok(d.routes.length >= 1, at(d.id + " has routes"));
       for (const r of d.routes) {
         assert.ok(actorIds.has(r.templateId), at(`dispatcher ${d.id} names a missing actor ${r.templateId}`));
-        if (r.at) stand(r.at, "dispatcher " + d.id);
+        if (r.at) {
+          stand(r.at, "dispatcher " + d.id);
+          assert.ok(realFloor(r.at, 0, 0.2), at("dispatcher " + d.id + " spot (" + r.at.x + ", " + r.at.y + ", " + r.at.z + ") is not on a real floor of " + item.mapId));
+        }
       }
       if (d.afterKill) { stats.trade++; assert.ok(d.afterKill.some((id) => actorIds.has(id)), at(d.id + " trade target exists")); }
       if (d.swing) {
@@ -150,6 +199,70 @@ async function main() {
     }
   }
 
+  // ---- round 2 structure (reads the committed files)
+  for (const file of files) {
+    const data = readJson(path.join(SCEN, file)), doc = docOf(data), item = data.item;
+    const kit = kits[item.mapId];
+    const at = (msg) => file + ": " + msg;
+    const start = doc.playerSpawn.position, yaw = doc.playerSpawn.yaw;
+    const bearingOf = (p) => { const d = ((Math.atan2(-(p.x - start.x), -(p.z - start.z)) - yaw) * 180) / Math.PI; return ((d % 360) + 540) % 360 - 180; };
+    const movement = (a) => a.behaviors.find((b) => b.kind === "cross" || (b.kind === "path" && b.waypoints && b.waypoints.length > 1)); // a peeker is a cross route, or a path when it strafes at the peek
+    const gated = new Set();
+    for (const d of doc.dispatchers || []) if (d.hear) for (const r of d.routes) gated.add(r.templateId);
+    const showSpot = (a) => {
+      const cross = movement(a);
+      if (cross) { const fl = cross.flashStops && cross.flashStops[0]; return cross.waypoints[Math.min(cross.waypoints.length - 1, fl ? fl.at + 1 : 1)]; }
+      const s = doc.spawners.find((x) => x.actorTemplateId === a.id);
+      if (s) return { x: s.position.x, y: s.groundSnap ? s.position.y - 0.3 : s.position.y, z: s.position.z };
+      return (doc.dispatchers || []).flatMap((d) => d.routes).find((r) => r.templateId === a.id && r.at).at;
+    };
+    // the player can see where every bot that is not sound-gated shows up (with a small margin for a hairline gap)
+    if (!kit.dataless) for (const a of doc.actors) {
+      if (gated.has(a.id)) continue;
+      const p = showSpot(a);
+      assert.ok(kit.sees(start, p) && kit.sees({ ...start, y: start.y + 0.05 }, p), at("the player cannot see where " + a.id + " shows up (" + p.x + ", " + p.y + ", " + p.z + ")"));
+    }
+    // the player faces its enemies: the middle of the bots that are not sound-gated is within 70 degrees of the facing (Summit's rotators cross a lane)
+    const shown = doc.actors.filter((a) => !gated.has(a.id)).map(showSpot);
+    if (shown.length && !/summit-b-main-rotators/.test(file)) {
+      const mean = shown.reduce((a, p) => a + bearingOf(p), 0) / shown.length;
+      assert.ok(Math.abs(mean) <= 70, at("the bots are not in front of the player (mean bearing " + Math.round(mean) + ")"));
+    }
+    const afterKills = [...doc.spawners, ...(doc.dispatchers || [])].filter((x) => x.afterKill);
+    if (/lurk-from-behind/.test(file)) {
+      const behind = doc.actors.filter((a) => gated.has(a.id)).map((a) => movement(a).waypoints[1]);
+      assert.ok(behind.length >= 1 && behind.every((p) => Math.abs(bearingOf(p)) >= 110), at("lurkers are behind the player: " + behind.map((p) => Math.round(bearingOf(p)))));
+      assert.ok(doc.actors.length > behind.length, at("a bot in front keeps the player busy"));
+      for (const d of doc.dispatchers || []) if (d.hear) assert.ok(d.hear.sources.includes("shot") || d.hear.sources.includes("footstep"), at("lurkers hear shots or steps"));
+    }
+    if (/off-angle-chain/.test(file)) {
+      assert.ok(doc.actors.length >= 3, at("a chain of three or more"));
+      assert.strictEqual(afterKills.length, doc.actors.length - 1, at("every bot but the first waits for a kill"));
+      assert.strictEqual(new Set(afterKills.map((x) => x.afterKill[0])).size, afterKills.length, at("every bot after the first follows a different kill"));
+    }
+    if (/trade-swing-delays/.test(file)) {
+      assert.ok(afterKills.length === 2 && afterKills[0].afterKill[0] === afterKills[1].afterKill[0], at("two partners trade the same kill"));
+    }
+    if (/shoulder-peek-read/.test(file)) {
+      const shoulder = doc.actors.filter((a) => !gated.has(a.id));
+      assert.strictEqual(shoulder.length, 1, at("one shoulder bot"));
+      const cr = movement(shoulder[0]);
+      assert.ok((cr.pauses || []).some((w) => w.at === 1 && w.wait > 0 && w.wait <= 0.4), at("the shoulder is out for 0.4 s or less"));
+      assert.strictEqual(gated.size, 1, at("one sound-gated partner"));
+    }
+    if (/choke-entry/.test(file)) assert.ok(afterKills.length >= 1, at("a trading partner"));
+    if (/retake-staggered/.test(file)) {
+      const delays = [...doc.spawners.map((s) => (s.spawnDelay || [0])[0]), ...(doc.dispatchers || []).map((d) => (d.spawnDelay || [0])[0])];
+      assert.ok(new Set(delays.map((d) => Math.round(d * 10))).size >= 3, at("arrivals are staggered: " + delays));
+    }
+    if (/repeek/.test(file)) assert.ok(doc.actors.some((a) => movement(a)), at("peekers"));
+    if (item.mapId === "infinity") {
+      // no floor data for Abyss: every bot stands exactly where an existing scenario already put a bot
+      const sp = doc.spawners.map((s) => ({ x: s.position.x, y: s.position.y - 0.3, z: s.position.z })).concat((doc.dispatchers || []).flatMap((d) => d.routes.filter((r) => r.at).map((r) => r.at)));
+      for (const p of sp) assert.ok(kit.points.some((q) => Math.hypot(q.x - p.x, q.z - p.z) < 0.2 && Math.abs(q.y - p.y) < 0.6), at("an Abyss bot at (" + p.x + ", " + p.z + ") is not a spot an existing scenario uses"));
+    }
+  }
+
   // ---- siblings: <stem>-easy and <stem>-hard come in pairs, and the build lists them
   const stems = new Set(files.filter((f) => /-(easy|hard)\.json$/.test(f)).map((f) => f.replace(/-(easy|hard)\.json$/, "")));
   for (const stem of stems) {
@@ -168,10 +281,12 @@ async function main() {
   } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
 
   // ---- coverage of the situations
-  assert.ok(stats.maps.size >= 6, "spread over at least 6 maps, got " + [...stats.maps]);
+  assert.ok(stats.maps.size >= 11, "spread over at least 11 maps (incl. Pearl, Icebox, Abyss), got " + [...stats.maps]);
+  for (const m of ["pitt", "port", "infinity"]) assert.ok(stats.maps.has(m), "map " + m + " is covered");
+  for (const fam of ["shoulder-peek-read", "off-angle-chain", "trade-swing-delays", "lurk-from-behind", "choke-entry", "repeek", "retake-staggered"]) assert.ok(files.filter((x) => x.includes(fam)).length >= 2, "situation " + fam + " has scenarios");
   assert.ok(stats.swing >= 2 && stats.hear >= 2 && stats.trade >= 4 && stats.flash >= 6 && stats.sniper >= 3, "uses swing triggers, sound areas, trades, flashes and snipers: " + JSON.stringify({ ...stats, maps: undefined, types: undefined }));
   assert.ok(stats.types.has("flash") && stats.types.has("hold"));
-  assert.ok(stats.easy >= 10 && stats.hard >= 10);
+  assert.ok(stats.easy >= 30 && stats.hard >= 30);
   console.log(`${files.length} Workshop scenarios on ${stats.maps.size} maps: ${stats.swing} swing triggers, ${stats.hear} sound areas, ${stats.trade} trades, ${stats.flash} flashes`);
 }
 
