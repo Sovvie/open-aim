@@ -30,6 +30,15 @@ All notable changes to openVaim (formerly AimTrainer). Newest first.
 - Export a drill to a file and import it again (drop a file on the drill list too); press ? for the shortcut list.
 - Snapping and guide lines while dragging (Snap toggle in the header, Alt for free movement), and a timeline of what each bot will do after the round starts.
 
+### Interface polish
+- Lobby: every tab shows at any window width, the top bar stays one row and the page never scrolls sideways, Target Workshop scrolls inside its tab and no longer freezes on click, cards show an Easy / Hard badge with a new level filter, and arrow keys move between cards.
+- Settings: the Interface (Enhanced / Performance) choice is back in Video, Settings search finds it, the Discord dock no longer covers the controls, and several labels were reworded in plain English. Update errors show in red and the offline Community Workshop says it can't be reached.
+- Result and pause screens: the result card stays centred with the hit report attached on its left, nothing is cut off between 1280 and 1440 px, the coach tip and medal strip no longer jump or hide, Switch difficulty sits under Restart, and Resume and Play again show their shortcut keys.
+- Stats: clear first-day empty states, plain coach wording and labels, fixed-height coach cards, readable axis labels, keyboard and touch tooltips on charts, real tabs with arrow keys, charts that draw in once, and hatched died rounds for colour-blind players.
+- Routines: the picker lists all drills, works with the keyboard and fits the window, routines can hold 30 steps, Save and Delete give clear feedback with Undo, and medal badges are larger.
+- Studio: Esc closes every dialog, Delete dialogs start on Cancel, the tour no longer covers the toolbar, a new empty drill no longer shows a red error, and hover, undo and delete give feedback.
+- Motion and access: Settings no longer re-lays out the page every frame (about 165 fps instead of 35), shared animation timings, one reduced-motion rule for the whole app, visible focus rings on slanted buttons, better text contrast, and consistent scrollbars and cursors.
+
 ### Speed
 - The first window opens about a second sooner, big map files are streamed instead of loaded whole, and the stats recorder does less work per tick.
 
