@@ -1,0 +1,201 @@
+{
+  "item": {
+    "name": "Easy-Peek — Long-range sprint peek",
+    "description": "A small ball far down the range sprints across your view, stops for a blink and runs on; it is gone after a short time. Trains timing a shot on a distant, fast peeker. Easy: Ball 2.4° wide, 40 m away, 6.75 m/s, gone after 2.2 s, 100 points off for each one that gets away.",
+    "shareCode": "f25836cae12668b3",
+    "sceneKey": "set-f25836cae12668b3",
+    "createTime": "2026-11-20 12:00:00",
+    "updateTime": "2026-11-20 12:00:00",
+    "docBytes": 1663,
+    "playCount": 0,
+    "status": 1,
+    "featured": false,
+    "parSeconds": null,
+    "mapId": null,
+    "sort": 259,
+    "type": "ball"
+  },
+  "scene": {
+    "name": "Easy-Peek — Long-range sprint peek",
+    "description": "A small ball far down the range sprints across your view, stops for a blink and runs on; it is gone after a short time. Trains timing a shot on a distant, fast peeker. Easy: Ball 2.4° wide, 40 m away, 6.75 m/s, gone after 2.2 s, 100 points off for each one that gets away.",
+    "shareCode": "f25836cae12668b3",
+    "sceneKey": "set-f25836cae12668b3",
+    "createTime": "2026-11-20 12:00:00",
+    "updateTime": "2026-11-20 12:00:00",
+    "docBytes": 1663,
+    "playCount": 0,
+    "status": 1,
+    "featured": false,
+    "parSeconds": null,
+    "schemaVersion": 2,
+    "blockCount": 1,
+    "authorNickname": "openVaim",
+    "authorUid": "openvaim",
+    "sceneHash": "f0ed15141fab4ae1",
+    "doc": {
+      "schemaVersion": 2,
+      "meta": {
+        "id": "scene-254116716",
+        "name": "Easy-Peek — Long-range sprint peek",
+        "seed": 254116716,
+        "createdAt": 0
+      },
+      "environment": {
+        "skyColor": "#000000",
+        "fogNear": 50,
+        "fogFar": 140,
+        "ambientIntensity": 1.55,
+        "keyLightIntensity": 2.2,
+        "grid": {
+          "size": 102,
+          "divisions": 68,
+          "centerColor": "#ffffff",
+          "gridColor": "#0091ff",
+          "position": {
+            "x": 0,
+            "y": -0.02,
+            "z": 4.2
+          }
+        }
+      },
+      "blocks": [
+        {
+          "id": "ground",
+          "shape": "plane",
+          "position": {
+            "x": -0.2,
+            "y": -13.6,
+            "z": -8.8
+          },
+          "rotationY": 0,
+          "size": {
+            "x": 40,
+            "y": 0.4,
+            "z": 45
+          },
+          "color": "#18222b",
+          "collidable": true,
+          "transparent": true
+        }
+      ],
+      "playerSpawn": {
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 4.2
+        },
+        "yaw": 0
+      },
+      "spawners": [
+        {
+          "id": "spawner-1",
+          "actorTemplateId": "actor-1",
+          "kind": "area",
+          "position": {
+            "x": 0,
+            "y": 1.75,
+            "z": -35.8
+          },
+          "size": {
+            "x": 10,
+            "y": 0,
+            "z": 0
+          },
+          "maxAlive": 1,
+          "spawnDelay": [
+            0.25,
+            0.6
+          ]
+        }
+      ],
+      "actors": [
+        {
+          "id": "actor-1",
+          "name": "Target",
+          "body": {
+            "shape": "sphere",
+            "headSize": 1,
+            "bodyWidth": 0.44,
+            "bodyHeight": 0,
+            "radius": 0.838
+          },
+          "color": "#ff4655",
+          "behaviors": [
+            {
+              "kind": "strafe",
+              "speed": [
+                6.75,
+                6.75
+              ],
+              "dwell": [
+                0.08,
+                0.2
+              ],
+              "travel": [
+                4,
+                7
+              ],
+              "counterStrafe": true
+            },
+            {
+              "kind": "decay",
+              "lifetime": 2.2,
+              "growTime": 0.1,
+              "minScale": 0.6
+            },
+            {
+              "kind": "respawn",
+              "delay": [
+                0.25,
+                0.6
+              ],
+              "mode": "reSpawner"
+            }
+          ]
+        }
+      ],
+      "rules": {
+        "duration": 60,
+        "scoring": "clicking",
+        "weapon": "vandal",
+        "playerMovable": false,
+        "fireMode": "single",
+        "perfectAccuracy": true,
+        "expiredPenalty": 100,
+        "tunables": [
+          {
+            "field": "radius",
+            "id": "actor-1",
+            "label": "Target size",
+            "min": 0.33,
+            "max": 1.85,
+            "step": 0.01
+          },
+          {
+            "field": "strafe.speed",
+            "id": "actor-1",
+            "label": "Strafe speed",
+            "min": 1,
+            "max": 8,
+            "step": 0.1
+          },
+          {
+            "field": "decay.lifetime",
+            "id": "actor-1",
+            "label": "Target lifetime",
+            "min": 0.3,
+            "max": 5.5,
+            "step": 0.1
+          },
+          {
+            "field": "duration",
+            "label": "Round length",
+            "min": 30,
+            "max": 180,
+            "step": 15
+          }
+        ]
+      }
+    }
+  }
+}

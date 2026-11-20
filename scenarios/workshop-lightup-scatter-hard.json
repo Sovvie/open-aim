@@ -1,0 +1,317 @@
+{
+  "item": {
+    "name": "Hard-Reaction — Light scatter",
+    "description": "Nine points in a 3×3 square light up in a shuffled order, one at a time (Hard: two at a time). Shoot each before it goes dark. Trains reacting to a light you cannot predict. Hard: 9 points in a 26° × 12° square, balls 2.8° wide, two lit at a time for 1 s each.",
+    "shareCode": "06d217be102dc676",
+    "sceneKey": "set-06d217be102dc676",
+    "createTime": "2026-11-20 12:00:00",
+    "updateTime": "2026-11-20 12:00:00",
+    "docBytes": 2344,
+    "playCount": 0,
+    "status": 1,
+    "featured": false,
+    "parSeconds": null,
+    "mapId": null,
+    "sort": 252,
+    "type": "ball"
+  },
+  "scene": {
+    "name": "Hard-Reaction — Light scatter",
+    "description": "Nine points in a 3×3 square light up in a shuffled order, one at a time (Hard: two at a time). Shoot each before it goes dark. Trains reacting to a light you cannot predict. Hard: 9 points in a 26° × 12° square, balls 2.8° wide, two lit at a time for 1 s each.",
+    "shareCode": "06d217be102dc676",
+    "sceneKey": "set-06d217be102dc676",
+    "createTime": "2026-11-20 12:00:00",
+    "updateTime": "2026-11-20 12:00:00",
+    "docBytes": 2344,
+    "playCount": 0,
+    "status": 1,
+    "featured": false,
+    "parSeconds": null,
+    "schemaVersion": 2,
+    "blockCount": 1,
+    "authorNickname": "openVaim",
+    "authorUid": "openvaim",
+    "sceneHash": "f6cba92e0e25eb93",
+    "doc": {
+      "schemaVersion": 2,
+      "meta": {
+        "id": "scene-7151995",
+        "name": "Hard-Reaction — Light scatter",
+        "seed": 7151995,
+        "createdAt": 0
+      },
+      "environment": {
+        "skyColor": "#000000",
+        "fogNear": 50,
+        "fogFar": 140,
+        "ambientIntensity": 1.55,
+        "keyLightIntensity": 2.2,
+        "grid": {
+          "size": 42,
+          "divisions": 28,
+          "centerColor": "#ffffff",
+          "gridColor": "#0091ff",
+          "position": {
+            "x": 0,
+            "y": -0.02,
+            "z": 4.2
+          }
+        }
+      },
+      "blocks": [
+        {
+          "id": "ground",
+          "shape": "plane",
+          "position": {
+            "x": -0.2,
+            "y": -13.6,
+            "z": -8.8
+          },
+          "rotationY": 0,
+          "size": {
+            "x": 40,
+            "y": 0.4,
+            "z": 45
+          },
+          "color": "#18222b",
+          "collidable": true,
+          "transparent": true
+        }
+      ],
+      "playerSpawn": {
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 4.2
+        },
+        "yaw": 0
+      },
+      "spawners": [],
+      "actors": [
+        {
+          "id": "actor-1",
+          "name": "Target",
+          "body": {
+            "shape": "sphere",
+            "headSize": 1,
+            "bodyWidth": 0.44,
+            "bodyHeight": 0,
+            "radius": 0.391
+          },
+          "color": "#ff4655",
+          "behaviors": []
+        }
+      ],
+      "dispatchers": [
+        {
+          "id": "dispatcher-1",
+          "name": "Light scatter",
+          "routes": [
+            {
+              "templateId": "actor-1",
+              "streak": [
+                1,
+                1
+              ],
+              "at": {
+                "x": -3.694,
+                "y": 4.682,
+                "z": -11.8
+              },
+              "point": true,
+              "stay": [
+                1,
+                1
+              ]
+            },
+            {
+              "templateId": "actor-1",
+              "streak": [
+                1,
+                1
+              ],
+              "at": {
+                "x": 0,
+                "y": 4.682,
+                "z": -11.8
+              },
+              "point": true,
+              "stay": [
+                1,
+                1
+              ]
+            },
+            {
+              "templateId": "actor-1",
+              "streak": [
+                1,
+                1
+              ],
+              "at": {
+                "x": 3.694,
+                "y": 4.682,
+                "z": -11.8
+              },
+              "point": true,
+              "stay": [
+                1,
+                1
+              ]
+            },
+            {
+              "templateId": "actor-1",
+              "streak": [
+                1,
+                1
+              ],
+              "at": {
+                "x": -3.694,
+                "y": 3,
+                "z": -11.8
+              },
+              "point": true,
+              "stay": [
+                1,
+                1
+              ]
+            },
+            {
+              "templateId": "actor-1",
+              "streak": [
+                1,
+                1
+              ],
+              "at": {
+                "x": 0,
+                "y": 3,
+                "z": -11.8
+              },
+              "point": true,
+              "stay": [
+                1,
+                1
+              ]
+            },
+            {
+              "templateId": "actor-1",
+              "streak": [
+                1,
+                1
+              ],
+              "at": {
+                "x": 3.694,
+                "y": 3,
+                "z": -11.8
+              },
+              "point": true,
+              "stay": [
+                1,
+                1
+              ]
+            },
+            {
+              "templateId": "actor-1",
+              "streak": [
+                1,
+                1
+              ],
+              "at": {
+                "x": -3.694,
+                "y": 1.318,
+                "z": -11.8
+              },
+              "point": true,
+              "stay": [
+                1,
+                1
+              ]
+            },
+            {
+              "templateId": "actor-1",
+              "streak": [
+                1,
+                1
+              ],
+              "at": {
+                "x": 0,
+                "y": 1.318,
+                "z": -11.8
+              },
+              "point": true,
+              "stay": [
+                1,
+                1
+              ]
+            },
+            {
+              "templateId": "actor-1",
+              "streak": [
+                1,
+                1
+              ],
+              "at": {
+                "x": 3.694,
+                "y": 1.318,
+                "z": -11.8
+              },
+              "point": true,
+              "stay": [
+                1,
+                1
+              ]
+            }
+          ],
+          "order": "shuffle",
+          "maxAlive": 2,
+          "interval": [
+            0.08,
+            0.2
+          ],
+          "faceTarget": false
+        }
+      ],
+      "rules": {
+        "duration": 60,
+        "scoring": "clicking",
+        "weapon": "vandal",
+        "playerMovable": false,
+        "fireMode": "single",
+        "perfectAccuracy": true,
+        "expiredPenalty": 200,
+        "tunables": [
+          {
+            "field": "radius",
+            "id": "actor-1",
+            "label": "Target size",
+            "min": 0.15,
+            "max": 0.87,
+            "step": 0.01
+          },
+          {
+            "field": "dispatcher.stay",
+            "id": "dispatcher-1",
+            "label": "Time lit",
+            "min": 0.3,
+            "max": 2.5,
+            "step": 0.1
+          },
+          {
+            "field": "dispatcher.maxAlive",
+            "id": "dispatcher-1",
+            "label": "Points lit at once",
+            "min": 1,
+            "max": 4,
+            "step": 1
+          },
+          {
+            "field": "duration",
+            "label": "Round length",
+            "min": 30,
+            "max": 180,
+            "step": 15
+          }
+        ]
+      }
+    }
+  }
+}

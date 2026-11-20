@@ -71,6 +71,28 @@ function validateScene(text, label) {
       if (b.kind === "respawn") ok(isPair(b.delay) && ["never", "inPlace", "reSpawner"].includes(b.mode), "respawn");
     }
   }
+  // Dispatchers (BiMsX6Xn.js, the game's reader Pt in D_iGclxB.js): routes are points that light up one after the other.
+  const disp = doc.dispatchers === undefined ? [] : doc.dispatchers;
+  ok(Array.isArray(disp), "dispatchers is a list");
+  ok(doc.spawners.length > 0 || disp.length > 0, "something spawns the targets");
+  const dispIds = new Set();
+  for (const d of disp) {
+    ok(typeof d.id === "string" && d.id && !dispIds.has(d.id) && !spawnerIds.has(d.id) && !templates.has(d.id), "unique dispatcher id"); dispIds.add(d.id);
+    ok(typeof d.name === "string" && Array.isArray(d.routes) && d.routes.length >= 1, "dispatcher routes");
+    for (const rt of d.routes) {
+      ok(isObj(rt) && templates.has(rt.templateId), "route template exists");
+      ok(isPair(rt.streak), "route streak");
+      ok(rt.at === undefined || isVec(rt.at), "route at"); ok(optNum(rt.rotationY), "route rotationY");
+      ok(rt.stay === undefined || (isPair(rt.stay) && rt.stay[0] > 0 && rt.stay[0] <= rt.stay[1]), "route stay");
+      ok(rt.point === undefined || rt.point === true, "route point");
+      if (rt.point === true) ok(isVec(rt.at), "a point needs a place");
+    }
+    ok(["random", "shuffle", "sequence"].includes(d.order), "dispatcher order");
+    ok(isNum(d.maxAlive) && Number.isInteger(d.maxAlive) && d.maxAlive >= 1 && d.maxAlive <= 8, "dispatcher maxAlive");
+    ok(isPair(d.interval) && d.interval[0] >= 0 && d.interval[0] <= d.interval[1], "dispatcher interval");
+    ok(d.faceTarget === undefined || typeof d.faceTarget === "boolean", "dispatcher faceTarget");
+    ok(optNum(d.total), "dispatcher total");
+  }
   const r = doc.rules;
   ok(WEAPONS.includes(r.weapon), "weapon " + r.weapon);
   ok(["clicking", "tracking"].includes(r.scoring), "scoring");
@@ -84,10 +106,10 @@ function validateScene(text, label) {
 
 // The Tune screen's rules (Dc2Dm9E6.js Mh / Eh): which fields exist, on which node, and that today's value sits inside min..max.
 const TUNABLE_NODE = { radius: "template", maxAlive: "spawner", spacing: "spawner", spacingX: "spawner", width: "spawner", height: "spawner", duration: "rules",
-  "decay.lifetime": "template", "jump.height": "template", "strafe.speed": "template" };
+  "decay.lifetime": "template", "jump.height": "template", "strafe.speed": "template", "dispatcher.stay": "dispatcher", "dispatcher.maxAlive": "dispatcher" };
 const INTEGER_FIELDS = new Set(["maxAlive", "duration"]);
 function tunableValue(doc, t) {
-  const sp = doc.spawners.find((s) => s.id === t.id), tpl = doc.actors.find((a) => a.id === t.id);
+  const sp = doc.spawners.find((s) => s.id === t.id), tpl = doc.actors.find((a) => a.id === t.id), dp = (doc.dispatchers || []).find((d) => d.id === t.id);
   switch (t.field) {
     case "radius": return tpl.body.radius;
     case "maxAlive": return sp.maxAlive;
@@ -98,6 +120,12 @@ function tunableValue(doc, t) {
     case "decay.lifetime": return tpl.behaviors.find((b) => b.kind === "decay").lifetime;
     case "jump.height": return tpl.behaviors.find((b) => b.kind === "jump").height;
     case "strafe.speed": { const b = tpl.behaviors.find((x) => x.kind === "strafe"); assert(Math.abs(b.speed[0] - b.speed[1]) < 1e-9, "strafe speed must be one number to be adjustable"); return b.speed[0]; }
+    case "dispatcher.maxAlive": return dp.maxAlive;
+    case "dispatcher.stay": {
+      const stays = dp.routes.filter((r) => r.point === true).map((r) => r.stay);
+      assert(stays.length && stays.every((p) => p && p[0] === p[1] && p[0] === stays[0][0]), "every point needs the same fixed stay time to be adjustable");
+      return stays[0][0];
+    }
     default: throw new Error("unknown tunable " + t.field);
   }
 }
@@ -106,10 +134,12 @@ function tunableValue(doc, t) {
 function lobbySkill(doc) {
   const actors = new Map(doc.actors.map((a) => [a.id, a]));
   const sp = [...doc.spawners].sort((a, b) => b.maxAlive - a.maxAlive)[0];
-  const kinds = new Set(actors.get(sp.actorTemplateId).behaviors.map((b) => b.kind));
-  const form = kinds.has("strafe") ? "strafe" : kinds.has("sway") || kinds.has("path") ? "sway" : kinds.has("blink") ? "blink" : sp.kind === "grid" ? "grid" : "area";
+  const points = (doc.dispatchers || []).flatMap((d) => d.routes).filter((rt) => rt.point === true && rt.at).length;
+  const tpl = sp ? actors.get(sp.actorTemplateId) : actors.get(doc.dispatchers[0].routes[0].templateId);
+  const kinds = new Set(tpl.behaviors.map((b) => b.kind));
+  const form = points >= 2 && !sp ? "points" : kinds.has("strafe") ? "strafe" : kinds.has("sway") || kinds.has("path") ? "sway" : kinds.has("blink") ? "blink" : sp.kind === "grid" ? "grid" : "area";
   if (doc.rules.scoring === "tracking") return "Tracking";
-  return form === "blink" ? "Reaction" : form === "strafe" || form === "sway" ? "Moving" : "Flicking";
+  return form === "blink" || form === "points" ? "Reaction" : form === "strafe" || form === "sway" ? "Moving" : "Flicking";
 }
 
 const diaOf = (r, d) => (2 * Math.atan(r / d)) / RAD; // ball width in degrees of view
@@ -164,7 +194,7 @@ async function main() {
       assert(TUNABLE_NODE[t.field], `${label}: tunable ${t.field} unknown to the game`);
       const key = t.field + "@" + (t.id ?? ""); assert(!seen.has(key), `${label}: duplicate tunable ${key}`); seen.add(key);
       if (TUNABLE_NODE[t.field] === "rules") assert.strictEqual(t.id, undefined);
-      else assert(typeof t.id === "string" && (TUNABLE_NODE[t.field] === "template" ? doc.actors : doc.spawners).some((n) => n.id === t.id), `${label}: tunable ${key} points nowhere`);
+      else assert(typeof t.id === "string" && (TUNABLE_NODE[t.field] === "template" ? doc.actors : TUNABLE_NODE[t.field] === "dispatcher" ? doc.dispatchers || [] : doc.spawners).some((n) => n.id === t.id), `${label}: tunable ${key} points nowhere`);
       assert(typeof t.label === "string" && t.label.trim() && isNum(t.min) && isNum(t.max) && t.step > 0 && t.min < t.max && t.min > 0, `${label}: tunable ${key} shape`);
       if (INTEGER_FIELDS.has(t.field)) assert(Number.isInteger(t.min) && Number.isInteger(t.max) && Number.isInteger(t.step), `${label}: ${key} whole numbers`);
       const v = tunableValue(doc, t);
@@ -172,14 +202,28 @@ async function main() {
     }
 
     // numbers a player would notice
-    const actor = doc.actors[0], sp = doc.spawners[0], r = actor.body.radius, built = s.built;
+    const actor = doc.actors[0], sp = doc.spawners[0] || null, r = actor.body.radius, built = s.built;
     const dia = diaOf(r, built.dist);
     assert(dia >= 0.7 && dia <= 8, `${label}: ball is ${dia.toFixed(2)} degrees wide`);
     assert(Math.abs(dia - built.dia) < 0.05, `${label}: ball width ${dia} vs ${built.dia}`);
-    if (doc.rules.scoring === "clicking") {
+    if (doc.dispatchers) {
+      // points that light up in turn: every point is in a comfortable place, none touch each other
+      assert.strictEqual(doc.spawners.length, 0, label + " dispatcher drills have no spawner");
+      const pts = doc.dispatchers.flatMap((d) => d.routes.map((rt) => rt.at));
+      assert(pts.length >= 2, label + " needs at least two points");
+      for (const p of pts) {
+        const dist = distOf(p.z);
+        assert(dist >= 8, label + " point only " + dist + " m away");
+        assert(Math.atan((Math.abs(p.x) + r) / dist) / RAD <= 44, label + " point too near the edge of the view");
+        assert(p.y - r >= 0.3 && p.y + r <= 6.6, label + " point height");
+        assert(Math.atan((p.y + r - 1.75) / dist) / RAD <= 24, label + " point too far above the crosshair");
+      }
+      for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) assert(Math.hypot(pts[i].x - pts[j].x, pts[i].y - pts[j].y) > 2 * r, label + " two points overlap");
+      for (const d of doc.dispatchers) assert(d.maxAlive <= d.routes.length, label + " more lit than points");
+    } else if (doc.rules.scoring === "clicking") {
       const dist = distOf(sp.position.z);
       assert(dist >= 8, `${label}: wall only ${dist} m away`);
-      assert(Math.abs(sp.position.x) < 1e-9 || s.stem === "bounce", label + " wall is centred");
+      assert(Math.abs(sp.position.x) < 1e-9 || ["bounce", "bounce-wall"].includes(s.stem), label + " wall is centred");
       const edge = Math.atan((sp.size.x / 2 + r) / dist) / RAD;
       assert(edge <= 44, `${label}: outermost target is ${edge.toFixed(1)} degrees off the centre, too near the edge of the view`);
       const sway = actor.behaviors.find((b) => b.kind === "sway"), swayY = sway ? sway.amplitude.y : 0;
@@ -191,16 +235,26 @@ async function main() {
       if (sp.kind === "slots") assert(sp.size.x / (sp.slotCount - 1) > 2 * r, `${label}: slots overlap`);
     } else {
       // tracking: every waypoint stays 6 m or more from the player, inside a comfortable view, above the floor
-      const way = actor.behaviors.find((b) => b.kind === "path").waypoints;
+      const pathB = actor.behaviors.find((b) => b.kind === "path"), way = pathB ? pathB.waypoints : [];
       for (const w of way) {
         const d = Math.hypot(w.x, distOf(w.z));
         assert(d >= 6 && d <= 40, `${label}: waypoint ${d.toFixed(1)} m away`);
         assert(Math.abs(Math.atan(w.x / distOf(w.z))) / RAD <= 40, label + " waypoint too far to the side");
         assert(w.y - r >= 0.2 && w.y + r <= 6.6, label + " waypoint height");
       }
-      assert.deepStrictEqual(sp.position, way[0], label + " starts on its path");
-      const last = way[way.length - 1], first = way[0];
-      assert(Math.hypot(last.x - first.x, last.y - first.y, last.z - first.z) < 0.02, label + " loop closes");
+      if (pathB) {
+        assert.deepStrictEqual(sp.position, way[0], label + " starts on its path");
+        const last = way[way.length - 1], first = way[0];
+        assert(Math.hypot(last.x - first.x, last.y - first.y, last.z - first.z) < 0.02, label + " loop closes");
+      } else {
+        // a swaying or strafing tracking target: it stays inside a comfortable view the whole time and above the floor
+        const sway = actor.behaviors.find((b) => b.kind === "sway"), strafe = actor.behaviors.find((b) => b.kind === "strafe");
+        assert(sway || strafe, label + " tracking drill needs a path, sway or strafe");
+        const dist = distOf(sp.position.z), ax = sway ? sway.amplitude.x : strafe.travel[1] * 2, ay = sway ? sway.amplitude.y : 0;
+        assert(dist >= 6 && Math.atan((ax + r) / dist) / RAD <= 40, label + " tracking target swings too far to the side");
+        assert(sp.position.y - ay - r >= 0.2 && sp.position.y + ay + r <= 6.6, label + " tracking height");
+        assert(sp.size.x === 0 && sp.size.y === 0, label + " a tracking target starts in one place");
+      }
     }
     (stems.get(s.stem) || stems.set(s.stem, {}).get(s.stem))[s.tier] = { s, doc };
   }
@@ -208,13 +262,93 @@ async function main() {
   // pairs: the hard one differs and has the smaller (or equal) balls; they sit side by side in the list
   for (const [name, t] of stems) {
     assert(t.easy && t.hard, name + " needs both tiers");
-    const body = (x) => JSON.stringify({ a: x.doc.actors, s: x.doc.spawners, r: x.doc.rules });
+    const body = (x) => JSON.stringify({ a: x.doc.actors, s: x.doc.spawners, d: x.doc.dispatchers, r: x.doc.rules });
     assert.notStrictEqual(body(t.easy), body(t.hard), name + ": easy and hard are the same");
     assert.strictEqual(t.easy.s.sort + 1, t.hard.s.sort, name + " pair sits side by side");
     assert(diaOf(t.hard.doc.actors[0].body.radius, t.hard.s.built.dist) <= diaOf(t.easy.doc.actors[0].body.radius, t.easy.s.built.dist) + 1e-6, name + ": hard balls are bigger than easy ones");
   }
   const skills = new Set(scenes.map((s) => s.skill));
   for (const k of ["Flicking", "Reaction", "Moving", "Tracking"]) assert(skills.has(k), "no " + k + " drill");
+
+  // ---- round 2 ---------------------------------------------------------------------------------------------------------------------
+  // the first 44 files (round 1) keep their sort order 205-248; the new drills sort 249 and up, in pairs
+  const round1 = scenes.filter((x) => x.sort <= 248), round2 = scenes.filter((x) => x.sort >= 249);
+  assert.strictEqual(round1.length, 44, "round 1 is 22 pairs");
+  assert(round2.length >= 20 && round2.length % 2 === 0, "round 2 has easy/hard pairs");
+  for (const x of round2) assert(x.sort >= 249 && x.sort <= 299, x.file + " sort in the round 2 range");
+  assert(round2.some((x) => x.doc.dispatchers), "a dispatcher drill exists");
+  assert(round2.some((x) => x.skill === "Tracking" && x.doc.actors[0].behaviors.some((b) => b.kind === "sway")), "a swaying tracking drill exists");
+  assert(round2.some((x) => x.skill === "Tracking" && x.doc.actors[0].behaviors.some((b) => b.kind === "strafe")), "a strafing tracking drill exists");
+  assert(round2.some((x) => x.doc.rules.playerMovable === true && x.doc.rules.perfectAccuracy === false), "a counter-strafe trainer lets you move with real inaccuracy");
+  const sprayHealth = new Set(round2.filter((x) => x.stem.startsWith("spray-")).map((x) => x.doc.rules.weapon + ":" + x.doc.actors[0].health));
+  assert(sprayHealth.size >= 4 && [...sprayHealth].some((k) => k.startsWith("vandal:")) && [...sprayHealth].some((k) => k.startsWith("phantom:")), "spray drills for both rifles with different health");
+
+  // ---- tracking drills are scored by time on target and never need the fire button ------------------------------------------------------
+  // (tools/patch-tracking-no-fire.cjs: the game counts a frame whenever the aim ray is on the target; shots, ammo and a button play no part)
+  let trackingFiles = 0;
+  for (const [file, data] of onDisk) {
+    const doc = typeof data.scene.doc === "string" ? JSON.parse(data.scene.doc) : data.scene.doc;
+    if (doc.rules.scoring !== "tracking") continue;
+    trackingFiles++;
+    assert.strictEqual(doc.rules.targetsInvincible, true, file + ": a tracking drill needs invincible targets");
+    assert(!doc.rules.limitedAmmo, file + ": a tracking drill must not run out of ammo");
+    assert(!doc.actors.some((a) => a.behaviors.some((b) => b.kind === "shooter")), file + ": a tracking target does not shoot");
+    assert(doc.actors.every((a) => a.hitSlow === true), file + ": tracking targets are slowed by a hit like the other tracking drills");
+    assert(!doc.actors.some((a) => a.behaviors.some((b) => b.kind === "respawn")), file + ": a tracking target is never killed, so it has no respawn");
+    assert.strictEqual(data.item.type, "ball", file + ": lists under the Target Workshop");
+  }
+  assert(trackingFiles >= 9, "tracking drills found: " + trackingFiles);
+  for (const dir of ["next/js", "_assets/r20261021-1/next/js"]) {
+    const eng = fs.readFileSync(path.join(ROOT, "app", "site", dir, "OkAdunfX.js"), "utf-8");
+    assert(eng.includes("/*aim-trackcover*/"), dir + ": the tracking-without-fire patch is in the game files (run tools/patch-tracking-no-fire.cjs)");
+    assert(!eng.includes("!o||!y.fire)return;l.frames++"), dir + ": a frame still needs the fire button to count");
+  }
+
+  // ---- every Target Workshop drill (workshop-*, tracking-*) draws a sensible thumbnail in the Routines picker ---------------------------------------
+  const SRC = fs.readFileSync(path.join(ROOT, "app", "routines.js"), "utf-8");
+  const store = new Map(), ls = { getItem: (k) => (store.has(k) ? store.get(k) : null), setItem: (k, v) => store.set(k, String(v)), removeItem: (k) => store.delete(k) };
+  const win = { localStorage: ls, dispatchEvent() {}, addEventListener() {} };
+  new Function("window", "localStorage", "fetch", SRC)(win, ls, async () => ({ json: async () => ({}) }));
+  const R = win.__aimRoutines;
+  let thumbs = 0;
+  for (const [file, data] of onDisk) {
+    if (data.item.type !== "ball") continue;
+    const doc = typeof data.scene.doc === "string" ? JSON.parse(data.scene.doc) : data.scene.doc;
+    const W = 1600, H = 900, m = R.ui.thumbModel(doc, W, H);
+    thumbs++;
+    const live = m.balls.filter((b) => b.live);
+    assert(live.length >= 1, file + ": thumbnail has no lit ball");
+    for (const b of m.balls) assert([b.x, b.y, b.r].every(Number.isFinite) && b.r > 0, file + ": thumbnail ball is not a number");
+    assert(live.some((b) => b.x >= 0 && b.x <= W && b.y >= 0 && b.y <= H), file + ": no lit ball is inside the picture");
+    const biggest = Math.max(...live.map((b) => b.r)), smallest = Math.min(...live.map((b) => b.r));
+    assert(biggest >= 3 && smallest <= 200, file + ": thumbnail ball size " + smallest + ".." + biggest);
+    const d0 = doc.dispatchers && doc.dispatchers[0];
+    if (d0) {
+      assert.strictEqual(m.balls.length, d0.routes.length, file + ": every point is drawn");
+      assert.strictEqual(live.length, Math.min(d0.maxAlive, d0.routes.length), file + ": as many lit as the dispatcher lights at once");
+    }
+    if (doc.actors[0].behaviors.some((b) => b.kind === "path")) assert(m.lines.length >= 1, file + ": a path drill draws its path");
+    if (doc.actors[0].behaviors.some((b) => b.kind === "strafe")) assert(m.arrows.length >= 1, file + ": a strafe drill draws its arrow");
+  }
+  assert(thumbs >= 54, "thumbnail check ran on " + thumbs + " Target Workshop drills");
+
+  // ---- medals work for these scoring types: points (clicking and tracking) are higher-is-better, a result in seconds would flip ---------------
+  // (the game's result screen prints the score with the unit "pts" for every ball drill, see app/routines.js readResult)
+  const L = R.logic;
+  assert.strictEqual(L.lowerBetter("pts"), false); assert.strictEqual(L.lowerBetter("%"), false); assert.strictEqual(L.lowerBetter("s"), true);
+  for (const [label, scores] of [["clicking", [4200, 4600, 4400, 4800, 4300, 5000]], ["tracking", [38, 55, 47, 61, 52, 70]]]) {
+    const state = {}, code = "a".repeat(16);
+    const out = scores.map((sc) => L.recordRun(state, { code, name: label, unit: "pts", score: sc, end: "time", at: 1 }));
+    assert.strictEqual(out[0].medal, null, label + ": no medal on the first run");
+    assert(out[1].thresholds === null || out[2].thresholds === null, label + ": no thresholds before " + L.MIN_RUNS + " runs");
+    const th = L.thresholds(state[code]);
+    assert(th && th.bronze <= th.silver && th.silver <= th.gold, label + " medal thresholds are ordered");
+    assert.strictEqual(L.medalFor(th.gold + 1, th, state[code].lower), "gold"); assert.strictEqual(L.medalFor(th.bronze - 1, th, state[code].lower), null);
+    assert.strictEqual(out[out.length - 1].medal === null || L.MEDALS.includes(out[out.length - 1].medal), true);
+  }
+  // a drill with a hand-set medal table: the three numbers are used as they are
+  { const state = {}, code = "b".repeat(16); L.recordRun(state, { code, name: "t", unit: "pts", score: 50, end: "time", at: 1 }); state[code].custom = { bronze: 40, silver: 60, gold: 80 };
+    assert.strictEqual(L.medalFor(61, L.thresholds(state[code]), state[code].lower), "silver"); }
 
   console.log(`ok: ${scenes.length} scenes, ${stems.size} drills, skills ${[...skills].join("/")}`);
 }

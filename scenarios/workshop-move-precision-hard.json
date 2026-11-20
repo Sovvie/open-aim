@@ -1,0 +1,171 @@
+{
+  "item": {
+    "name": "Hard-Precision — Under movement",
+    "description": "A small ball swings slowly left and right and up and down. It is easy to follow and hard to hit exactly. Trains placing a precise shot on a target that never quite stands still. Hard: Ball 1.1° wide, swings 7 m across, 0.26 cycles per second.",
+    "shareCode": "89aaf956230c40e2",
+    "sceneKey": "set-89aaf956230c40e2",
+    "createTime": "2026-11-20 12:00:00",
+    "updateTime": "2026-11-20 12:00:00",
+    "docBytes": 1365,
+    "playCount": 0,
+    "status": 1,
+    "featured": false,
+    "parSeconds": null,
+    "mapId": null,
+    "sort": 264,
+    "type": "ball"
+  },
+  "scene": {
+    "name": "Hard-Precision — Under movement",
+    "description": "A small ball swings slowly left and right and up and down. It is easy to follow and hard to hit exactly. Trains placing a precise shot on a target that never quite stands still. Hard: Ball 1.1° wide, swings 7 m across, 0.26 cycles per second.",
+    "shareCode": "89aaf956230c40e2",
+    "sceneKey": "set-89aaf956230c40e2",
+    "createTime": "2026-11-20 12:00:00",
+    "updateTime": "2026-11-20 12:00:00",
+    "docBytes": 1365,
+    "playCount": 0,
+    "status": 1,
+    "featured": false,
+    "parSeconds": null,
+    "schemaVersion": 2,
+    "blockCount": 1,
+    "authorNickname": "openVaim",
+    "authorUid": "openvaim",
+    "sceneHash": "4170e38525e47674",
+    "doc": {
+      "schemaVersion": 2,
+      "meta": {
+        "id": "scene-144355221",
+        "name": "Hard-Precision — Under movement",
+        "seed": 144355221,
+        "createdAt": 0
+      },
+      "environment": {
+        "skyColor": "#000000",
+        "fogNear": 50,
+        "fogFar": 140,
+        "ambientIntensity": 1.55,
+        "keyLightIntensity": 2.2,
+        "grid": {
+          "size": 42,
+          "divisions": 28,
+          "centerColor": "#ffffff",
+          "gridColor": "#0091ff",
+          "position": {
+            "x": 0,
+            "y": -0.02,
+            "z": 4.2
+          }
+        }
+      },
+      "blocks": [
+        {
+          "id": "ground",
+          "shape": "plane",
+          "position": {
+            "x": -0.2,
+            "y": -13.6,
+            "z": -8.8
+          },
+          "rotationY": 0,
+          "size": {
+            "x": 40,
+            "y": 0.4,
+            "z": 45
+          },
+          "color": "#18222b",
+          "collidable": true,
+          "transparent": true
+        }
+      ],
+      "playerSpawn": {
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 4.2
+        },
+        "yaw": 0
+      },
+      "spawners": [
+        {
+          "id": "spawner-1",
+          "actorTemplateId": "actor-1",
+          "kind": "area",
+          "position": {
+            "x": 0,
+            "y": 2.4,
+            "z": -9.8
+          },
+          "size": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "maxAlive": 1,
+          "spawnDelay": [
+            0.15,
+            0.3
+          ]
+        }
+      ],
+      "actors": [
+        {
+          "id": "actor-1",
+          "name": "Target",
+          "body": {
+            "shape": "sphere",
+            "headSize": 1,
+            "bodyWidth": 0.44,
+            "bodyHeight": 0,
+            "radius": 0.134
+          },
+          "color": "#ff4655",
+          "behaviors": [
+            {
+              "kind": "sway",
+              "amplitude": {
+                "x": 3.5,
+                "y": 0.7
+              },
+              "frequency": 0.26,
+              "unit": "hz"
+            },
+            {
+              "kind": "respawn",
+              "delay": [
+                0.15,
+                0.3
+              ],
+              "mode": "reSpawner"
+            }
+          ]
+        }
+      ],
+      "rules": {
+        "duration": 60,
+        "scoring": "clicking",
+        "weapon": "vandal",
+        "playerMovable": false,
+        "fireMode": "single",
+        "perfectAccuracy": true,
+        "tunables": [
+          {
+            "field": "radius",
+            "id": "actor-1",
+            "label": "Target size",
+            "min": 0.05,
+            "max": 0.3,
+            "step": 0.01
+          },
+          {
+            "field": "duration",
+            "label": "Round length",
+            "min": 30,
+            "max": 180,
+            "step": 15
+          }
+        ]
+      }
+    }
+  }
+}

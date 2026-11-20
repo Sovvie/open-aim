@@ -550,6 +550,11 @@ html[data-aim-local]:not(#es) body .aim-rt-btn:hover { background: var(--es-red-
         if (strafe && i === 0) out.arrows.push({ x: p.x, y: p.y, len: 2.5 * p.k });
       }
     }
+    // A dispatcher drill ("points light up in turn", 1.6.0): every route with a fixed place is a dashed cell, as many as the dispatcher lights at once are filled.
+    for (const d of doc.dispatchers || []) {
+      const spots = (d.routes || []).filter((rt) => rt && rt.at && actors.get(rt.templateId)), live = Math.max(1, Math.min(8, Math.round(d.maxAlive || 1)));
+      spots.forEach((rt, i) => { const p = at(rt.at); if (p) out.balls.push({ x: p.x, y: p.y, r: radiusOf(actors.get(rt.templateId)) * p.k, live: i < live }); });
+    }
     return out;
   }
   function drawThumb(canvas, doc) {

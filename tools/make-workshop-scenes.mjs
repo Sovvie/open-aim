@@ -63,6 +63,10 @@ const tLifetime = (v) => ({ field: "decay.lifetime", id: "actor-1", label: "Targ
 const tJump = (v) => ({ field: "jump.height", id: "actor-1", label: "Jump height", min: 0.2, max: ceilTo(v * 1.6, 0.1), step: 0.05 });
 const tStrafe = (v) => ({ field: "strafe.speed", id: "actor-1", label: "Strafe speed", min: 1, max: 8, step: 0.1 });
 
+// A dispatcher (points that light up in turn) has its own tunables: how long a point stays lit, and how many are lit at once.
+const tDispStay = (v) => ({ field: "dispatcher.stay", id: "dispatcher-1", label: "Time lit", min: 0.3, max: ceilTo(v * 2.5, 0.1), step: 0.1 });
+const tDispAlive = (cap) => ({ field: "dispatcher.maxAlive", id: "dispatcher-1", label: "Points lit at once", min: 1, max: cap, step: 1 });
+
 const degTxt = (d) => (Math.round(d * 10) / 10).toString().replace(/\.0$/, "") + "°";
 
 // ---- the drills -----------------------------------------------------------------------------------------------------------------------
@@ -264,6 +268,141 @@ stem({ stem: "popup", title: "Reaction — Pop-up", skill: "Reaction",
     } });
 }
 
+// =============================================================================================================================================
+// Round 2 (sort 249 and up). Appended after the first 22 drills, so the files above are untouched.
+// =============================================================================================================================================
+
+// --- Reaction: a dispatcher lights fixed points one after another (the lobby calls this "N points light up in turn") ---------------------------
+// Each route is a point (point: true) at a place `at`; `stay` is how long it stays lit before it leaves (an expired point costs points).
+{
+  const lights = (name, order, dist, dia, pts, stay, penalty, tun) => {
+    const routes = pts.map((at) => ({ templateId: "actor-1", streak: [1, 1], at, point: true, stay: [stay, stay] }));
+    const dispatcher = { id: "dispatcher-1", name, routes, order, maxAlive: 1, interval: [0.08, 0.2], faceTarget: false };
+    return { dist, dia, dispatcher, behaviors: [], tunables: [tRadius(radiusAt(dist, dia)), tDispStay(stay), ...tun, tDuration], rules: { expiredPenalty: penalty } };
+  };
+  stem({ stem: "lightup-chain", title: "Reaction — Light chain", skill: "Reaction",
+    about: "Six points on a row light up one after the other, from left to right and then back to the start. Shoot each one before it goes dark. Trains rhythm and a fast, calm switch to the next light.",
+    build: (t) => {
+      const easy = t === "easy", dist = 16, dia = easy ? 4.4 : 3, step = easy ? 9 : 12, stay = easy ? 1.6 : 0.9, n = 6;
+      const pts = Array.from({ length: n }, (_, i) => P(r3((i - (n - 1) / 2) * stepAt(dist, step)), 2.2, z0(dist)));
+      const b = lights("Light chain", "sequence", dist, dia, pts, stay, easy ? 100 : 200, []);
+      return { ...b, note: `${n} points ${degTxt(step)} apart, balls ${degTxt(dia)} wide, each lit for ${stay} s, ${easy ? 100 : 200} points off for each one you miss.` };
+    } });
+  stem({ stem: "lightup-scatter", title: "Reaction — Light scatter", skill: "Reaction",
+    about: "Nine points in a 3×3 square light up in a shuffled order, one at a time (Hard: two at a time). Shoot each before it goes dark. Trains reacting to a light you cannot predict.",
+    build: (t) => {
+      const easy = t === "easy", dist = 16, dia = easy ? 4 : 2.8, sx = easy ? 10 : 13, sy = 6, stay = easy ? 1.5 : 1.0;
+      const pts = [];
+      for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) pts.push(P(r3((c - 1) * stepAt(dist, sx)), r3(3 - (r - 1) * stepAt(dist, sy)), z0(dist)));
+      const b = lights("Light scatter", "shuffle", dist, dia, pts, stay, easy ? 100 : 200, [tDispAlive(4)]);
+      b.dispatcher.maxAlive = easy ? 1 : 2;
+      return { ...b, note: `9 points in a ${2 * sx}° × ${2 * sy}° square, balls ${degTxt(dia)} wide, ${easy ? "one" : "two"} lit at a time for ${stay} s each.` };
+    } });
+}
+
+// --- Tracking: a swaying target and a target that strafes like a player (scoring "tracking": time on target, no button) ---------------------
+{
+  const swayTrack = (dist, dia, ax, ay, hz, cy, note) => {
+    const spawner = areaSp({ dist, y: cy, alive: 1, delay: [0.2, 0.5] });
+    return { dist, dia, spawner, behaviors: [{ kind: "sway", amplitude: { x: ax, y: ay }, frequency: hz, unit: "hz" }], tunables: [tRadius(radiusAt(dist, dia)), tDuration], tracking: true, note };
+  };
+  stem({ stem: "track-sway", title: "Tracking — Sway", skill: "Tracking",
+    about: "The ball swings smoothly from side to side and up and down, like a pendulum. Keep the crosshair on it all round. Trains smooth, speed-matched tracking where you must slow down at each turn.",
+    build: (t) => {
+      const easy = t === "easy", dia = easy ? 3.6 : 2.4, ax = easy ? 3.5 : 5, ay = easy ? 0.9 : 1.4, hz = easy ? 0.18 : 0.3;
+      return swayTrack(18, dia, ax, ay, hz, 3, `Ball ${degTxt(dia)} wide, swings ${2 * ax} m across and ${2 * ay} m up and down, ${hz} cycles per second.`);
+    } });
+  stem({ stem: "track-strafe", title: "Tracking — Player strafe", skill: "Tracking",
+    about: "A ball moves like a player: it runs left and right, stops, taps and turns around at random. Stay on it through every stop and change of direction. Trains tracking an unpredictable human-like mover.",
+    build: (t) => {
+      const easy = t === "easy", dist = 16, dia = easy ? 3.8 : 2.6, speed = easy ? WALK : RUN;
+      const strafe = easy
+        ? { kind: "strafe", speed: [speed, speed], dwell: [0.2, 0.6], travel: [2, 3.5], counterStrafe: true }
+        : { kind: "strafe", speed: [speed, speed], dwell: [0.05, 0.3], travel: [1.8, 3.5], tap: [0.35, 0.4, 1], counterStrafe: true };
+      const spawner = areaSp({ dist, alive: 1, delay: [0.2, 0.5] });
+      return { dist, dia, spawner, behaviors: [strafe], tunables: [tRadius(radiusAt(dist, dia)), tStrafe(speed), tDuration], tracking: true,
+        note: `Ball ${degTxt(dia)} wide at ${speed} m/s, ${easy ? "steady stops" : "short random stops and taps"}.` };
+    } });
+}
+
+// --- Moving: stop and shoot, a long-range sprint peek, a bounce wall, precision under movement --------------------------------------------
+{
+  // Counter-strafe trainer: the PLAYER moves (A / D), the balls stand still far apart on a row, and the weapon is NOT perfectly accurate (perfectAccuracy false),
+  // so a shot fired while you are still running goes wide. Stop first, then shoot.
+  stem({ stem: "stop-shoot", title: "Counter-strafe — Stop and shoot", skill: "Flicking",
+    about: "You can move in this one. The balls stand far apart on a row, so you strafe over, stop, then shoot: shots fired while you are still running go wide. Trains the counter-strafe and shooting only once you are still.",
+    build: (t) => {
+      const easy = t === "easy", dist = 18, dia = easy ? 4.2 : 2.8, cols = easy ? 3 : 4, step = easy ? 26 : 22;
+      const spawner = gridSp({ dist, cols, rows: 1, stepX: step, alive: 1 });
+      return { dist, dia, spawner, behaviors: [respawn()], tunables: [tRadius(radiusAt(dist, dia)), tAlive(cols - 1), tSpacing(spawner), tDuration], playerMovable: true, perfectAccuracy: false,
+        note: `Move with A and D. ${cols} balls ${degTxt(dia)} wide, ${degTxt(step)} apart, Vandal with real movement inaccuracy.` };
+    } });
+  stem({ stem: "sprint-peek", title: "Peek — Long-range sprint peek", skill: "Moving",
+    about: "A small ball far down the range sprints across your view, stops for a blink and runs on; it is gone after a short time. Trains timing a shot on a distant, fast peeker.",
+    build: (t) => {
+      const easy = t === "easy", dist = 40, dia = easy ? 2.4 : 1.7, life = easy ? 2.2 : 1.3;
+      const strafe = { kind: "strafe", speed: [FAST, FAST], dwell: easy ? [0.08, 0.2] : [0.03, 0.12], travel: [4, 7], counterStrafe: true };
+      const decay = { kind: "decay", lifetime: life, growTime: 0.1, minScale: 0.6 };
+      const spawner = areaSp({ dist, wMeters: 10, hMeters: 0, alive: 1, delay: [0.25, 0.6] });
+      return { dist, dia, spawner, behaviors: [strafe, decay, respawn([0.25, 0.6])], tunables: [tRadius(radiusAt(dist, dia)), tStrafe(FAST), tLifetime(life), tDuration],
+        rules: { expiredPenalty: easy ? 100 : 150 },
+        note: `Ball ${degTxt(dia)} wide, 40 m away, ${FAST} m/s, gone after ${life} s, ${easy ? 100 : 150} points off for each one that gets away.` };
+    } });
+  // Bounce wall: a ball ricochets off the edges of a box at an angle (a real billiard path: it reflects, it does not zig-zag).
+  const ricochet = (wx, lo, hi, dx, dy, bounces, z) => {
+    let x = -wx, y = lo, sx = 1, sy = 1;
+    const pts = [P(x, y, z)];
+    for (let i = 0; i < bounces; i++) {
+      const tx = (sx > 0 ? wx - x : x + wx) / dx, ty = (sy > 0 ? hi - y : y - lo) / dy, t = Math.min(tx, ty);
+      x += sx * dx * t; y += sy * dy * t;
+      pts.push(P(r3(x), r3(y), z));
+      if (tx <= ty + 1e-9) sx = -sx;
+      if (ty <= tx + 1e-9) sy = -sy;
+    }
+    pts.push(P(r3(pts[0].x + 0.01), pts[0].y, z)); // closes the loop like the other path drills
+    return pts;
+  };
+  stem({ stem: "bounce-wall", title: "Bounce — Wall rush", skill: "Moving",
+    about: "A ball ricochets off the edges of a wide wall like a billiard ball and speeds on. Hit it as it goes. Trains reading a bounce, so you aim where the ball will be after it turns.",
+    build: (t) => {
+      const easy = t === "easy", dist = 20, dia = easy ? 4 : 2.8, z = z0(dist), wx = 8, lo = 1.3, hi = 4.4, speed = easy ? 7 : 11;
+      const way = ricochet(wx, lo, hi, 1, easy ? 0.42 : 0.68, 9, z);
+      const spawner = areaSp({ dist, x: -wx, y: lo, alive: 1, delay: [0.15, 0.35] });
+      return { dist, dia, spawner, behaviors: [{ kind: "path", waypoints: way, loop: true, speed }, respawn([0.15, 0.35])], tunables: [tRadius(radiusAt(dist, dia)), tDuration],
+        note: `Ball ${degTxt(dia)} wide at ${speed} m/s over a ${2 * wx} m × ${r3(hi - lo)} m box.` };
+    } });
+  stem({ stem: "move-precision", title: "Precision — Under movement", skill: "Moving",
+    about: "A small ball swings slowly left and right and up and down. It is easy to follow and hard to hit exactly. Trains placing a precise shot on a target that never quite stands still.",
+    build: (t) => {
+      const easy = t === "easy", dist = 14, dia = easy ? 1.8 : 1.1, ax = easy ? 3 : 3.5, ay = easy ? 0.5 : 0.7, hz = easy ? 0.16 : 0.26;
+      const sway = { kind: "sway", amplitude: { x: ax, y: ay }, frequency: hz, unit: "hz" };
+      const spawner = areaSp({ dist, y: 2.4, alive: 1, delay: [0.15, 0.3] });
+      return { dist, dia, spawner, behaviors: [sway, respawn([0.15, 0.3])], tunables: [tRadius(radiusAt(dist, dia)), tDuration],
+        note: `Ball ${degTxt(dia)} wide, swings ${2 * ax} m across, ${hz} cycles per second.` };
+    } });
+}
+
+// --- Spray control: hold the trigger on a ball with a lot of health (Vandal and Phantom, real recoil) --------------------------------------
+{
+  const spray = (weapon, dist, dia, health, ax, ay, hz, note) => {
+    const sway = { kind: "sway", amplitude: { x: ax, y: ay }, frequency: hz, unit: "hz" };
+    const spawner = areaSp({ dist, y: 2.2, alive: 1, delay: [0.2, 0.4] });
+    return { dist, dia, spawner, behaviors: [sway, respawn([0.2, 0.4])], tunables: [tRadius(radiusAt(dist, dia)), tDuration], weapon, fireMode: "hold", perfectAccuracy: false, health, note };
+  };
+  stem({ stem: "spray-vandal", title: "Spray — Vandal control", skill: "Moving",
+    about: "A big ball drifts slowly and has a lot of health. Hold the trigger with the Vandal and pull the recoil back down onto the ball until it falls. Trains Vandal spray control.",
+    build: (t) => {
+      const easy = t === "easy", dist = easy ? 18 : 26, dia = easy ? 5 : 3.2, health = easy ? 240 : 420;
+      return spray("vandal", dist, dia, health, easy ? 2.5 : 4, easy ? 0.4 : 0.6, easy ? 0.1 : 0.16, `Vandal, ball ${degTxt(dia)} wide at ${dist} m, ${health} health.`);
+    } });
+  stem({ stem: "spray-phantom", title: "Spray — Phantom control", skill: "Moving",
+    about: "A big, tough ball drifts slowly. Hold the trigger with the Phantom and keep the spray on it; the Trains long, steady Phantom sprays. See also Burst control.",
+    build: (t) => {
+      const easy = t === "easy", dist = easy ? 20 : 28, dia = easy ? 5 : 3.4, health = easy ? 600 : 900;
+      return spray("phantom", dist, dia, health, easy ? 2.5 : 4, easy ? 0.4 : 0.6, easy ? 0.1 : 0.16, `Phantom, ball ${degTxt(dia)} wide at ${dist} m, ${health} health.`);
+    } });
+}
+
 // ---- documents ----------------------------------------------------------------------------------------------------------------------------
 // Balls never dip below the floor: a tall area or grid is lifted until its lowest ball (and any sway) clears it by 0.4 m.
 function spawnerOf(built, radius, tracking) {
@@ -290,10 +429,11 @@ export function docOf(name, s, built) {
       grid: { size: gridSize, divisions: Math.round(gridSize / 1.5), centerColor: "#ffffff", gridColor: "#0091ff", position: P(0, -0.02, PZ) } },
     blocks: [{ id: "ground", shape: "plane", position: P(-0.2, -13.6, -8.8), rotationY: 0, size: P(40, 0.4, 45), color: "#18222b", collidable: true, transparent: true }],
     playerSpawn: { position: P(0, 0, PZ), yaw: 0 },
-    spawners: [spawnerOf(built, radius, tracking)],
+    spawners: built.dispatcher ? [] : [spawnerOf(built, radius, tracking)],
     actors: [actor],
+    ...(built.dispatcher ? { dispatchers: [built.dispatcher] } : {}),
     rules: {
-      duration: 60, scoring: tracking ? "tracking" : "clicking", weapon: built.weapon || "vandal", playerMovable: false,
+      duration: 60, scoring: tracking ? "tracking" : "clicking", weapon: built.weapon || "vandal", playerMovable: built.playerMovable === true,
       fireMode: built.fireMode || (tracking ? "hold" : "single"), ...(tracking ? { targetsInvincible: true } : {}),
       perfectAccuracy: built.perfectAccuracy ?? true, ...(built.rules || {}), tunables: built.tunables,
     },

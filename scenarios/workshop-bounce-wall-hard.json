@@ -1,0 +1,224 @@
+{
+  "item": {
+    "name": "Hard-Bounce — Wall rush",
+    "description": "A ball ricochets off the edges of a wide wall like a billiard ball and speeds on. Hit it as it goes. Trains reading a bounce, so you aim where the ball will be after it turns. Hard: Ball 2.8° wide at 11 m/s over a 16 m × 3.1 m box.",
+    "shareCode": "6ef6d8e130907595",
+    "sceneKey": "set-6ef6d8e130907595",
+    "createTime": "2026-11-20 12:00:00",
+    "updateTime": "2026-11-20 12:00:00",
+    "docBytes": 1665,
+    "playCount": 0,
+    "status": 1,
+    "featured": false,
+    "parSeconds": null,
+    "mapId": null,
+    "sort": 262,
+    "type": "ball"
+  },
+  "scene": {
+    "name": "Hard-Bounce — Wall rush",
+    "description": "A ball ricochets off the edges of a wide wall like a billiard ball and speeds on. Hit it as it goes. Trains reading a bounce, so you aim where the ball will be after it turns. Hard: Ball 2.8° wide at 11 m/s over a 16 m × 3.1 m box.",
+    "shareCode": "6ef6d8e130907595",
+    "sceneKey": "set-6ef6d8e130907595",
+    "createTime": "2026-11-20 12:00:00",
+    "updateTime": "2026-11-20 12:00:00",
+    "docBytes": 1665,
+    "playCount": 0,
+    "status": 1,
+    "featured": false,
+    "parSeconds": null,
+    "schemaVersion": 2,
+    "blockCount": 1,
+    "authorNickname": "openVaim",
+    "authorUid": "openvaim",
+    "sceneHash": "3e518273785ea1df",
+    "doc": {
+      "schemaVersion": 2,
+      "meta": {
+        "id": "scene-116354446",
+        "name": "Hard-Bounce — Wall rush",
+        "seed": 116354446,
+        "createdAt": 0
+      },
+      "environment": {
+        "skyColor": "#000000",
+        "fogNear": 50,
+        "fogFar": 140,
+        "ambientIntensity": 1.55,
+        "keyLightIntensity": 2.2,
+        "grid": {
+          "size": 42,
+          "divisions": 28,
+          "centerColor": "#ffffff",
+          "gridColor": "#0091ff",
+          "position": {
+            "x": 0,
+            "y": -0.02,
+            "z": 4.2
+          }
+        }
+      },
+      "blocks": [
+        {
+          "id": "ground",
+          "shape": "plane",
+          "position": {
+            "x": -0.2,
+            "y": -13.6,
+            "z": -8.8
+          },
+          "rotationY": 0,
+          "size": {
+            "x": 40,
+            "y": 0.4,
+            "z": 45
+          },
+          "color": "#18222b",
+          "collidable": true,
+          "transparent": true
+        }
+      ],
+      "playerSpawn": {
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 4.2
+        },
+        "yaw": 0
+      },
+      "spawners": [
+        {
+          "id": "spawner-1",
+          "actorTemplateId": "actor-1",
+          "kind": "area",
+          "position": {
+            "x": -8,
+            "y": 1.3,
+            "z": -15.8
+          },
+          "size": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "maxAlive": 1,
+          "spawnDelay": [
+            0.15,
+            0.35
+          ]
+        }
+      ],
+      "actors": [
+        {
+          "id": "actor-1",
+          "name": "Target",
+          "body": {
+            "shape": "sphere",
+            "headSize": 1,
+            "bodyWidth": 0.44,
+            "bodyHeight": 0,
+            "radius": 0.489
+          },
+          "color": "#ff4655",
+          "behaviors": [
+            {
+              "kind": "path",
+              "waypoints": [
+                {
+                  "x": -8,
+                  "y": 1.3,
+                  "z": -15.8
+                },
+                {
+                  "x": -3.441,
+                  "y": 4.4,
+                  "z": -15.8
+                },
+                {
+                  "x": 1.118,
+                  "y": 1.3,
+                  "z": -15.8
+                },
+                {
+                  "x": 5.676,
+                  "y": 4.4,
+                  "z": -15.8
+                },
+                {
+                  "x": 8,
+                  "y": 2.82,
+                  "z": -15.8
+                },
+                {
+                  "x": 5.765,
+                  "y": 1.3,
+                  "z": -15.8
+                },
+                {
+                  "x": 1.206,
+                  "y": 4.4,
+                  "z": -15.8
+                },
+                {
+                  "x": -3.353,
+                  "y": 1.3,
+                  "z": -15.8
+                },
+                {
+                  "x": -7.912,
+                  "y": 4.4,
+                  "z": -15.8
+                },
+                {
+                  "x": -8,
+                  "y": 4.34,
+                  "z": -15.8
+                },
+                {
+                  "x": -7.99,
+                  "y": 1.3,
+                  "z": -15.8
+                }
+              ],
+              "loop": true,
+              "speed": 11
+            },
+            {
+              "kind": "respawn",
+              "delay": [
+                0.15,
+                0.35
+              ],
+              "mode": "reSpawner"
+            }
+          ]
+        }
+      ],
+      "rules": {
+        "duration": 60,
+        "scoring": "clicking",
+        "weapon": "vandal",
+        "playerMovable": false,
+        "fireMode": "single",
+        "perfectAccuracy": true,
+        "tunables": [
+          {
+            "field": "radius",
+            "id": "actor-1",
+            "label": "Target size",
+            "min": 0.19,
+            "max": 1.08,
+            "step": 0.01
+          },
+          {
+            "field": "duration",
+            "label": "Round length",
+            "min": 30,
+            "max": 180,
+            "step": 15
+          }
+        ]
+      }
+    }
+  }
+}

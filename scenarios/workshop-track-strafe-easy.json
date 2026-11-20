@@ -1,0 +1,180 @@
+{
+  "item": {
+    "name": "Easy-Tracking — Player strafe",
+    "description": "A ball moves like a player: it runs left and right, stops, taps and turns around at random. Stay on it through every stop and change of direction. Trains tracking an unpredictable human-like mover. Easy: Ball 3.8° wide at 2.97 m/s, steady stops.",
+    "shareCode": "ef044e82fa8b8fc7",
+    "sceneKey": "set-ef044e82fa8b8fc7",
+    "createTime": "2026-11-20 12:00:00",
+    "updateTime": "2026-11-20 12:00:00",
+    "docBytes": 1455,
+    "playCount": 0,
+    "status": 1,
+    "featured": false,
+    "parSeconds": null,
+    "mapId": null,
+    "sort": 255,
+    "type": "ball"
+  },
+  "scene": {
+    "name": "Easy-Tracking — Player strafe",
+    "description": "A ball moves like a player: it runs left and right, stops, taps and turns around at random. Stay on it through every stop and change of direction. Trains tracking an unpredictable human-like mover. Easy: Ball 3.8° wide at 2.97 m/s, steady stops.",
+    "shareCode": "ef044e82fa8b8fc7",
+    "sceneKey": "set-ef044e82fa8b8fc7",
+    "createTime": "2026-11-20 12:00:00",
+    "updateTime": "2026-11-20 12:00:00",
+    "docBytes": 1455,
+    "playCount": 0,
+    "status": 1,
+    "featured": false,
+    "parSeconds": null,
+    "schemaVersion": 2,
+    "blockCount": 1,
+    "authorNickname": "openVaim",
+    "authorUid": "openvaim",
+    "sceneHash": "07c73a01bfdfd63c",
+    "doc": {
+      "schemaVersion": 2,
+      "meta": {
+        "id": "scene-250627304",
+        "name": "Easy-Tracking — Player strafe",
+        "seed": 250627304,
+        "createdAt": 0
+      },
+      "environment": {
+        "skyColor": "#000000",
+        "fogNear": 50,
+        "fogFar": 140,
+        "ambientIntensity": 1.55,
+        "keyLightIntensity": 2.2,
+        "grid": {
+          "size": 42,
+          "divisions": 28,
+          "centerColor": "#ffffff",
+          "gridColor": "#0091ff",
+          "position": {
+            "x": 0,
+            "y": -0.02,
+            "z": 4.2
+          }
+        }
+      },
+      "blocks": [
+        {
+          "id": "ground",
+          "shape": "plane",
+          "position": {
+            "x": -0.2,
+            "y": -13.6,
+            "z": -8.8
+          },
+          "rotationY": 0,
+          "size": {
+            "x": 40,
+            "y": 0.4,
+            "z": 45
+          },
+          "color": "#18222b",
+          "collidable": true,
+          "transparent": true
+        }
+      ],
+      "playerSpawn": {
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 4.2
+        },
+        "yaw": 0
+      },
+      "spawners": [
+        {
+          "id": "spawner-1",
+          "actorTemplateId": "actor-1",
+          "kind": "area",
+          "position": {
+            "x": 0,
+            "y": 1.75,
+            "z": -11.8
+          },
+          "size": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "maxAlive": 1,
+          "spawnDelay": [
+            0.2,
+            0.5
+          ]
+        }
+      ],
+      "actors": [
+        {
+          "id": "actor-1",
+          "name": "Target",
+          "body": {
+            "shape": "sphere",
+            "headSize": 1,
+            "bodyWidth": 0.44,
+            "bodyHeight": 0,
+            "radius": 0.531
+          },
+          "color": "#ff4655",
+          "behaviors": [
+            {
+              "kind": "strafe",
+              "speed": [
+                2.97,
+                2.97
+              ],
+              "dwell": [
+                0.2,
+                0.6
+              ],
+              "travel": [
+                2,
+                3.5
+              ],
+              "counterStrafe": true
+            }
+          ],
+          "hitSlow": true
+        }
+      ],
+      "rules": {
+        "duration": 60,
+        "scoring": "tracking",
+        "weapon": "vandal",
+        "playerMovable": false,
+        "fireMode": "hold",
+        "targetsInvincible": true,
+        "perfectAccuracy": true,
+        "tunables": [
+          {
+            "field": "radius",
+            "id": "actor-1",
+            "label": "Target size",
+            "min": 0.21,
+            "max": 1.17,
+            "step": 0.01
+          },
+          {
+            "field": "strafe.speed",
+            "id": "actor-1",
+            "label": "Strafe speed",
+            "min": 1,
+            "max": 8,
+            "step": 0.1
+          },
+          {
+            "field": "duration",
+            "label": "Round length",
+            "min": 30,
+            "max": 180,
+            "step": 15
+          }
+        ]
+      }
+    }
+  }
+}

@@ -286,6 +286,12 @@ test("thumbnails: a Target Workshop drill is drawn from its scene: a grid as cel
   const behind = base({ actors: grid.actors, spawners: [{ ...grid.spawners[0], position: { x: 0, y: 3, z: 40 } }] });
   assert.strictEqual(R.ui.thumbModel(behind, 1600, 900).balls.length, 0);
   assert.deepStrictEqual(R.ui.thumbModel(null, 100, 100), { balls: [], lines: [], arrows: [] });
+  // a dispatcher drill (points that light up in turn, no spawner): each point is a dashed cell, as many as light at once are filled
+  const pts = base({ actors: [{ id: "b", body: { shape: "sphere", radius: 0.5 }, behaviors: [] }], spawners: [],
+    dispatchers: [{ id: "d", name: "n", order: "sequence", maxAlive: 2, interval: [0.1, 0.2], routes: [-6, -2, 2, 6].map((x) => ({ templateId: "b", streak: [1, 1], at: { x, y: 2, z: -12 }, point: true })).concat([{ templateId: "gone", streak: [1, 1], at: { x: 0, y: 2, z: -12 } }, { templateId: "b", streak: [1, 1] }]) }] });
+  const dp = R.ui.thumbModel(pts, 1600, 900);
+  assert.strictEqual(dp.balls.length, 4, "only routes with a place and an existing template are drawn"); assert.strictEqual(dp.balls.filter((b) => b.live).length, 2);
+  assert.ok(dp.balls[0].x < dp.balls[1].x && dp.balls.every((b) => b.r > 5 && b.x > 0 && b.x < 1600));
   const card = R.ui.galleryCardHtml(A, { name: "Grid shooting", map: null, type: "ball" }, null, 0);
   assert.ok(card.includes('<canvas class="es-rt-gcanvas" data-thumb="' + A + '">') && !card.includes("es-rt-gart is-plain"), "the card has a canvas for the picture");
   assert.ok(R.ui.galleryCardHtml(B, { name: "x", map: "ascent", type: "aim" }, null, 0).includes("<img"), "a map drill keeps the map's picture");

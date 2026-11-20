@@ -1,0 +1,258 @@
+{
+  "item": {
+    "name": "Hard-Reaction — Light chain",
+    "description": "Six points on a row light up one after the other, from left to right and then back to the start. Shoot each one before it goes dark. Trains rhythm and a fast, calm switch to the next light. Hard: 6 points 12° apart, balls 3° wide, each lit for 0.9 s, 200 points off for each one you miss.",
+    "shareCode": "5cfad4a8d36f4dd8",
+    "sceneKey": "set-5cfad4a8d36f4dd8",
+    "createTime": "2026-11-20 12:00:00",
+    "updateTime": "2026-11-20 12:00:00",
+    "docBytes": 1977,
+    "playCount": 0,
+    "status": 1,
+    "featured": false,
+    "parSeconds": null,
+    "mapId": null,
+    "sort": 250,
+    "type": "ball"
+  },
+  "scene": {
+    "name": "Hard-Reaction — Light chain",
+    "description": "Six points on a row light up one after the other, from left to right and then back to the start. Shoot each one before it goes dark. Trains rhythm and a fast, calm switch to the next light. Hard: 6 points 12° apart, balls 3° wide, each lit for 0.9 s, 200 points off for each one you miss.",
+    "shareCode": "5cfad4a8d36f4dd8",
+    "sceneKey": "set-5cfad4a8d36f4dd8",
+    "createTime": "2026-11-20 12:00:00",
+    "updateTime": "2026-11-20 12:00:00",
+    "docBytes": 1977,
+    "playCount": 0,
+    "status": 1,
+    "featured": false,
+    "parSeconds": null,
+    "schemaVersion": 2,
+    "blockCount": 1,
+    "authorNickname": "openVaim",
+    "authorUid": "openvaim",
+    "sceneHash": "5ab9037811036d10",
+    "doc": {
+      "schemaVersion": 2,
+      "meta": {
+        "id": "scene-97496394",
+        "name": "Hard-Reaction — Light chain",
+        "seed": 97496394,
+        "createdAt": 0
+      },
+      "environment": {
+        "skyColor": "#000000",
+        "fogNear": 50,
+        "fogFar": 140,
+        "ambientIntensity": 1.55,
+        "keyLightIntensity": 2.2,
+        "grid": {
+          "size": 42,
+          "divisions": 28,
+          "centerColor": "#ffffff",
+          "gridColor": "#0091ff",
+          "position": {
+            "x": 0,
+            "y": -0.02,
+            "z": 4.2
+          }
+        }
+      },
+      "blocks": [
+        {
+          "id": "ground",
+          "shape": "plane",
+          "position": {
+            "x": -0.2,
+            "y": -13.6,
+            "z": -8.8
+          },
+          "rotationY": 0,
+          "size": {
+            "x": 40,
+            "y": 0.4,
+            "z": 45
+          },
+          "color": "#18222b",
+          "collidable": true,
+          "transparent": true
+        }
+      ],
+      "playerSpawn": {
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 4.2
+        },
+        "yaw": 0
+      },
+      "spawners": [],
+      "actors": [
+        {
+          "id": "actor-1",
+          "name": "Target",
+          "body": {
+            "shape": "sphere",
+            "headSize": 1,
+            "bodyWidth": 0.44,
+            "bodyHeight": 0,
+            "radius": 0.419
+          },
+          "color": "#ff4655",
+          "behaviors": []
+        }
+      ],
+      "dispatchers": [
+        {
+          "id": "dispatcher-1",
+          "name": "Light chain",
+          "routes": [
+            {
+              "templateId": "actor-1",
+              "streak": [
+                1,
+                1
+              ],
+              "at": {
+                "x": -8.502,
+                "y": 2.2,
+                "z": -11.8
+              },
+              "point": true,
+              "stay": [
+                0.9,
+                0.9
+              ]
+            },
+            {
+              "templateId": "actor-1",
+              "streak": [
+                1,
+                1
+              ],
+              "at": {
+                "x": -5.101,
+                "y": 2.2,
+                "z": -11.8
+              },
+              "point": true,
+              "stay": [
+                0.9,
+                0.9
+              ]
+            },
+            {
+              "templateId": "actor-1",
+              "streak": [
+                1,
+                1
+              ],
+              "at": {
+                "x": -1.7,
+                "y": 2.2,
+                "z": -11.8
+              },
+              "point": true,
+              "stay": [
+                0.9,
+                0.9
+              ]
+            },
+            {
+              "templateId": "actor-1",
+              "streak": [
+                1,
+                1
+              ],
+              "at": {
+                "x": 1.701,
+                "y": 2.2,
+                "z": -11.8
+              },
+              "point": true,
+              "stay": [
+                0.9,
+                0.9
+              ]
+            },
+            {
+              "templateId": "actor-1",
+              "streak": [
+                1,
+                1
+              ],
+              "at": {
+                "x": 5.102,
+                "y": 2.2,
+                "z": -11.8
+              },
+              "point": true,
+              "stay": [
+                0.9,
+                0.9
+              ]
+            },
+            {
+              "templateId": "actor-1",
+              "streak": [
+                1,
+                1
+              ],
+              "at": {
+                "x": 8.503,
+                "y": 2.2,
+                "z": -11.8
+              },
+              "point": true,
+              "stay": [
+                0.9,
+                0.9
+              ]
+            }
+          ],
+          "order": "sequence",
+          "maxAlive": 1,
+          "interval": [
+            0.08,
+            0.2
+          ],
+          "faceTarget": false
+        }
+      ],
+      "rules": {
+        "duration": 60,
+        "scoring": "clicking",
+        "weapon": "vandal",
+        "playerMovable": false,
+        "fireMode": "single",
+        "perfectAccuracy": true,
+        "expiredPenalty": 200,
+        "tunables": [
+          {
+            "field": "radius",
+            "id": "actor-1",
+            "label": "Target size",
+            "min": 0.16,
+            "max": 0.93,
+            "step": 0.01
+          },
+          {
+            "field": "dispatcher.stay",
+            "id": "dispatcher-1",
+            "label": "Time lit",
+            "min": 0.3,
+            "max": 2.3000000000000003,
+            "step": 0.1
+          },
+          {
+            "field": "duration",
+            "label": "Round length",
+            "min": 30,
+            "max": 180,
+            "step": 15
+          }
+        ]
+      }
+    }
+  }
+}
