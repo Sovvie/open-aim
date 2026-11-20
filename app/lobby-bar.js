@@ -263,6 +263,7 @@
     });
     dock.append(toggle, link);
     document.body.appendChild(dock);
+    checkDock(); // at once: it never shows over the page for a moment before tucking
     scheduleDockCheck();
   }
   let dockCheck = null;
