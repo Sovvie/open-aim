@@ -7,6 +7,9 @@ const fs = require("fs");
 const http = require("http");
 const path = require("path");
 const crypto = require("crypto");
+// AIM_STARTUP_TRACE=1 prints how many ms after process start each startup step happened (measurement only).
+const trace = process.env.AIM_STARTUP_TRACE === "1" ? (label) => console.log(`STARTUP +${Math.round(process.uptime() * 1000)} ms ${label}`) : () => {};
+trace("main.js start");
 const backups = require("./backups");
 const studio = require("./studio-store");
 const communityFeed = require("./community-feed");
@@ -506,6 +509,10 @@ const VSYNC = shellSettings.vsync === true;
 // Above the refresh rate, the game's own "Unlimited" frame mode takes over.
 if (!VSYNC) app.commandLine.appendSwitch("disable-gpu-vsync");
 app.commandLine.appendSwitch("force_high_performance_gpu");
+// no-proxy-server-v1: the game only ever talks to this machine (every other address is blocked below, and the
+// updater and workshop use Node's own fetch, which never used Chromium's proxy settings). Without this, Chromium
+// looks up the Windows proxy configuration (auto-detect) before the first request, about 1 s on this PC.
+app.commandLine.appendSwitch("no-proxy-server");
 app.commandLine.appendSwitch("disable-renderer-backgrounding");
 app.commandLine.appendSwitch("disable-background-timer-throttling");
 app.commandLine.appendSwitch("disable-backgrounding-occluded-windows");
@@ -865,7 +872,11 @@ async function handle(req, res) {
 
 function startServer() {
   return new Promise((resolveStart, rejectStart) => {
-    const server = http.createServer(handle);
+    const server = http.createServer(process.env.AIM_STARTUP_TRACE === "1" ? (req, res) => {
+      const t0 = process.uptime() * 1000;
+      res.once("finish", () => console.log(`STARTUP req ${Math.round(t0)} +${Math.round(process.uptime() * 1000 - t0)} ms ${res.getHeader("content-length") || 0} B ${req.url.slice(0, 90)}`));
+      return handle(req, res);
+    } : handle);
     server.once("error", rejectStart);
     server.listen(PORT, HOST, () => resolveStart(server));
   });
@@ -892,10 +903,11 @@ function createWindow(url) {
   // half-loaded lobby never flashes first. The fallback keeps it from staying hidden.
   let shown = false;
   const show = () => {
-    if (!shown && !win.isDestroyed()) { shown = true; win.show(); }
+    if (!shown && !win.isDestroyed()) { shown = true; win.show(); trace("window shown"); }
   };
-  win.once("ready-to-show", () => setTimeout(show, new URL(url).pathname.startsWith(STUDIO_PATH) ? 0 : 3000));
+  win.once("ready-to-show", () => trace("ready-to-show") || setTimeout(show, new URL(url).pathname.startsWith(STUDIO_PATH) ? 0 : 3000));
   win.webContents.on("dom-ready", () => {
+    trace("dom-ready");
     // The Studio is a page of its own with its own look; it gets only the loading screen (creator-loading-v1).
     const pagePath = new URL(win.webContents.getURL()).pathname;
     if (pagePath.startsWith(STUDIO_PATH)) {
@@ -914,7 +926,7 @@ function createWindow(url) {
       win.webContents.insertCSS(RELEASE_UPDATES_CSS),
       win.webContents.mainFrame.executeJavaScript(STARTUP_SCREEN_RUN).catch((err) => console.log(`STARTUP SCREEN: ${err}`)),
     ]).catch(() => {}).finally(show);
-    win.webContents.executeJavaScript(UI_SCRIPT_BATCH).catch((err) => console.log(`UI SCRIPTS: ${err}`));
+    win.webContents.executeJavaScript(UI_SCRIPT_BATCH).then(() => trace("ui scripts done"), (err) => console.log(`UI SCRIPTS: ${err}`));
   });
 
   win.webContents.on("before-input-event", (event, input) => {
@@ -951,6 +963,13 @@ function createWindow(url) {
     }
   });
 
+  win.webContents.once("did-start-loading", () => trace("did-start-loading"));
+  win.webContents.once("did-finish-load", () => {
+    trace("did-finish-load");
+    if (process.env.AIM_STARTUP_TRACE === "1") {
+      setTimeout(() => win.webContents.executeJavaScript("JSON.stringify({nav: (() => { const n = performance.getEntriesByType('navigation')[0]; return n && {responseEnd: Math.round(n.responseEnd), domInteractive: Math.round(n.domInteractive), domContentLoaded: Math.round(n.domContentLoadedEventEnd), load: Math.round(n.loadEventEnd)}; })(), paint: performance.getEntriesByType('paint').map(p => p.name + ':' + Math.round(p.startTime))})").then((s) => console.log("STARTUP renderer " + s)).catch(() => {}), 1500);
+    }
+  });
   win.loadURL(url);
   return win;
 }
@@ -1250,7 +1269,9 @@ ipcMain.handle("aim:workshop:preview", async (_event, code) => {
   return { code: item.shareCode };
 });
 
+trace("main.js loaded");
 app.whenReady().then(async () => {
+  trace("app ready");
   backups.onStartup();
   Menu.setApplicationMenu(null);
   session.defaultSession.webRequest.onBeforeRequest((details, callback) => {
@@ -1282,6 +1303,7 @@ app.whenReady().then(async () => {
     app.quit();
     return;
   }
+  trace("server listening");
   mainWindow = createWindow(ORIGIN + START_PATH);
   // In-app updater (from 1.3.0): checks GitHub releases in the installed app only.
   require("./release-updates").register(() => mainWindow);
