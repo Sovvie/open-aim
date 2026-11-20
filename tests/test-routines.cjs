@@ -284,6 +284,8 @@ test("thumbnails: a Target Workshop drill is drawn from its scene: a grid as cel
   assert.ok(Math.abs(p.balls[0].x - p.lines[0][0][0]) < 1e-6, "the target sits at the start of its path");
   const strafe = base({ actors: [{ id: "a", body: { shape: "sphere", radius: 0.4 }, behaviors: [{ kind: "strafe", speed: [3, 7] }] }], spawners: [{ id: "s", kind: "area", actorTemplateId: "a", position: { x: 0, y: 1.7, z: -15 }, size: { x: 11, y: 0.1, z: 1 }, maxAlive: 1 }] });
   assert.strictEqual(R.ui.thumbModel(strafe, 1600, 900).arrows.length, 1);
+  const sway = base({ actors: [{ id: "a", body: { shape: "sphere", radius: 0.7 }, behaviors: [{ kind: "sway" }] }], spawners: [{ id: "s", kind: "area", actorTemplateId: "a", position: { x: 0, y: 2.2, z: -24 }, size: { x: 0, y: 0, z: 0 }, maxAlive: 1 }] });
+  assert.strictEqual(R.ui.thumbModel(sway, 1600, 900).arrows.length, 1, "a swaying target gets the side-to-side arrow too");
   // a player turned around (yaw pi, as in the grid drills) still sees the targets in front of it; nothing behind the player is drawn
   const turned = base({ playerSpawn: { position: { x: 0, y: 0, z: -7 }, yaw: Math.PI }, actors: grid.actors, spawners: [{ ...grid.spawners[0], position: { x: 0, y: 3.1, z: 7 } }] });
   assert.strictEqual(R.ui.thumbModel(turned, 1600, 900).balls.length, 25);
