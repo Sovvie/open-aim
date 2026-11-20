@@ -117,6 +117,8 @@
 .tw-actions{flex-wrap:wrap;gap:8px}
 .tw-actions .tw-btn{padding:11px 18px}.tw-actions .tw-btn.is-ghost{padding:11px 14px}
 .tw-card{content-visibility:auto;contain-intrinsic-size:auto 330px}
+button.tw-back{display:inline-flex;align-items:center;min-height:32px;align-self:flex-start;margin:-8px 0 -4px}
+button.tw-back:focus-visible,.tw-tabs button:focus-visible,.tw-seg button:focus-visible{outline:2px solid #fff;outline-offset:2px}
 /* The list scrolls inside the tab, like VALORANT Training (it scrolled the whole window, so the top bar and the
    search bar scrolled away with it). */
 .tw-root{height:100%;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-gutter:stable}
@@ -477,12 +479,21 @@
       body = `<div class="tw-empty"><div><b>Nothing here</b><p class="tw-note" style="justify-content:center">${what} ${fixes}</p></div></div>`;
     }
     else body = items.map(card).join("");
+    // The rebuild below replaces every element: note the focused control so keyboard focus survives it
+    // (selecting a card with Space, a favourite toggled with Enter, a filter chip).
+    const had = document.activeElement && root.contains(document.activeElement) ? document.activeElement : null;
+    const focusSel = !had ? null
+      : had.dataset.filter != null ? `[data-filter="${CSS.escape(had.dataset.filter)}"]`
+      : had.dataset.level != null ? `[data-level="${CSS.escape(had.dataset.level)}"]`
+      : had.closest("[data-code]") ? `.tw-card[data-code="${CSS.escape(had.closest("[data-code]").dataset.code)}"]${had.classList.contains("tw-card") ? "" : had.dataset.act ? ` [data-act="${CSS.escape(had.dataset.act)}"]` : ""}`
+      : null;
     root.innerHTML = `<div class="tw-page">
       <div class="tw-head"><div><div class="tw-kicker">Train the basics · precision, reactions, tracking</div><h1 class="tw-title">Target Workshop</h1></div>
         <div class="tw-filters"><div class="tw-chips" role="group" aria-label="Filter by skill">${chip("all", "All", inLevel.length)}${skills.map((s) => chip(s, s, inLevel.filter((it) => it.facts?.skill === s).length)).join("")}${chip(FAV, "Favorites", inLevel.filter((it) => state.favorites.includes(it.shareCode)).length)}</div>
         ${hasTiers ? `<div class="tw-chips" role="group" aria-label="Filter by difficulty">${chip("any", "Any level", null, "data-level", level)}${chip("easy", "Easy", inSkill.filter((it) => tierOf(it.name).tier === "easy").length, "data-level", level)}${chip("hard", "Hard", inSkill.filter((it) => tierOf(it.name).tier === "hard").length, "data-level", level)}</div>` : ""}</div></div>
       ${q ? `<p class="tw-note">Search "${esc(q)}" · ${items.length} ${items.length === 1 ? "task" : "tasks"} <button type="button" data-act="clear">Clear search</button></p>` : ""}
       <div class="tw-grid">${body}</div></div>`;
+    if (focusSel) root.querySelector(focusSel)?.focus({ preventScroll: true });
     queueDraw();
   }
   function card(it) {
@@ -578,8 +589,8 @@
     if (tune) return;
     const t = e.target.closest("button, [data-code]");
     if (!t || !root.contains(t)) return;
-    if (t.matches("[data-filter]")) { filter = t.dataset.filter; saveFilters(); renderList(); focusChip(`[data-filter="${CSS.escape(filter)}"]`); return; }
-    if (t.matches("[data-level]")) { level = t.dataset.level; saveFilters(); renderList(); focusChip(`[data-level="${CSS.escape(level)}"]`); return; }
+    if (t.matches("[data-filter]")) { filter = t.dataset.filter; saveFilters(); renderList(); return; }
+    if (t.matches("[data-level]")) { level = t.dataset.level; saveFilters(); renderList(); return; }
     const act = t.dataset.act;
     if (act === "show-all") { filter = "all"; level = "any"; saveFilters(); renderList(); return; }
     if (act === "retry") return api.retry();
@@ -591,11 +602,6 @@
     if (act === "tune") { if (t.getAttribute("aria-disabled") !== "true") openTune(code); return; }
     if (act === "play") { if (!state.paused) api.play(code); return; }
     if (code !== state.selected) api.select(code);
-  }
-  // The list is rebuilt on every change, so keyboard focus goes back to the chip that was used.
-  function focusChip(selector) {
-    if (!root || document.activeElement && document.activeElement !== document.body && root.contains(document.activeElement)) return;
-    root.querySelector(selector)?.focus({ preventScroll: true });
   }
   function onKey(e) {
     if (tune || !root?.isConnected) return;

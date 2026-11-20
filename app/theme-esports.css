@@ -3888,6 +3888,8 @@ html[data-aim-local]:not(#es) body .al-wk-main > .al-wk-empty {
 }
 html[data-aim-local]:not(#es) body .al-wk-main > .al-wk-empty::before { content: "Nothing here"; font: italic 800 22px/1 var(--es-head); letter-spacing: .04em; text-transform: uppercase; color: #fff; }
 html[data-aim-local]:not(#es) body .al-wk-main > .al-wk-empty::after { content: "Try fewer words, another map or type, or clear the search."; color: var(--es-muted); font-size: 13px; }
+/* Keyboard: the drill card that holds the focused button lights up like a hovered card. */
+html[data-aim-local]:not(#es) body .al-wk-card:has(:focus-visible) { border-bottom-color: var(--es-red) !important; --es-card-edge: var(--es-red); }
 /* Shelf paging arrows: on the first / last page the dead arrow (opacity .3) sat over the first card's art. */
 html[data-aim-local]:not(#es) body .al-wk-paddle:disabled { opacity: 0 !important; pointer-events: none !important; }
 /* Filter chips with no drills (e.g. "Fundamentals 0") were 2.4:1 against the panel; still dimmed, now readable. */
@@ -3896,6 +3898,7 @@ html[data-aim-local]:not(#es) body .al-wk-chip.is-zero { opacity: .62 !important
    strip scrolls sideways (its arrow button) instead. */
 @media (max-width: 1100px) {
   html[data-aim-local]:not(#es) body .al-wk-strip .al-wk-slice { flex: 0 0 100px !important; }
+  html[data-aim-local]:not(#es) body .al-wk-strip { scroll-padding-inline: 8px 28px; }
   html[data-aim-local]:not(#es) body .al-wk-strip .al-wk-slice.is-all { flex-basis: 108px !important; }
   html[data-aim-local]:not(#es) body .al-wk-slice .al-wk-s-name { font-size: 15px !important; }
 }
