@@ -42,7 +42,7 @@ let checks = 0;
   const window = {};
   const docListeners = {};
   const document = {
-    documentElement: { dataset: {} },
+    documentElement: { dataset: {}, classList: { contains: () => false, toggle: () => {} } },
     querySelector: () => null, querySelectorAll: () => [],
     addEventListener: (t, f) => { docListeners[t] = f; },
   };
