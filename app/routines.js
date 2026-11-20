@@ -372,6 +372,15 @@
 html[data-aim-local]:not(#es) body .aim-rt-btn { height: 34px; padding: 0 24px !important; background: var(--es-red, #ff4655) !important; color: #fff !important; border: 0 !important; border-radius: 0 !important; clip-path: var(--es-slant) !important; box-shadow: none !important;
   font: 800 13px/1 var(--es-head, "Bahnschrift", sans-serif) !important; font-stretch: 75% !important; letter-spacing: .06em; text-transform: uppercase !important; cursor: pointer; }
 html[data-aim-local]:not(#es) body .aim-rt-btn:hover { background: var(--es-red-2, #ff6b77) !important; }
+/* ui-result (20 Nov 2026). Inside the result card the strip is a full-width band like the stat strip under it: no cut corner
+   and no right border against the card's edge. The medal name uses the theme's condensed italic heading type. */
+html[data-aim-local]:not(#es) body .al-result-modal .aim-rt-strip { clip-path: none; border-width: 1px 0 1px 4px; }
+.aim-rt-medal { font: 800 italic 16px/1.1 var(--es-head, "Bahnschrift", sans-serif); font-stretch: 75%; color: #fff; }
+/* The run is read once the score has counted up (SETTLE_MS), well after the card appeared: a hidden one-row strip holds its
+   place from the start, so the card does not jump when the medal line arrives; the line then slides in once. */
+.aim-rt-strip.is-pending { visibility: hidden; min-height: 44px; box-sizing: border-box; }
+.aim-rt-strip.is-in { animation: es-rx-in-left 0.25s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@media (prefers-reduced-motion: reduce) { .aim-rt-strip.is-in { animation: none; } }
 `;
   function injectCss() {
     try {
@@ -436,23 +445,29 @@ html[data-aim-local]:not(#es) body .aim-rt-btn:hover { background: var(--es-red-
       if (handled.has(root) || !current) return;
       if (!seen.has(root)) {
         seen.set(root, Date.now());
+        injectCss();
+        place(root, ""); setStripClass(root, "is-pending", true); // holds the line's place until the run is read
         setTimeout(() => { try { finish(root); } catch {} }, SETTLE_MS);
       }
     } catch {}
   }
+  function setStripClass(root, cls, on) { const s = root.querySelector(".aim-rt-strip"); if (s && s.classList) s.classList.toggle(cls, on); return s; }
+  const dropPending = (root) => { const s = root.querySelector(".aim-rt-strip.is-pending"); if (s) s.remove(); };
   async function finish(root) {
     if (handled.has(root) || !root.isConnected) return;
     const read1 = readResult(root);
-    if (!read1) return;
+    if (!read1) { dropPending(root); return; }
     handled.add(root);
     await loadNames();
     const info = names.get(current) || {};
     const res = api.finishRun({ code: current, name: info.name || "", unit: read1.unit, score: read1.score, end: read1.end, at: Date.now() });
-    if (!res) return;
+    if (!res) { dropPending(root); return; }
     injectCss();
     const html = stripHtml(res, { died: read1.end === "died" });
     results.set(root, html);
     place(root, html);
+    setStripClass(root, "is-pending", false); setStripClass(root, "is-in", true);
+    setTimeout(() => { try { setStripClass(root, "is-in", false); } catch {} }, 600); // once: a later move of the strip does not replay it
   }
   if (doc) {
     window.addEventListener("aim-local-scene", (event) => { current = event.detail && event.detail.id ? String(event.detail.id) : null; });

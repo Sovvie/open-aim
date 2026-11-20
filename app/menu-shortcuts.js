@@ -14,6 +14,17 @@
   const ESC_KEY = "aim-pause-esc-close-v1";
   const read = (key) => { try { return localStorage.getItem(key) !== "off"; } catch { return true; } };
   const write = (key, on) => { try { localStorage.setItem(key, on ? "on" : "off"); } catch {} };
+  // Key chips (20 Nov 2026): attributes on <html> that show each shortcut on its button while it is on.
+  const RESTART_CHIP = "data-aim-restart-chip";
+  const ESC_CHIP = "data-aim-esc-resume";
+  // A keyboard code as a key-cap label: "KeyT" -> "T", "Digit5" -> "5", "Numpad5" -> "Num 5", "F5" -> "F5".
+  const keyLabel = (code) => {
+    const c = String(code || "");
+    if (/^Key[A-Z]$/.test(c)) return c.slice(3);
+    if (/^Digit\d$/.test(c)) return c.slice(5);
+    if (/^Numpad\d$/.test(c)) return "Num " + c.slice(6);
+    return c.replace(/(Left|Right)$/, "").slice(0, 8);
+  };
 
   const overlay = () => document.querySelector(".al-result-overlay");
   // The verdict splash keeps its "is-died" class for as long as the result screen is up.
@@ -63,7 +74,13 @@
     const style = document.createElement("style");
     style.id = "aim-esc-resuming-style";
     style.textContent = `html.${HIDE_CLASS} .al-pause-layer { opacity: 0 !important; transition: none !important; }
-html.${HIDE_CLASS} .al-pause-layer * { pointer-events: none !important; }`;
+html.${HIDE_CLASS} .al-pause-layer * { pointer-events: none !important; }
+/* ui-result (20 Nov 2026): the Eliminated screen's Play again shows the Restart key as a chip while that shortcut is on
+   (::before, the theme uses ::after for the button's shine); the Esc chip on Resume is in ui.css */
+html[data-aim-local][${RESTART_CHIP}]:not(#es) body .al-result-overlay:has(> .al-result-verdict-splash.is-died) .al-run-actions .al-primary-btn::before {
+  content: var(--aim-restart-key, "T"); position: absolute; right: 26px; top: 50%; transform: translateY(-50%); padding: 1px 6px;
+  font: 700 11px/1.4 var(--es-head, "Bahnschrift", sans-serif); font-style: normal; letter-spacing: 0.04em; text-transform: uppercase;
+  color: #fff; background: rgba(0, 0, 0, 0.22); border: 1px solid rgba(255, 255, 255, 0.35); pointer-events: none; }`;
     (document.head || document.documentElement).appendChild(style);
   } catch {}
   let hideTimer = 0;
@@ -187,7 +204,18 @@ html.${HIDE_CLASS} .al-pause-layer * { pointer-events: none !important; }`;
     for (const el of [row, ...row.querySelectorAll("*")]) for (const a of scope) el.setAttribute(a, "");
     return row;
   }
+  function syncChips() {
+    try {
+      const html = document.documentElement;
+      const escOn = read(ESC_KEY), first = read(RESTART_KEY) ? restartCodes()[0] : null;
+      if (html.hasAttribute(ESC_CHIP) !== escOn) html.toggleAttribute(ESC_CHIP, escOn);
+      if (html.hasAttribute(RESTART_CHIP) !== !!first) html.toggleAttribute(RESTART_CHIP, !!first);
+      const label = first ? JSON.stringify(keyLabel(first)) : "";
+      if (html.style.getPropertyValue("--aim-restart-key") !== label) { if (label) html.style.setProperty("--aim-restart-key", label); else html.style.removeProperty("--aim-restart-key"); }
+    } catch {}
+  }
   function sync() {
+    syncChips();
     for (const anchor of document.querySelectorAll('[data-setting="invertMouseY"]')) {
       let head = anchor.nextElementSibling?.matches?.(".aim-menu-keys-head") ? anchor.nextElementSibling : null;
       if (!head) {
@@ -215,5 +243,5 @@ html.${HIDE_CLASS} .al-pause-layer * { pointer-events: none !important; }`;
   if (window.__aimWatchPage) window.__aimWatchPage(later, { childList: true, subtree: true });
   sync();
 
-  window.__aimMenuShortcuts = { resumeNow, hidden: () => { try { return document.documentElement.classList.contains(HIDE_CLASS); } catch { return false; } }, read: (which) => read(which === "esc" ? ESC_KEY : RESTART_KEY) };
+  window.__aimMenuShortcuts = { resumeNow, keyLabel, syncChips, hidden: () => { try { return document.documentElement.classList.contains(HIDE_CLASS); } catch { return false; } }, read: (which) => read(which === "esc" ? ESC_KEY : RESTART_KEY) };
 })();

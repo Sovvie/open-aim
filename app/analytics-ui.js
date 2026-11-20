@@ -136,9 +136,15 @@
      "N left" bots card on the right, .al-bots-card.is-side) gets the panel as its own column LEFT of the result card, as
      the map screens get theirs, instead of inside the card under the stats. The panel is then a direct child of the
      overlay (class aim-an-hit-side, set by placePanel only in this media range); each :has() ends in a class. */
+  /* ui-result (20 Nov 2026): the two outer columns have a floor (--aim-an-side: the report's narrowest width, or the game's
+     300px bots card when there is one) and stay equal, and the card column (up to 960px, the game's own card width, so the card does not reflow when the report arrives) shrinks first, so the
+     card stays centred and nothing is pushed off screen. placePanel only uses this layout when the card keeps >= ~680px. */
   html[data-aim-local]:not(#es) body .al-result-overlay:has(> .aim-an-hit-side) {
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
+    --aim-an-side: 260px;
+    grid-template-columns: minmax(var(--aim-an-side), 1fr) minmax(0, 960px) minmax(var(--aim-an-side), 1fr) !important;
     gap: 18px !important; justify-content: stretch !important; align-items: center !important; }
+  html[data-aim-local]:not(#es) body .al-result-overlay:has(> .aim-an-hit-side):has(> .al-bots-card) { --aim-an-side: 300px; }
+  html[data-aim-local]:not(#es) body .al-result-overlay:has(> .aim-an-hit-side) > .al-result-modal { width: 100% !important; min-width: 0; }
   /* Centred card (19 Nov 2026): the result card stays in the middle of the screen (the two outer columns are equal), the hit report
      is attached to its left edge and the game's bots card, when there is one, to its right edge. */
   html[data-aim-local]:not(#es) body .al-result-overlay:has(> .aim-an-hit-side) > .al-result-modal { justify-self: center; }
@@ -146,7 +152,7 @@
   html[data-aim-local]:not(#es) body .al-result-overlay:has(> .aim-an-hit-side) > .aim-an-hit-side { grid-column: 1; grid-row: 1; }
   html[data-aim-local]:not(#es) body .al-result-overlay:has(> .aim-an-hit-side) > .al-result-modal { grid-column: 2; grid-row: 1; }
   html[data-aim-local]:not(#es) body .al-result-overlay:has(> .aim-an-hit-side) > .al-bots-card { grid-column: 3; grid-row: 1; }
-  html[data-aim-local]:not(#es) body .al-result-overlay > .aim-an-hit.aim-an-hit-side { align-self: center; justify-self: end; width: min(100%, clamp(260px, 21vw, 340px)); max-height: 92vh;
+  html[data-aim-local]:not(#es) body .al-result-overlay > .aim-an-hit.aim-an-hit-side { align-self: center; justify-self: end; width: min(100%, clamp(260px, 21vw, 340px)); min-width: 0; max-height: 92vh;
     margin: 0; padding: 14px 16px 14px; overflow: hidden auto; scrollbar-width: thin;
     box-shadow: inset 0 0 0 1px var(--an-line), 0 30px 90px rgba(0, 0, 0, 0.5); }
 }
@@ -605,6 +611,12 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-tipm h3 { text-transform: non
   .aim-an-track-tiles { grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)); }
   .aim-an-coach { --an-card-h: 252px; }
 }
+/* ---- ui-result review (20 Nov 2026): result-screen hit report ---- */
+/* the base site forces border-radius: 8px !important on every button: the report's tabs stay square like the theme's */
+html[data-aim-local]:not(#es) body .aim-an-hit .aim-an-hit-tabs button { border-radius: 0 !important; }
+/* beside the card (no Position map) the report enters with that screen's own pace: the card pops in 0.42s and the game's
+   bots card in 0.34s, so a 0.7s slide (the map board's column timing) finished well after everything else */
+.aim-an-hit.aim-an-hit-side.aim-an-hit-enter { animation-duration: 0.42s; }
 `;
   function injectCss() {
     try {
@@ -1092,17 +1104,21 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-tipm h3 { text-transform: non
   // body display: contents, so it is a grid item of the left column there), and narrow windows keep it inside the card
   // under the stat strip. Moves only when it is not where it belongs, so a placed panel wakes no watcher.
   const SIDE = "aim-an-hit-side";
-  const SIDE_MQ = "(min-width: 1180px) and (min-height: 680px)";
-  let sideMq = null;
-  function wideScreen() {
+  // ui-result (20 Nov 2026): the side column needs room for two equal outer columns (260px each, 300px with the game's bots
+  // card) plus a card of about 680px, so it starts at 1280px (1360px with a bots card); below that the panel stays in the card.
+  const SIDE_MQ = "(min-width: 1280px) and (min-height: 680px)";
+  const SIDE_MQ_BOTS = "(min-width: 1360px) and (min-height: 680px)";
+  const sideMqs = {};
+  function wideScreen(bots) {
     try {
-      if (!sideMq) {
+      const q = bots ? SIDE_MQ_BOTS : SIDE_MQ;
+      if (!sideMqs[q]) {
         if (!window.matchMedia) return false;
-        sideMq = window.matchMedia(SIDE_MQ);
+        const mq = sideMqs[q] = window.matchMedia(q);
         const again = () => syncResult(); // crossing the breakpoint moves the panel; nothing else changes in the DOM then
-        if (sideMq.addEventListener) sideMq.addEventListener("change", again); else if (sideMq.addListener) sideMq.addListener(again);
+        if (mq.addEventListener) mq.addEventListener("change", again); else if (mq.addListener) mq.addListener(again);
       }
-      return !!sideMq.matches;
+      return !!sideMqs[q].matches;
     } catch { return false; }
   }
   const childOf = (el, cls) => { for (const c of Array.from(el.children || [])) if (c.classList && c.classList.contains(cls)) return c; return null; };
@@ -1112,7 +1128,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-tipm h3 { text-transform: non
   }
   function putPanel(overlay, panel) {
     const modal = childOf(overlay, "al-result-modal");
-    const side = !!modal && !childOf(overlay, "al-pm") && wideScreen();
+    const side = !!modal && !childOf(overlay, "al-pm") && wideScreen(!!childOf(overlay, "al-bots-card"));
     setClass(panel, SIDE, side);
     if (side) { if (panel.parentElement !== overlay || modal.nextElementSibling !== panel) modal.after(panel); return; }
     const strip = overlay.querySelector(".al-run-strip");

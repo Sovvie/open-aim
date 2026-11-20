@@ -55,6 +55,14 @@
     const d = String(info.difficulty || "").toLowerCase();
     return d === "easy" || d === "hard" ? `Switch difficulty: ${d[0].toUpperCase()}${d.slice(1)}` : "Switch difficulty";
   }
+  // Pause menu (ui-result, 20 Nov 2026): right under Restart, with the other ways to (re)start, not after the Sensitivity
+  // field; the menu's Exit stays last. Result screen: after its Exit button, in the button row. Moves only when out of place.
+  function place(button, parent, exit, before) {
+    if (before !== "exit") { if (exit.nextElementSibling !== button) exit.after(button); return; }
+    const restart = parent.querySelector(`.al-pause-act.is-second:not(.${MARK})`);
+    if (restart && restart.parentElement === parent) { if (restart.nextElementSibling !== button) restart.after(button); }
+    else if (exit.previousElementSibling !== button) parent.insertBefore(button, exit);
+  }
   function mount(exit, info, before) {
     const parent = exit.parentElement;
     let button = parent.querySelector(`.${MARK}`);
@@ -66,8 +74,8 @@
       button.classList.add(MARK);
       button.type = "button";
       button.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); begin(); });
-      if (before === "exit") parent.insertBefore(button, exit); else exit.after(button);
-    }
+      place(button, parent, exit, before);
+    } else if (before === "exit") place(button, parent, exit, before); // the menu re-rendered: back next to Restart
     const text = labelOf(info);
     if (button.textContent !== text) button.textContent = text;
     button.title = info.name ? `Play ${info.name}` : "";

@@ -230,3 +230,63 @@
 .al-pause-desc {
   color: var(--aim-muted) !important;
 }
+
+/* ---------- ui-result review (20 Nov 2026): pause and Tab menus ----------
+   Loaded before theme-esports.css, so these use the theme's own prefix to win over it. */
+/* a long drill name wraps to two lines instead of being cut after a few words */
+html[data-aim-local]:not(#es) body .al-pause-id h1 {
+  white-space: normal !important;
+  overflow: hidden !important;
+  display: -webkit-box !important;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-height: 1.15 !important;
+  overflow-wrap: anywhere;
+}
+/* a switch that is on (Pause timer) shows it: the state chip turns red like the theme's active chips */
+html[data-aim-local]:not(#es) body .al-pause-act[aria-checked="true"] .al-pause-timer-state {
+  background: var(--es-red) !important;
+  border-color: var(--es-red) !important;
+  color: #fff !important;
+}
+/* the Sensitivity row lines up with the action rows above it (their 3px left bar + 12px padding) and uses their type */
+html[data-aim-local]:not(#es) body .al-pause-sens { padding-left: 15px !important; }
+html[data-aim-local]:not(#es) body .al-pause-sens-label {
+  font-family: var(--es-head) !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  font-stretch: 75%;
+  letter-spacing: 0.03em !important;
+  text-transform: uppercase;
+}
+/* the stepper arrows are real targets, square like the field */
+html[data-aim-local]:not(#es) body .al-pause-sens-stepper button { border-radius: 0 !important; }
+/* the Esc shortcut (menu-shortcuts.js) shows on Resume as a key chip, like Restart's T */
+html[data-aim-local][data-aim-esc-resume]:not(#es) body .al-pause-act.is-primary::after {
+  content: "Esc";
+  position: absolute;
+  right: 22px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 1px 6px;
+  font: 700 10.5px/1.4 var(--es-head);
+  font-style: normal;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+html[data-aim-local][data-aim-esc-resume]:not(#es) body .al-pause-act.is-primary { position: relative !important; }
+
+/* ---------- ui-result review (20 Nov 2026): result card (screens without the Position map) ----------
+   The drill name is an uppercase condensed heading: at the base 1.5 line height a name that wraps to two lines took
+   ~100px. Short windows (768px and less) also get tighter padding, so the card, the stat strip and the buttons fit
+   without scrolling at 1280x720 and 1366x768 more often. */
+html[data-aim-local]:not(#es) body .al-result-overlay:not(:has(> .al-pm)) .al-result-head h2 { line-height: 1.12 !important; }
+@media (max-height: 800px) {
+  html[data-aim-local]:not(#es) body .al-result-overlay:not(:has(> .al-pm)) .al-result-head { padding-block: 18px !important; }
+  html[data-aim-local]:not(#es) body .al-result-overlay:not(:has(> .al-pm)) .al-run-hero { padding-block: 20px 18px !important; }
+  html[data-aim-local]:not(#es) body .al-result-overlay:not(:has(> .al-pm)) .al-run-strip > div { padding-block: 12px !important; }
+  html[data-aim-local]:not(#es) body .al-result-overlay:not(:has(> .al-pm)) .al-run-actions { padding-block: 12px !important; }
+}

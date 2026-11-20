@@ -218,6 +218,26 @@ function resultOverlay(document, { died = true, wide = false } = {}) {
     assert.deepStrictEqual(acts.children.map((c) => c.className), ["al-primary-btn", "aim-rt-card"]);
   });
 
+  await test("(v) side report column (20 Nov 2026): the card goes to the bottom of that column, not into the result card; back in the card when the column goes", () => {
+    const { card, document } = loadCard({});
+    const { overlay, body, hit, acts } = resultOverlay(document);
+    hit.remove(); hit.className = "aim-an-hit aim-an-hit-side"; overlay.appendChild(hit); // analytics-ui.js side placement
+    const inner = document.createElement("div"); inner.className = "aim-an-hit-panes"; hit.appendChild(inner);
+    const el = card.render.mount(overlay, finding);
+    assert.ok(el.parentElement === hit && hit.lastElementChild === el, "last child of the side column");
+    assert.deepStrictEqual(body.children.map((c) => c.className), ["al-run-strip", "al-run-actions"], "the result card is untouched");
+    // the report rewrote its inside (a tab switch): the next sync puts a card back at the bottom
+    hit.children = []; el.parentElement = null; inner.parentElement = null; hit.appendChild(inner);
+    const again = card.render.mount(overlay, finding);
+    assert.ok(again.parentElement === hit && hit.lastElementChild === again);
+    // narrow window: the report moved back into the card, the tip goes above the buttons again
+    hit.remove(); hit.className = "aim-an-hit"; body.children.splice(1, 0, hit); hit.parentElement = body;
+    card.render.mount(overlay, finding);
+    assert.deepStrictEqual(body.children.map((c) => c.className), ["al-run-strip", "aim-an-hit", "aim-rt-card", "al-run-actions"]);
+    assert.ok(!hit.children.some((c) => c.className === "aim-rt-card"));
+    void acts;
+  });
+
   await test("(v) with the coach missing the card renders nothing and the menu is untouched", async () => {
     const A = { rounds: async () => [mkRound({ side: 0.2 })] };
     const { card, document } = loadCard({ analytics: A, coach: undefined });
