@@ -818,6 +818,31 @@ const HEAD_CM = T.HEAD_ABOVE_CENTRE_CM;
     assert.ok(!find(await run({ rounds: sessions(3, (i) => (i < 2 ? 0.3 : 0.5)).map((r) => ({ ...r, shots: r.shots.slice(0, 15) })) }), "warmup"), "too few shots in the first rounds");
   });
 
+  await test("warm-up plan: the rule's numbers, and up to 3 of your most played drills, the ones you hit most with first (the first one twice)", async () => {
+    const C = loadCoach(stub({}));
+    const acc = (a, n = 50) => many(n, (i) => shot({ part: i < Math.round(a * n) ? "body" : null }));
+    // 3 sessions of 8 rounds on drills A (about 60%), B (50%), C (40%), D (30%), E (a drill that kills you), the first two rounds of every session cold
+    const plan = [["A", 0.6], ["B", 0.5], ["C", 0.4], ["D", 0.3], ["A", 0.6], ["B", 0.5], ["C", 0.4], ["D", 0.3]];
+    const mk = (cold, end) => Array.from({ length: 3 }, (_, d) => plan.map(([code, a], i) => round({ at: at("2026-11-1" + (d + 1)) + i * 5 * 60000, code, end: end ? end(code) : "cleared", shots: acc(i < 2 ? a - 0.2 : a) }))).flat();
+    let w = C.warmupPlan(mk());
+    assert.ok(w.cold && w.gapPoints >= 6 && w.sessions === 3 && w.firstAccuracyPercent < w.middleAccuracyPercent, JSON.stringify(w));
+    assert.deepStrictEqual(w.steps.map((s) => s.code), ["A", "B", "C"], "highest accuracy first, at most 3 steps");
+    assert.deepStrictEqual(w.steps.map((s) => s.runs), [C.thresholds.WARM_ROUNDS, 1, 1]);
+    assert.ok(w.steps.every((s) => s.rounds >= 3 && s.accuracyPercent > 0) && w.reason === "");
+    // a drill that ends in your death is no warm-up
+    w = C.warmupPlan(mk(0, (code) => (code === "A" ? "died" : "cleared")));
+    assert.ok(!w.steps.some((s) => s.code === "A"), "A died in every round: left out");
+    // no cold start: still a plan, but not flagged
+    const even = Array.from({ length: 3 }, (_, d) => plan.map(([code, a], i) => round({ at: at("2026-11-1" + (d + 1)) + i * 5 * 60000, code, shots: acc(a) }))).flat();
+    w = C.warmupPlan(even);
+    assert.ok(!w.cold && w.steps.length === 3, JSON.stringify(w));
+    // too little: nothing to suggest, and no crash on junk
+    w = C.warmupPlan([round({ code: "A", shots: acc(0.5) }), round({ code: "A", shots: acc(0.5), at: at("2026-11-16") })]);
+    assert.deepStrictEqual([w.cold, w.steps.length, w.reason, w.sessions], [false, 0, "few-rounds", null]);
+    assert.strictEqual(C.warmupPlan(null).steps.length, 0);
+    assert.strictEqual(C.warmupPlan([{}, null, { at: 1 }]).steps.length, 0);
+  });
+
   const failed = results.filter(([, ok]) => !ok).length;
   console.log("\n" + (results.length - failed) + " of " + results.length + " passed");
   process.exit(failed ? 1 : 0);

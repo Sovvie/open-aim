@@ -464,6 +464,204 @@ test("export: the buttons read fresh, build the file and start a Blob download; 
   assert.strictEqual(saved.length, 3, "no file for an empty store");
 });
 
+// ---- round 2 (21 Nov 2026): Compare gaps, per-drill deltas, goals, the suggested warm-up ----
+test("mergeRawDays / periodCompare: a day with no row (or a row that lags the stored rounds) is taken from the rounds; a bigger row is kept", () => {
+  const rs = [rnd(NOW - DAY, { n: 20, hits: 10, heads: 2, kills: 3, deaths: 1 }), rnd(NOW - DAY + 5 * MIN, { n: 20, hits: 10 }), rnd(NOW - 9 * DAY, { n: 20, hits: 5 })];
+  const lag = { day: new Date(NOW - DAY).toISOString().slice(0, 10), rounds: 1, shots: 20, hits: 10, headshots: 2, kills: 3, deaths: 1, grid: { bind: { "1,1": 1 } } };
+  const merged = R.mergeRawDays([lag], rs.map(R.roundFacts));
+  const yday = merged.find((d) => d.day === lag.day), old = merged.find((d) => d.day === new Date(NOW - 9 * DAY).toISOString().slice(0, 10));
+  assert.deepStrictEqual([yday.rounds, yday.shots, yday.hits], [2, 40, 20], "the lagging row is replaced by the rounds' counts");
+  assert.ok(yday.grid && yday.grid.bind, "and keeps its other fields");
+  assert.deepStrictEqual([old.rounds, old.shots, old.hits], [1, 20, 5], "no row for that day: made from the rounds");
+  const big = { ...lag, rounds: 9, shots: 900, hits: 450 };
+  assert.deepStrictEqual(R.mergeRawDays([big], rs.map(R.roundFacts)).find((d) => d.day === lag.day).shots, 900, "a row with more rounds stays");
+  // the point: rounds but no day rows at all still compare (the old behaviour said "Nothing recorded")
+  const html = R.compareHtml([], rs, 7, NOW);
+  assert.ok(!html.includes("Nothing recorded") && html.includes("data-cmp-grid"), "rounds without day rows");
+  assert.ok(html.includes("2 rounds, 40 shots"), html.slice(0, 600));
+  assert.ok(R.compareHtml([], [], 7, NOW).includes("Nothing recorded"));
+});
+
+test("compare card: the arrow points sideways for a change that is too small to count", () => {
+  const day = (n, o) => ({ day: new Date(NOW - n * DAY).toISOString().slice(0, 10), rounds: 2, shots: 100, hits: 40, headshots: 10, kills: 5, deaths: 2, ...o });
+  const html = R.compareHtml([day(1, { hits: 41 }), day(8)], [], 7, NOW), card = html.slice(html.indexOf('data-metric="accuracy"'), html.indexOf('data-metric="headshots"'));
+  assert.ok(card.includes('data-verdict="same"') && card.includes("→") && !card.includes("↑"), card);
+});
+
+test("sessionDrillChanges: each drill against the last earlier session that had it, with minimum shots, and a lower-is-better score flipped", () => {
+  const S = (at, code, n, hits) => R.roundFacts(rnd(at, { code, n, hits }));
+  const sessions = R.groupSessions([S(NOW - 5 * DAY, "aaa", 40, 20), S(NOW - 5 * DAY + 2 * MIN, "bbb", 40, 20), S(NOW - 3 * DAY, "aaa", 40, 24), S(NOW - DAY, "ccc", 40, 20), S(NOW, "aaa", 40, 32), S(NOW + 2 * MIN, "bbb", 10, 9), S(NOW + 4 * MIN, "ddd", 40, 10)]);
+  assert.strictEqual(sessions.length, 4);
+  const runs = { aaa: { unit: "pts", lower: false, runs: [{ at: NOW - 3 * DAY + 5000, score: 100 }, { at: NOW + 5000, score: 150 }] }, bbb: { unit: "s", lower: true, runs: [{ at: NOW - 5 * DAY + 2 * MIN + 5000, score: 30 }, { at: NOW + 2 * MIN + 5000, score: 36 }] } };
+  const d = R.sessionDrillChanges(sessions, 3, runs, (c) => c), by = (c) => d.find((x) => x.code === c);
+  assert.strictEqual(by("aaa").prev.start, sessions[1].start, "the nearest earlier session with the drill");
+  assert.deepStrictEqual([Math.round(by("aaa").acc.delta), by("aaa").acc.verdict], [20, "better"], "60% -> 80%");
+  assert.deepStrictEqual([by("aaa").score.delta, by("aaa").score.verdict], [50, "better"]);
+  assert.strictEqual(by("bbb").prev.start, sessions[0].start, "looks back past sessions without it");
+  assert.strictEqual(by("bbb").acc, null, "10 shots now is under the minimum");
+  assert.deepStrictEqual([by("bbb").score.delta, by("bbb").score.verdict], [6, "worse"], "36 s against 30 s: less is better");
+  assert.strictEqual(by("ddd").prev, null);
+  assert.ok(R.changeCellHtml(by("ddd")).includes("First time"));
+  assert.ok(R.changeCellHtml(by("aaa")).includes("is-up") && R.changeCellHtml(by("aaa")).includes("+20 pts accuracy") && R.changeCellHtml(by("aaa")).includes("+50 pts best score"), R.changeCellHtml(by("aaa")));
+  assert.ok(R.changeCellHtml(by("bbb")).includes("is-down"));
+  assert.deepStrictEqual(R.sessionDrillChanges(sessions, 0, runs, (c) => c).map((x) => x.prev), [null, null], "the first session has nothing before it");
+  // the Session tab shows the cells
+  const html = R.sessionHtml({ rounds: [rnd(NOW - 3 * DAY, { code: "aaa", n: 40, hits: 24 }), rnd(NOW, { code: "aaa", n: 40, hits: 32 })] }, null, NOW, {}, (c) => c);
+  assert.ok(html.includes("aim-an-sd-change") && html.includes("accuracy"), "in the session list");
+});
+
+test("goals: normalising, adding with its rules, removing", () => {
+  assert.strictEqual(R.normalizeGoal({ type: "medal", tier: "platinum" }), null);
+  assert.strictEqual(R.normalizeGoal({ type: "body", percent: 0 }), null);
+  assert.strictEqual(R.normalizeGoal({ type: "body", percent: 101 }), null);
+  assert.strictEqual(R.normalizeGoal({ type: "score", target: NaN }), null);
+  assert.strictEqual(R.normalizeGoal({ type: "other" }), null);
+  assert.deepStrictEqual(Object.keys(R.normalizeGoals({ "aa-1": [{ type: "score", target: 5 }, { type: "x" }], "bad code!": [{ type: "score", target: 5 }], z: "no" })), ["aa-1"]);
+  const entry = entryOf([10, 12, 14, 16, 18], { bestMedal: "bronze", unit: "pts" }), th = logic.thresholds(entry), map = {};
+  const r = R.addGoal(map, "aaa", { type: "medal", tier: "silver" }, entry, th, NOW);
+  assert.ok(r.ok && r.goal.since === NOW && r.goal.base === 18 && map.aaa.length === 1, "base is the last finished score");
+  assert.ok(!R.addGoal(map, "aaa", { type: "medal", tier: "silver" }, entry, th).ok, "the same goal twice");
+  assert.ok(!R.addGoal(map, "aaa", { type: "medal", tier: "bronze" }, entry, th).ok, "a medal you already have");
+  assert.ok(!R.addGoal({}, "aaa", { type: "medal", tier: "gold" }, entryOf([1, 2]), null).ok, "no medal scores yet");
+  assert.ok(/above your best/.test(R.addGoal(map, "aaa", { type: "score", target: 18 }, entry, th).why), "a score you already reached");
+  assert.ok(R.addGoal(map, "aaa", { type: "score", target: 25 }, entry, th).ok);
+  const lowerEntry = entryOf([40, 38, 36], { lower: true, unit: "s", best: 36 });
+  assert.ok(/below your best/.test(R.addGoal({}, "bbb", { type: "score", target: 37 }, lowerEntry, null).why), "less is better: the target must be below");
+  assert.ok(R.addGoal({}, "bbb", { type: "score", target: 30 }, lowerEntry, null).ok);
+  assert.ok(!R.addGoal({}, "bad code", { type: "score", target: 3 }, entry, th).ok);
+  const full = {}; for (let i = 0; i < 6; i++) R.addGoal(full, "ccc", { type: "score", target: 100 + i }, entry, th, NOW);
+  assert.strictEqual(full.ccc.length, 6);
+  assert.ok(/up to 6/.test(R.addGoal(full, "ccc", { type: "score", target: 200 }, entry, th).why), "six goals is the limit");
+  full.ccc[0].done = NOW; assert.ok(R.addGoal(full, "ccc", { type: "score", target: 201 }, entry, th).ok && full.ccc.length === 6, "a finished goal makes room");
+  const id = map.aaa[0].id;
+  assert.ok(R.removeGoal(map, "aaa", id) && map.aaa.length === 1 && !map.aaa.some((g) => g.id === id));
+  R.removeGoal(map, "aaa", map.aaa[0].id); assert.ok(!("aaa" in map), "an empty list is dropped");
+});
+
+test("evaluateGoal: medal, score (both directions) and body goals; died runs and runs before the goal do not count", () => {
+  const since = NOW - 3 * DAY;
+  const run = (dAt, score, o = {}) => ({ at: since + dAt, score, died: false, medal: null, ...o });
+  const mk = (runs, o = {}) => { const entry = entryOf([10, 10, 10], { ...o, runs: [run(-DAY, 10), run(-DAY, 10), run(-DAY, 10), ...runs] }); return { entry, m: R.drillModel("aaa", entry, logic, [], "Aaa") }; };
+  let { entry, m } = mk([run(1, 15), run(2, 31, { died: true, medal: "gold" })]);
+  let ev = R.evaluateGoal({ id: "g1", type: "medal", tier: "silver", since, base: 10, done: null }, m, entry, []);
+  assert.ok(!ev.met && ev.label === "Reach Silver" && ev.value === 15 && ev.progress > 0 && ev.progress < 1, JSON.stringify(ev));
+  ({ entry, m } = mk([run(1, 21, { medal: "silver" })]));
+  ev = R.evaluateGoal({ id: "g1", type: "medal", tier: "silver", since, base: 10, done: null }, m, entry, []);
+  assert.ok(ev.met && ev.progress === 1);
+  ({ entry, m } = mk([run(-2 * DAY, 99, { medal: "gold" })]));
+  assert.ok(!R.evaluateGoal({ id: "g1", type: "medal", tier: "gold", since, base: 10, done: null }, m, entry, []).met, "a run before the goal was set");
+  ({ entry, m } = mk([run(1, 25)]));
+  ev = R.evaluateGoal({ id: "g2", type: "score", target: 25, since, base: 10, done: null }, m, entry, []);
+  assert.ok(ev.met && ev.label.startsWith("Score 25"));
+  ev = R.evaluateGoal({ id: "g2", type: "score", target: 50, since, base: 10, done: null }, m, entry, []);
+  assert.ok(!ev.met && Math.abs(ev.progress - 15 / 40) < 1e-9, "from the base to the target: " + ev.progress);
+  ({ entry, m } = mk([run(1, 28), run(2, 31)], { lower: true, unit: "s" }));
+  ev = R.evaluateGoal({ id: "g3", type: "score", target: 30, since, base: 40, done: null }, m, entry, []);
+  assert.ok(ev.met && ev.label.endsWith("or less"), "less is better");
+  assert.ok(!R.evaluateGoal({ id: "g3", type: "score", target: 25, since, base: 40, done: null }, m, entry, []).met);
+  const none = mk([]);
+  ev = R.evaluateGoal({ id: "g4", type: "score", target: 99, since, base: null, done: null }, none.m, none.entry, []);
+  assert.ok(!ev.met && ev.progress === 0 && /No finished run/.test(ev.status), "no run since");
+  ev = R.evaluateGoal({ id: "g5", type: "score", target: 99, since, base: null, done: NOW }, m, entry, []);
+  assert.ok(ev.met && ev.status.startsWith("Reached"), "a finished goal stays finished");
+  // body: the newest 3 tracked rounds since the goal
+  const tr = (at, on, n) => ({ ...R.roundFacts(rnd(at, { n: 5, hits: 2 })), trackOn: on, trackN: n, at });
+  const goal = { id: "g6", type: "body", percent: 70, since, base: null, done: null };
+  ev = R.evaluateGoal(goal, m, entry, [tr(since + 1, 50, 100), tr(since + 2, 80, 100)]);
+  assert.ok(!ev.met && Math.round(ev.value) === 65 && /needs 3|it needs 3/.test(ev.status), "two rounds are not enough: " + ev.status);
+  ev = R.evaluateGoal(goal, m, entry, [tr(since - 5, 0, 100), tr(since + 1, 70, 100), tr(since + 2, 80, 100), tr(since + 3, 75, 100)]);
+  assert.ok(ev.met && Math.round(ev.value) === 75, "three tracked rounds at 75%: " + JSON.stringify(ev));
+  ev = R.evaluateGoal(goal, m, entry, [tr(since + 1, 70, 100), tr(since + 2, 60, 100), tr(since + 3, 60, 100)]);
+  assert.ok(!ev.met && Math.round(ev.progress * 100) === 90);
+  assert.ok(/No tracked round/.test(R.evaluateGoal(goal, m, entry, [R.roundFacts(rnd(since + 1, { sight: false }))]).status), "rounds without tracking data");
+});
+
+test("goalsHtml: bars for each goal, medal buttons only for tiers above your best, the body form only for a drill with tracking data", () => {
+  const entry = entryOf([10, 12, 14, 16, 18], { bestMedal: "bronze" });
+  const m = R.drillModel("aaa", entry, logic, [], "Aaa");
+  let html = R.goalsHtml(m);
+  assert.ok(html.includes("data-goals-empty") && html.includes('data-goal-medal="silver"') && html.includes('data-goal-medal="gold"') && !html.includes('data-goal-medal="bronze"'));
+  assert.ok(html.includes('data-goal-form="score"') && !html.includes('data-goal-form="body"'));
+  const goal = { id: "gabc", type: "medal", tier: "silver", since: NOW, base: 10, done: null };
+  m.goals = [R.evaluateGoal(goal, m, entry, [])];
+  html = R.goalsHtml(m);
+  assert.ok(html.includes('data-goal="gabc"') && html.includes('data-goal-del="gabc"') && html.includes("aim-an-prog") && !html.includes('data-goal-medal="silver"'), "a silver goal already open is not offered again");
+  const tracked = R.drillModel("aaa", entry, logic, [{ ...R.roundFacts(rnd(NOW)), trackOn: 5, trackN: 10 }], "Aaa");
+  assert.ok(tracked.tracked && R.goalsHtml(tracked).includes('data-goal-form="body"'));
+  assert.ok(R.goalsHtml(R.drillModel("n", entryOf([1, 2]), logic, [], "N")).indexOf("data-goal-medal") < 0, "no medal scores: no medal buttons");
+  assert.ok(R.drillDetailHtml(m, entry).includes("Goals"));
+});
+
+function fakeStorage() { const s = {}; return { getItem: (k) => (k in s ? s[k] : null), setItem: (k, v) => { s[k] = String(v); }, removeItem: (k) => { delete s[k]; }, _s: s }; }
+
+test("goals in the panel: set from the drill detail, kept in localStorage, shown on the row; reaching one saves it done and shows the toast once", async () => {
+  const ls = fakeStorage(); global.localStorage = ls;
+  try {
+    const A = richStub();
+    const runs = { drillA: entryOf([10, 10, 10, 10, 12], { name: "Drill A", unit: "pts", bestMedal: "bronze" }) };
+    const routines = { runs: () => runs, logic, ui: { medalIcon: (t) => `<svg data-medal="${t}"/>` } };
+    const p = await openPanel(A, "drills", { win: { __aimRoutines: routines } });
+    p.click("[data-drill-open]", { drillOpen: "drillA" }); await settle();
+    assert.ok(p.content().innerHTML.includes("data-goals-empty"));
+    const submit = (kind, value) => p.content().listeners.submit[0]({ target: { closest: (s) => (s === "[data-goal-form]" ? { dataset: { goalForm: kind }, elements: { v: { value: String(value) } } } : null) }, preventDefault() {} });
+    submit("score", 20); await settle();
+    let saved = JSON.parse(ls.getItem("aim-an-goals-v1"));
+    assert.strictEqual(saved.drillA.length, 1); assert.strictEqual(saved.drillA[0].target, 20);
+    assert.ok(p.content().innerHTML.includes("Score 20 pts") && p.content().innerHTML.includes("aim-an-prog"));
+    submit("score", 5); await settle();
+    assert.strictEqual(JSON.parse(ls.getItem("aim-an-goals-v1")).drillA.length, 1, "below your best: refused");
+    p.click("[data-goal-medal]", { goalMedal: "silver" }); await settle();
+    assert.strictEqual(JSON.parse(ls.getItem("aim-an-goals-v1")).drillA.length, 2);
+    p.click("[data-drill-back]", {}); await settle();
+    assert.ok(/goal \d+%/.test(p.content().innerHTML), "the row mentions the goal");
+    // a finished run reaches both goals
+    runs.drillA.runs.push({ at: Date.now() + 1000, score: 22, died: false, medal: "silver" });
+    const made = []; const realCreate = p.document.createElement.bind(p.document);
+    p.document.createElement = (t) => { const el = realCreate(t); made.push(el); return el; };
+    const got = await p.ui.checkGoals();
+    assert.strictEqual(got.length, 2, JSON.stringify(got));
+    saved = JSON.parse(ls.getItem("aim-an-goals-v1"));
+    assert.ok(saved.drillA.every((g) => g.done), "saved as done");
+    const toasts = made.filter((t) => /es-score-toast/.test(t.className));
+    assert.strictEqual(toasts.length, 1, "one message for both");
+    assert.ok(/Goal reached: /.test(toasts[0].textContent) && /\(\+1 more\)/.test(toasts[0].textContent), toasts[0].textContent);
+    assert.strictEqual((await p.ui.checkGoals()).length, 0, "a done goal does not fire again");
+    p.click("[data-drill-open]", { drillOpen: "drillA" }); await settle();
+    p.click("[data-goal-del]", { goalDel: saved.drillA[0].id }); await settle();
+    assert.strictEqual(JSON.parse(ls.getItem("aim-an-goals-v1")).drillA.length, 1);
+  } finally { delete global.localStorage; }
+});
+
+test("suggested warm-up: the card on the Drills tab, saved through routines.saveRoutine as one routine (the same one when saved again)", async () => {
+  const rounds = []; for (let d = 1; d <= 3; d++) for (let i = 0; i < 8; i++) rounds.push(rnd(NOW - d * DAY + i * 5 * MIN, { code: ["aaa", "bbb", "ccc"][i % 3], n: 60, hits: i < 2 ? 15 : 36 }));
+  const A = stub({ rounds });
+  const saved = [];
+  const routines = { runs: () => ({}), routines: () => saved.slice(), logic, ui: { medalIcon: () => "" }, saveRoutine(r) { const at = saved.findIndex((x) => x.id === r.id); if (at >= 0) saved[at] = r; else saved.push(r); return r; } };
+  const coach = (() => { const win = { __aimAnalytics: A }; new Function("window", require("fs").readFileSync(path.join(__dirname, "..", "app", "coach.js"), "utf-8"))(win); return win.__aimCoach; })();
+  const p = await openPanel(A, "drills", { win: { __aimRoutines: routines, __aimCoach: coach } });
+  const html = p.content().innerHTML;
+  assert.ok(html.includes("data-warmup") && html.includes("Suggested warm-up") && html.includes("first 2 rounds"), html.slice(0, 500));
+  assert.ok(html.includes("data-warmup-save") && html.includes("Add to Routines"));
+  p.click("[data-warmup-save]", {}); await settle();
+  assert.strictEqual(saved.length, 1); assert.strictEqual(saved[0].id, "rt-suggested-warmup");
+  assert.ok(saved[0].steps.length >= 2 && saved[0].steps[0].runs === 2 && saved[0].steps.every((s) => s.minScore === null && s.minMedal === null && s.rank === ""), JSON.stringify(saved[0]));
+  p.click("[data-warmup-save]", {}); await settle();
+  assert.strictEqual(saved.length, 1, "saving again updates the same routine");
+  assert.deepStrictEqual(R.warmupRoutine({ steps: [{ code: "x1", runs: 2 }, { code: "y2", runs: 1 }] }, (c) => c.toUpperCase(), (c) => (c === "x1" ? "ball" : "")).steps.map((s) => [s.code, s.name, s.type, s.runs]), [["x1", "X1", "ball", 2], ["y2", "Y2", "", 1]]);
+  assert.ok(R.warmupHtml({ cold: false, steps: [], sessions: null }, (c) => c, false).includes("most played drills"), "no steps: says what is needed");
+  assert.ok(R.warmupHtml({ cold: true, firstAccuracyPercent: 40, middleAccuracyPercent: 50, sessions: 4, steps: [{ code: "a", runs: 2, accuracyPercent: 50 }, { code: "b", runs: 1, accuracyPercent: 40 }] }, (c) => c, true).includes("Update the routine"));
+  assert.strictEqual(R.warmupHtml(null, (c) => c, false), "");
+  const q = await openPanel(A, "drills", { win: { __aimRoutines: routines } });
+  assert.ok(!q.content().innerHTML.includes("data-warmup"), "no coach: no card, no crash");
+});
+
+test("heatmap drill filter shows the drill's name, not its share code", () => {
+  const code = "0123456789abcdef";
+  const html = R.heatmapHtml([], [rnd(NOW, { code })], { map: "bind", mode: "", code: "", weapon: "", layer: "deaths" }, null, null, 60, { k: 1, tx: 0, ty: 0 });
+  assert.ok(html.includes(`<option value="${code}">`), "the option keeps the code as its value");
+  assert.ok(/Drill<select data-filter="code">/.test(html) && !html.includes("Drill code"));
+});
+
 (async () => {
   let passed = 0, failed = 0;
   for (const [name, fn] of tests) {

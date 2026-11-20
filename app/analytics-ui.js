@@ -374,7 +374,9 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
   .es-tool.aim-an-panel { max-height: calc(100vh - 32px); }
   .es-tool.aim-an-panel .es-tool-head { padding: 16px 16px 8px; }
   .es-tool.aim-an-panel .es-tool-body { padding: 6px 16px 16px; }
-  .es-tool.aim-an-panel .aim-an-tabs button { flex: 1 1 auto; padding: 0 14px; }
+  /* seven tabs: four and three in two rows, instead of three ragged rows */
+  .es-tool.aim-an-panel .aim-an-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .es-tool.aim-an-panel .aim-an-tabs button { min-width: 0; height: 34px; padding: 0 4px; font-size: 12px; letter-spacing: 0.04em; }
   .aim-an-charts { grid-template-columns: minmax(0, 1fr); }
   .aim-an-filters select { min-width: 0; max-width: 100%; width: 100%; }
   .aim-an-filters label { flex: 1 1 40%; min-width: 0; }
@@ -412,6 +414,15 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
 .aim-an-sess-drills { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
 .aim-an-sess-drills li { display: grid; grid-template-columns: minmax(0, 1fr) 96px 64px 120px; gap: 8px; align-items: center; padding: 6px 10px; background: var(--an-raised); border: 1px solid var(--an-line); border-left: 3px solid var(--an-line-2);
   color: var(--an-soft); font: 600 13px/1.3 var(--an-head); font-variant-numeric: tabular-nums; }
+.aim-an-sess-drills.aim-an-sd-six li { grid-template-columns: minmax(0, 1fr) 72px 46px 96px 86px minmax(120px, 1.1fr); }
+.aim-an-sd-score { text-align: right; }
+.aim-an-sd-change { min-width: 0; color: var(--an-muted); font-size: 12px; }
+.aim-an-sd-change b { font-weight: 700; }
+.aim-an-sd-change b.is-up { color: var(--an-good); }
+.aim-an-sd-change b.is-down { color: var(--an-red-2); }
+.aim-an-sd-change b.is-same { color: var(--an-soft); }
+.aim-an-sd-change small { color: var(--an-dim); font-size: 11px; }
+.aim-an-sd-change.is-new { color: var(--an-dim); }
 .aim-an-sd-name { overflow: hidden; color: #fff; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .aim-an-medal { display: inline-flex; align-items: center; gap: 5px; margin-right: 10px; color: var(--an-soft); font: 700 12px/1 var(--an-head); }
 .aim-an-medal svg { display: block; width: 16px; height: 18px; flex: none; }
@@ -443,10 +454,14 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
 .aim-an-medals-row { display: flex; flex-wrap: wrap; gap: 6px 0; margin: 0 0 6px; }
 .aim-an-prog { height: 8px; margin: 6px 0 4px; background: rgba(255, 255, 255, 0.06); }
 .aim-an-prog i { display: block; height: 100%; background: var(--an-red); }
-.aim-an-scorewrap { padding: 10px 12px; background: var(--an-raised); border: 1px solid var(--an-line); border-left: 3px solid var(--an-line-2); }
+.aim-an-scorewrap { max-width: 860px; padding: 10px 12px; background: var(--an-raised); border: 1px solid var(--an-line); border-left: 3px solid var(--an-line-2); }
 .aim-an-score { display: block; width: 100%; height: auto; }
 .aim-an-score .aim-an-grid { stroke: rgba(255, 255, 255, 0.07); stroke-width: 1; }
 .aim-an-score .aim-an-axis { fill: var(--an-muted); font: 600 10px var(--an-head); }
+.aim-an-medal-tag { font: 700 9px var(--an-head); letter-spacing: 0.06em; text-transform: uppercase; }
+.aim-an-medal-tag.is-bronze { fill: #e8a867; }
+.aim-an-medal-tag.is-silver { fill: #c9d1da; }
+.aim-an-medal-tag.is-gold { fill: #ffd24d; }
 .aim-an-medal-line { stroke-width: 1; stroke-dasharray: 5 4; }
 .aim-an-medal-line.is-bronze { stroke: #e8a867; }
 .aim-an-medal-line.is-silver { stroke: #c9d1da; }
@@ -454,6 +469,38 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
 .aim-an-run { fill: #fff; stroke: var(--an-red); stroke-width: 1.4; }
 .aim-an-run.is-died { fill: var(--an-panel); stroke: var(--an-red-2); }
 .aim-an-best-ring { fill: none; stroke: var(--an-tip); stroke-width: 1.6; }
+/* Goals and the suggested warm-up (21 Nov 2026) */
+.aim-an-goals { display: grid; gap: 6px; margin: 0 0 10px; padding: 0; list-style: none; }
+.aim-an-goal { padding: 8px 12px; background: var(--an-raised); border: 1px solid var(--an-line); border-left: 3px solid var(--an-line-2); }
+.aim-an-goal.is-done { border-left-color: var(--an-good); }
+.aim-an-goal-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.aim-an-goal-head b { color: #fff; font: 700 13px/1.2 var(--an-head); letter-spacing: 0.04em; text-transform: uppercase; }
+.es-tool.aim-an-panel .aim-an-goal-del { width: 26px; height: 26px; padding: 0; background: transparent; color: var(--an-muted); border: 0; border-radius: 0; font-size: 12px; cursor: pointer; }
+.es-tool.aim-an-panel .aim-an-goal-del:hover { background: var(--an-raised-2); color: #fff; }
+.aim-an-goal .aim-an-prog { margin: 6px 0 4px; }
+.aim-an-goal.is-done .aim-an-prog i { background: var(--an-good); }
+.aim-an-goal small { color: var(--an-muted); font-size: 12px; }
+.aim-an-goal-add { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 14px; margin: 0 0 6px; }
+.es-tool.aim-an-panel .aim-an-goal-add > button, .es-tool.aim-an-panel .aim-an-goal-form button, .es-tool.aim-an-panel .aim-an-warm-actions button {
+  display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px; background: transparent; color: var(--an-soft); border: 1px solid var(--an-line-2); border-radius: 0;
+  font: 700 12px/1 var(--an-head); letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; clip-path: var(--an-slant-sm); transition: background-color 0.15s, border-color 0.15s, color 0.15s; }
+.es-tool.aim-an-panel .aim-an-goal-add > button:hover, .es-tool.aim-an-panel .aim-an-goal-form button:hover, .es-tool.aim-an-panel .aim-an-warm-actions button:hover { background: var(--an-raised); border-color: #fff; color: #fff; }
+.aim-an-goal-add svg { display: block; width: 16px; height: 18px; flex: none; }
+.aim-an-goal-form { display: flex; align-items: flex-end; gap: 6px; }
+.aim-an-goal-form label { display: grid; gap: 6px; font: 700 11px/1.2 var(--an-head); letter-spacing: 0.1em; text-transform: uppercase; color: var(--an-muted); }
+.aim-an-goal-form input { box-sizing: border-box; width: 120px; height: 34px; padding: 0 10px; background: var(--an-panel); color: #fff; border: 1px solid var(--an-line-2); border-radius: 0; font: 600 13px var(--an-head); font-variant-numeric: tabular-nums; }
+.aim-an-goal-form input:hover, .aim-an-goal-form input:focus { border-color: var(--an-red); }
+.aim-an-warm { margin: 0 0 14px; padding: 10px 12px 12px; background: var(--an-raised); border: 1px solid var(--an-line); border-left: 3px solid var(--an-line-2); }
+.aim-an-warm.is-cold { border-left-color: var(--an-tip); }
+.aim-an-warm h4 { margin: 0 0 4px; font: 800 italic 14px/1 var(--an-head); font-stretch: 75%; letter-spacing: 0.08em; text-transform: uppercase; color: #fff; }
+.aim-an-warm p { margin: 0 0 8px; color: var(--an-soft); font-size: 13px; line-height: 1.5; }
+.aim-an-warm ol { display: grid; gap: 4px; margin: 0 0 10px; padding: 0; list-style: none; }
+.aim-an-warm li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; padding: 5px 8px; background: var(--an-panel); border-left: 2px solid var(--an-line-2); color: var(--an-soft); font-size: 13px; }
+.aim-an-warm li i { color: var(--an-red-2); font: 800 italic 14px/1 var(--an-head); font-style: italic; }
+.aim-an-warm li b { color: #fff; font-weight: 700; }
+.aim-an-warm li em { color: var(--an-muted); font-style: normal; font-size: 12px; }
+.aim-an-warm-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.aim-an-warm-msg { color: var(--an-muted); font-size: 12px; }
 /* Compare */
 .aim-an-cmp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px; }
 .aim-an-cmp { display: grid; gap: 4px; min-width: 0; padding: 12px; background: var(--an-raised); border: 1px solid var(--an-line); border-left: 3px solid var(--an-line-2); }
@@ -489,6 +536,16 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
   .aim-an-drill .aim-an-spark, .aim-an-drill .aim-an-drill-num + .aim-an-drill-num, .aim-an-drill .aim-an-spread { display: none; }
   .aim-an-sess-drills li { grid-template-columns: minmax(0, 1fr) 70px 50px; }
   .aim-an-sess-drills li > :nth-child(4) { display: none; }
+  .aim-an-sess-drills.aim-an-sd-six li { grid-template-columns: minmax(0, 1fr) 62px 46px; }
+  .aim-an-sess-drills.aim-an-sd-six li > :nth-child(4), .aim-an-sess-drills.aim-an-sd-six li > :nth-child(5) { display: none; }
+  .aim-an-sess-drills.aim-an-sd-six li > .aim-an-sd-change { grid-column: 1 / -1; }
+}
+@media (max-width: 480px) {
+  /* the names wrap to two lines instead of being cut to three letters; the small line under them goes */
+  .aim-an-drill { grid-template-columns: 20px minmax(0, 1fr) auto auto; gap: 8px; }
+  .aim-an-drill-name { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; white-space: normal; line-height: 1.2; }
+  .aim-an-drill-name small { display: none; }
+  .aim-an-drill-trend { min-width: 52px; }
 }
 `;
   function injectCss() {
@@ -1168,9 +1225,9 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     const sort = (set) => [...set].sort((a, b) => a.localeCompare(b));
     return { maps: [...maps].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map((e) => e[0]), modes: sort(modes), codes: sort(codes), weapons: sort(weapons) };
   }
-  const select = (name, label, values, current, allLabel) => `<label>${label}<select data-filter="${name}">`
+  const select = (name, label, values, current, allLabel, text = (v) => v) => `<label>${label}<select data-filter="${name}">`
     + (allLabel ? `<option value="">${allLabel}</option>` : "")
-    + values.map((v) => `<option value="${esc(v)}"${v === current ? " selected" : ""}>${esc(v)}</option>`).join("") + `</select></label>`;
+    + values.map((v) => `<option value="${esc(v)}"${v === current ? " selected" : ""}>${esc(text(v))}</option>`).join("") + `</select></label>`;
   const CELL_KEY = /^-?\d+,-?\d+$/;
   // Fight cells for the filter: { cells: {"cx,cz": n}, total, withoutPosition (null = unknown), source: "days" | "rounds" }.
   // read = the fight read for this filter (a fightCells answer, or countFights() of the engagements), null when it failed.
@@ -1232,7 +1289,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     const layer = LAYERS.some((l) => l[0] === f.layer) ? f.layer : "deaths";
     const showDeaths = layer !== "fights", showFights = layer !== "deaths";
     const filters = `<div class="aim-an-filters">${select("map", "Map", opts.maps, f.map, "")}${select("mode", "Mode", opts.modes, f.mode, "All modes")}`
-      + `${select("code", "Drill code", opts.codes, f.code, "All drills")}${select("weapon", "Weapon", opts.weapons, f.weapon, "All weapons")}</div>`
+      + `${select("code", "Drill", opts.codes.slice().sort((a, b) => drillLabel(a).localeCompare(drillLabel(b))), f.code, "All drills", drillLabel)}${select("weapon", "Weapon", opts.weapons, f.weapon, "All weapons")}</div>`
       + `<div class="aim-an-filters aim-an-layers" role="group" aria-label="Layer">`
       + LAYERS.map(([id, label]) => `<button type="button" data-layer="${id}" aria-pressed="${id === layer}">${label}</button>`).join("")
       + `<button type="button" class="aim-an-zoom-reset" data-zoom-reset title="Wheel over the map zooms, drag pans, double-click resets">Reset zoom</button></div>`;
@@ -1711,6 +1768,39 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
       return { ...d, name: typeof nameOf === "function" ? nameOf(d.code) : d.code, accuracy: d.shots > 0 ? (d.hits / d.shots) * 100 : null, bestMedal, bestScore, unit: entry ? entry.unit || "" : "" };
     }).sort((a, b) => b.rounds - a.rounds || (a.name < b.name ? -1 : 1));
   }
+  // Each drill of the session against the last time it was played before this session (21 Nov 2026): the nearest earlier session that had it, looking back
+  // DELTA_LOOKBACK sessions. acc = accuracy change in points (needs DELTA_MIN_SHOTS shots in both), score = change of the best finished score (needs a scored run in both).
+  // { ...sessionDrills row, prev: { start, rounds, accuracy, bestScore } | null, acc: { delta, verdict } | null, score: { delta, verdict } | null }; verdict "better" | "worse" | "same".
+  const DELTA_LOOKBACK = 12, DELTA_MIN_SHOTS = 15, DELTA_ACC_EPS = 2, DELTA_SCORE_EPS = 0.02;
+  function sessionDrillChanges(sessions, index, runsState, nameOf) {
+    const now = sessionDrills(sessions[index], runsState, nameOf), want = new Set(now.map((d) => d.code)), prev = new Map();
+    for (let i = index - 1; i >= Math.max(0, index - DELTA_LOOKBACK) && prev.size < want.size; i--) {
+      for (const d of sessionDrills(sessions[i], runsState, nameOf)) if (want.has(d.code) && !prev.has(d.code)) prev.set(d.code, { start: sessions[i].start, rounds: d.rounds, shots: d.shots, accuracy: d.accuracy, bestScore: d.bestScore });
+    }
+    return now.map((d) => {
+      const p = prev.get(d.code) || null, lower = !!(runsState && runsState[d.code] && runsState[d.code].lower);
+      let acc = null, score = null;
+      if (p && d.accuracy !== null && p.accuracy !== null && d.shots >= DELTA_MIN_SHOTS && p.shots >= DELTA_MIN_SHOTS) {
+        const delta = d.accuracy - p.accuracy;
+        acc = { delta, verdict: Math.abs(delta) < DELTA_ACC_EPS ? "same" : delta > 0 ? "better" : "worse" };
+      }
+      if (p && num(d.bestScore) && num(p.bestScore)) {
+        const delta = d.bestScore - p.bestScore;
+        score = { delta, verdict: Math.abs(delta) < Math.abs(p.bestScore) * DELTA_SCORE_EPS ? "same" : (lower ? -delta : delta) > 0 ? "better" : "worse" };
+      }
+      return { ...d, prev: p, acc, score };
+    });
+  }
+  const signed = (v, dec = 0) => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(dec).replace(/\.0+$/, "");
+  // The "against last time" cell of a drill row.
+  function changeCellHtml(d) {
+    if (!d.prev) return `<span class="aim-an-sd-change is-new">First time in this list</span>`;
+    const bit = (c, text) => `<b class="${c.verdict === "better" ? "is-up" : c.verdict === "worse" ? "is-down" : "is-same"}">${esc(text)}</b>`;
+    const parts = [];
+    if (d.acc) parts.push(bit(d.acc, d.acc.verdict === "same" ? "same accuracy" : signed(d.acc.delta, 1) + " pts accuracy"));
+    if (d.score) parts.push(bit(d.score, d.score.verdict === "same" ? "same best score" : signed(d.score.delta, 2) + (d.unit === "%" ? " pts" : d.unit ? " " + d.unit : "") + " best score"));
+    return `<span class="aim-an-sd-change" title="Against ${esc(shortDate(d.prev.start))}, the last session that had this drill">${parts.length ? parts.join(" · ") : "not enough shots to compare"}<small> vs ${esc(shortDate(d.prev.start))}</small></span>`;
+  }
   // "Today 14:05", "Yesterday 21:30", "17 Nov 21:30".
   function sessionLabel(s, now = Date.now()) {
     const d = dayOf(s.start);
@@ -1751,9 +1841,11 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
       versus = `<div class="aim-an-versus" data-versus>${verdictList("What improved", v.improved, "is-up")}${verdictList("What slipped", v.slipped, "is-down")}</div>`
         + (none ? `<p class="aim-an-note">Everything is within a normal range of your last ${plural(v.before, "session")}.</p>` : `<p class="aim-an-note">Against your last ${plural(v.before, "session")} put together. Small changes are ignored, and a number needs enough shots, kills or ticks behind it.</p>`);
     }
-    const rows = drills.map((d) => `<li><span class="aim-an-sd-name">${esc(d.name)}</span><span>${plural(d.rounds, "round")}</span><span>${d.accuracy === null ? "–" : Math.round(d.accuracy) + "%"}</span><span>${d.bestMedal ? `<span class="aim-an-medal is-${d.bestMedal}">${medalSvg(d.bestMedal)}${MEDAL_WORD[d.bestMedal]}</span>` : ""}</span></li>`).join("");
+    const rows = sessionDrillChanges(sessions, idx, runsState, nameOf).map((d) => `<li><span class="aim-an-sd-name">${esc(d.name)}</span><span>${plural(d.rounds, "round")}</span><span>${d.accuracy === null ? "–" : Math.round(d.accuracy) + "%"}</span>`
+      + `<span class="aim-an-sd-score">${d.bestScore === null ? "" : esc(fmtScore(d.bestScore, d.unit))}</span><span>${d.bestMedal ? `<span class="aim-an-medal is-${d.bestMedal}">${medalSvg(d.bestMedal)}${MEDAL_WORD[d.bestMedal]}</span>` : ""}</span>${changeCellHtml(d)}</li>`).join("");
     return chips + tiles + medalLine + `<h4 class="aim-an-sub">Rounds</h4>` + timelineHtml(timelineOf(s)) + `<h4 class="aim-an-sub">Against your earlier sessions</h4>` + versus
-      + `<h4 class="aim-an-sub">Drills this session</h4><ul class="aim-an-sess-drills" data-session-drills>${rows}</ul>`;
+      + `<h4 class="aim-an-sub">Drills this session, against the last time you played each</h4><ul class="aim-an-sess-drills aim-an-sd-six" data-session-drills>${rows}</ul>`
+      + `<p class="aim-an-note">Accuracy needs ${DELTA_MIN_SHOTS} shots in both sessions; ${DELTA_ACC_EPS} points or less (and a best score within ${Math.round(DELTA_SCORE_EPS * 100)}%) counts as the same. Best score is your best finished run of that session, a run that ended in your death is not counted.</p>`;
   }
   const MEDAL_WORD = { bronze: "Bronze", silver: "Silver", gold: "Gold" };
   const medalSvg = (tier) => { try { const R = window.__aimRoutines; return R && R.ui && typeof R.ui.medalIcon === "function" ? R.ui.medalIcon(tier) || "" : ""; } catch { return ""; } };
@@ -1772,10 +1864,29 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
   // The last `range` days against the `range` days before: accuracy, headshot rate and deaths from the day rows (they reach back for good); kill time and tracking
   // from the stored rounds with sight data, which only reach back 30 days (and RAW_ROUNDS rounds), so the earlier period's timing is left out when it would not be whole.
   // { range, cur, prev, rows, timingPrev: whether the earlier period's timing is complete }
+  // The day rows with the stored rounds laid over them: a day whose row is missing, or counts fewer rounds than are stored for that day (the recorder
+  // sums a day after the write, so a failed or late roll-up leaves a gap), is taken from the rounds themselves. A day row never goes down here.
+  function mergeRawDays(days, facts) {
+    const by = new Map();
+    for (const f of arr(facts)) {
+      if (!num(f.at)) continue;
+      const k = dayOf(f.at), d = by.get(k) || { day: k, rounds: 0, shots: 0, hits: 0, headshots: 0, kills: 0, deaths: 0 };
+      d.rounds++; d.shots += f.shots || 0; d.hits += f.hits || 0; d.headshots += f.headshots || 0; d.kills += f.kills || 0; d.deaths += f.deaths || 0;
+      by.set(k, d);
+    }
+    const out = arr(days).filter((d) => d && typeof d.day === "string");
+    const at = new Map(out.map((d, i) => [d.day, i]));
+    for (const [k, d] of by) {
+      if (!at.has(k)) out.push(d);
+      else if ((out[at.get(k)].rounds || 0) < d.rounds) out[at.get(k)] = { ...out[at.get(k)], ...d };
+    }
+    return out;
+  }
   function periodCompare(days, rounds, range, now = Date.now()) {
     const curFrom = daysAgo(range - 1, now), prevFrom = daysAgo(2 * range - 1, now), prevTo = daysAgo(range, now), today = dayOf(now);
-    const cur = totalsFromDays(days, curFrom, today), prev = totalsFromDays(days, prevFrom, prevTo);
     const facts = arr(rounds).map(roundFacts).filter((f) => num(f.at));
+    days = mergeRawDays(days, facts);
+    const cur = totalsFromDays(days, curFrom, today), prev = totalsFromDays(days, prevFrom, prevTo);
     const oldest = facts.length ? Math.min(...facts.map((f) => f.at)) : Infinity;
     const timingPrev = 2 * range <= 30 && (facts.length < RAW_ROUNDS || dayOf(oldest) <= prevFrom);
     const part = (from, to) => totalsOf(facts.filter((f) => { const d = dayOf(f.at); return d >= from && d <= to; }));
@@ -1786,7 +1897,8 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
   }
   function compareCardHtml(r, range) {
     const bar = (v, cls) => `<i class="${cls}"><b style="width:${r.cur !== null && r.prev !== null && Math.max(r.cur, r.prev) > 0 && v !== null ? Math.max(4, Math.round((v / Math.max(r.cur, r.prev)) * 100)) : 0}%"></b></i>`;
-    const arrow = r.verdict === "unknown" ? "" : r.delta > 0 ? "↑" : r.delta < 0 ? "↓" : "→";
+    // an arrow only for a change that counts (the same threshold as the verdict): a small one is "about the same", so it points sideways
+    const arrow = r.verdict === "unknown" ? "" : r.verdict === "same" ? "→" : r.delta > 0 ? "↑" : "↓";
     const verdict = { better: "is-up", worse: "is-down", same: "", unknown: "" }[r.verdict];
     const why = r.cur === null ? `Not enough ${r.noun} in the last ${range} days (needs ${r.min}).` : r.prev === null ? `Not enough ${r.noun} in the ${range} days before.` : "";
     const delta = r.delta === null ? "" : (r.delta > 0 ? "+" : r.delta < 0 ? "−" : "") + Math.abs(r.delta).toFixed(r.dec) + (r.unit === "%" ? " pts" : r.unit === " s" ? " s" : "");
@@ -1851,7 +1963,8 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     return { code, name: name || (entry && entry.name) || String(code).slice(0, 7), unit: entry ? entry.unit || "" : "", lower, runs: runs.length, goodRuns: scores.length, died: runs.length - scores.length,
       last, best, bestMedal: entry && entry.bestMedal ? entry.bestMedal : null, medals: entry && entry.medals ? entry.medals : { bronze: 0, silver: 0, gold: 0 }, lastAt: runs.length ? runs[runs.length - 1].at : (arr(plays).length ? Math.max(...plays.map((f) => f.at || 0)) : 0),
       spark: scores.slice(-SPARK_RUNS), trend, spread, thresholds: th, next, progress,
-      rounds: arr(plays).length, accuracy: shots ? (hits / shots) * 100 : null, headshotPct: hits ? (heads / hits) * 100 : null, kills: arr(plays).reduce((s, f) => s + (f.kills || 0), 0), deaths: arr(plays).reduce((s, f) => s + (f.deaths || 0), 0) };
+      rounds: arr(plays).length, accuracy: shots ? (hits / shots) * 100 : null, headshotPct: hits ? (heads / hits) * 100 : null, kills: arr(plays).reduce((s, f) => s + (f.kills || 0), 0), deaths: arr(plays).reduce((s, f) => s + (f.deaths || 0), 0),
+      tracked: arr(plays).some((f) => f.trackN > 0), goals: [] };
   }
   // Every drill with a medal history or a recorded round, as models.
   function drillModels(runsState, logic, facts, nameOf) {
@@ -1890,29 +2003,36 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     const cls = m.trend ? (m.trend.direction === "up" ? " is-up" : m.trend.direction === "down" ? " is-down" : "") : "";
     const sp = m.spread ? `<span class="aim-an-spread is-${m.spread.label}" title="Scores vary by about ${Math.round(m.spread.pct)}% from run to run">${m.spread.label}</span>` : `<span class="aim-an-spread">–</span>`;
     return `<li><div class="aim-an-drill${cls}" role="button" tabindex="0" data-drill-open="${esc(m.code)}" aria-label="${esc(m.name)}: open its history">`
-      + `${medal}<span class="aim-an-drill-name">${esc(m.name)}<small>${m.runs ? plural(m.runs, "scored run") : "no scored runs"}${m.rounds ? ", " + plural(m.rounds, "round") + " recorded" : ""}</small></span>`
+      + `${medal}<span class="aim-an-drill-name">${esc(m.name)}<small>${m.runs ? plural(m.runs, "scored run") : "no scored runs"}${m.rounds ? ", " + plural(m.rounds, "round") + " recorded" : ""}${goalTag(m)}</small></span>`
       + `${sparkSvg(m.spark)}<span class="aim-an-drill-num">${esc(fmtScore(m.last, m.unit))}<small>last</small></span><span class="aim-an-drill-num">${esc(fmtScore(m.best, m.unit))}<small>best</small></span>`
       + `<span class="aim-an-drill-trend">${esc(trendText(m))}</span>${sp}</div></li>`;
   }
-  function drillsHtml(models, sort) {
+  function drillsHtml(models, sort, top = "") {
     if (!models.length) return `<p class="aim-an-msg">No drills yet. Finish a drill and its score history, medals and trend show up here.</p>`;
     sort = DRILL_SORTS.some((s) => s[0] === sort) ? sort : "recent";
     const bar = `<div class="aim-an-filters" role="group" aria-label="Sort drills">` + DRILL_SORTS.map(([id, label]) => `<button type="button" data-sort="${id}" aria-pressed="${id === sort}">${label}</button>`).join("") + `</div>`;
-    return bar + `<ul class="aim-an-drills" data-drill-list>` + sortDrills(models, sort).map(drillRowHtml).join("") + `</ul>`
+    return top + bar + `<ul class="aim-an-drills" data-drill-list>` + sortDrills(models, sort).map(drillRowHtml).join("") + `</ul>`
       + `<p class="aim-an-note">Scores come from your finished runs (the newest 40 per drill, runs that ended in your death are not counted). Trend compares your newest 5 runs with the 5 before; steady means your scores vary by under ${STEADY_PCT}%, swingy by ${SWINGY_PCT}% or more. Click a drill for its history.</p>`;
   }
   // The big score chart of one drill: every run (a died run is a hollow mark), dashed lines at the three medal scores, the best run ringed.
   function scoreChartSvg(entry, m) {
     const runs = arr(entry && entry.runs).filter((r) => r && num(r.score)).slice(-40);
     if (runs.length < 2) return "";
-    const W = 600, H = 190, L = 40, R = 8, T = 10, B = 18;
+    const W = 720, H = 200, L = 44, R = 50, T = 10, B = 18;
     const th = m.thresholds, vals = runs.map((r) => r.score).concat(th ? [th.bronze, th.silver, th.gold] : []);
     let lo = Math.min(...vals), hi = Math.max(...vals);
     if (hi - lo < 1e-9) { lo -= 1; hi += 1; }
     const nt = niceTicks(lo, hi, 4); lo = nt.ticks[0]; hi = nt.ticks[nt.ticks.length - 1];
     const x = (i) => L + (i / (runs.length - 1)) * (W - L - R), y = (v) => H - B - ((v - lo) / (hi - lo)) * (H - T - B);
     const grid = nt.ticks.map((v) => `<line class="aim-an-grid" x1="${L}" x2="${W - R}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}"/><text class="aim-an-axis" x="${L - 5}" y="${(y(v) + 3.5).toFixed(1)}" text-anchor="end">${v.toFixed(nt.dec)}</text>`).join("");
-    const lines = th ? ["bronze", "silver", "gold"].map((t) => `<line class="aim-an-medal-line is-${t}" x1="${L}" x2="${W - R}" y1="${y(th[t]).toFixed(1)}" y2="${y(th[t]).toFixed(1)}"/>`).join("") : "";
+    // a dashed line per medal score with its name at the right end (the names are pushed apart when the lines are close, so they stay readable)
+    let lines = "";
+    if (th) {
+      const at = ["bronze", "silver", "gold"].map((t) => ({ t, y: y(th[t]) })).sort((a, b) => a.y - b.y), label = [];
+      for (const l of at) label.push({ t: l.t, y: label.length ? Math.max(l.y, label[label.length - 1].y + 11) : l.y });
+      lines = at.map((l) => `<line class="aim-an-medal-line is-${l.t}" x1="${L}" x2="${W - R}" y1="${l.y.toFixed(1)}" y2="${l.y.toFixed(1)}"/>`).join("")
+        + label.map((l) => `<text class="aim-an-medal-tag is-${l.t}" x="${W - R + 5}" y="${(l.y + 3.5).toFixed(1)}">${MEDAL_WORD[l.t]}</text>`).join("");
+    }
     const path = runs.map((r, i) => `${x(i).toFixed(1)},${y(r.score).toFixed(1)}`).join(" ");
     const bestI = m.best !== null ? runs.reduce((bi, r, i) => (!r.died && r.score === m.best ? i : bi), -1) : -1;
     const dots = runs.map((r, i) => `<circle class="aim-an-run${r.died ? " is-died" : ""}" cx="${x(i).toFixed(1)}" cy="${y(r.score).toFixed(1)}" r="3.2" data-tip="${esc(`${fmtScore(r.score, m.unit)}${r.died ? " (died)" : r.medal ? ", " + MEDAL_WORD[r.medal] : ""}\n${shortDate(r.at)} ${hhmm(r.at)}`)}"/>`).join("");
@@ -1928,12 +2048,158 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     const tiles = `<div class="aim-an-track-tiles" data-drill-tiles>` + tileHtml("Best", fmtScore(m.best, m.unit), m.bestMedal ? MEDAL_WORD[m.bestMedal] + " medal" : "no medal yet") + tileHtml("Last", fmtScore(m.last, m.unit), plural(m.runs, "scored run"))
       + tileHtml("Trend", trendText(m), m.trend ? `newest ${m.trend.runs} runs against the ${m.trend.runs} before` : "needs " + DRILL_TREND_MIN + " finished runs")
       + tileHtml("Consistency", m.spread ? m.spread.label : "–", m.spread ? "scores vary by about " + Math.round(m.spread.pct) + "%" : "needs " + DRILL_SPREAD_MIN + " finished runs")
-      + (m.rounds ? tileHtml("Accuracy", m.accuracy === null ? "–" : Math.round(m.accuracy) + "%", m.headshotPct === null ? plural(m.rounds, "round") : Math.round(m.headshotPct) + "% headshots, " + plural(m.rounds, "round")) : "") + `</div>`;
+      + (m.rounds ? tileHtml("Accuracy", m.accuracy === null ? "–" : Math.round(m.accuracy) + "%", !m.headshotPct ? plural(m.rounds, "round") : Math.round(m.headshotPct) + "% headshots, " + plural(m.rounds, "round")) : "") + `</div>`;
     const chart = scoreChartSvg(entry, m);
     const recent = arr(entry && entry.runs).filter((r) => r && num(r.score)).slice(-8).reverse();
     const table = recent.length ? `<h4 class="aim-an-sub">Latest runs</h4><ul class="aim-an-sess-drills">` + recent.map((r) => `<li><span class="aim-an-sd-name">${shortDate(r.at)} ${hhmm(r.at)}</span><span>${esc(fmtScore(r.score, m.unit))}</span><span>${r.died ? "Died" : ""}</span><span>${r.medal ? `<span class="aim-an-medal is-${r.medal}">${medalSvg(r.medal)}${MEDAL_WORD[r.medal]}</span>` : ""}</span></li>`).join("") + `</ul>` : "";
-    return back + `<h3 class="aim-an-drill-title">${esc(m.name)}</h3>` + tiles + `<div class="aim-an-medals-row">${medalRow}</div>` + nextLine + (chart ? `<h4 class="aim-an-sub">Score history</h4><div class="aim-an-scorewrap">${chart}</div>` : "") + table
+    return back + `<h3 class="aim-an-drill-title">${esc(m.name)}</h3>` + tiles + `<div class="aim-an-medals-row">${medalRow}</div>` + nextLine + goalsHtml(m) + (chart ? `<h4 class="aim-an-sub">Score history</h4><div class="aim-an-scorewrap">${chart}</div>` : "") + table
       + `<p class="aim-an-note">${m.lower ? "Less is better on this drill. " : ""}Dashed lines are your medal scores. A hollow mark is a run that ended in your death. ${m.rounds ? "Accuracy and headshots come from your stored rounds of this drill (the last 30 days)." : ""}</p>`;
+  }
+
+  // ---- goals (21 Nov 2026) ----
+  // A goal belongs to one drill. Kept in localStorage GOALS_KEY as { [drill code]: [goal] }; goal = { id, type, tier | target | percent, since (ms), base (the last finished score when it was set, or null), done (ms or null) }.
+  //   medal  "reach silver": a finished run since the goal was set earned that medal or a better one (the drill needs medal scores, i.e. MIN_RUNS finished runs).
+  //   score  "score 4000": a finished run since then reached the target (at most it, on a drill where less is better). The target must be beyond your best, or it would be done at once.
+  //   body   "hold 70% on the body": over your newest BODY_GOAL_ROUNDS rounds of the drill since then that have line-of-sight tracking data, you were on the body that much of the time.
+  // A run that ended in your death never counts. The bar is how far along the way you are: from `base` to the target for a score, 0 to the target for the body share.
+  const GOALS_KEY = "aim-an-goals-v1", MAX_GOALS = 6, MAX_GOAL_DRILLS = 80, BODY_GOAL_ROUNDS = 3;
+  const GOAL_TYPES = ["medal", "score", "body"];
+  const goalId = () => "g" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  function normalizeGoal(g) {
+    if (!g || typeof g !== "object" || !GOAL_TYPES.includes(g.type)) return null;
+    const out = { id: typeof g.id === "string" && /^[a-z0-9]{3,24}$/i.test(g.id) ? g.id : goalId(), type: g.type, since: num(g.since) ? g.since : Date.now(), base: num(g.base) ? g.base : null, done: num(g.done) ? g.done : null };
+    if (g.type === "medal") { if (!MEDAL_RANK[g.tier]) return null; out.tier = g.tier; }
+    else if (g.type === "score") { if (!num(g.target)) return null; out.target = g.target; }
+    else { if (!num(g.percent) || g.percent < 1 || g.percent > 100) return null; out.percent = Math.round(g.percent * 10) / 10; }
+    return out;
+  }
+  function normalizeGoals(v) {
+    const out = {};
+    if (!v || typeof v !== "object" || Array.isArray(v)) return out;
+    for (const code of Object.keys(v).slice(0, MAX_GOAL_DRILLS)) {
+      if (!CODE_RE.test(code) || !Array.isArray(v[code])) continue;
+      const list = v[code].map(normalizeGoal).filter(Boolean).slice(0, MAX_GOALS);
+      if (list.length) out[code] = list;
+    }
+    return out;
+  }
+  function loadGoals() { try { return normalizeGoals(JSON.parse(localStorage.getItem(GOALS_KEY))); } catch { return {}; } }
+  function saveGoals(map) { try { localStorage.setItem(GOALS_KEY, JSON.stringify(map)); return true; } catch { return false; } }
+  // Adds a goal to the goals map (changed in place). spec = { type, tier | target | percent }, entry = the drill's runs entry, thresholds = its medal scores or null.
+  // -> { ok: true, goal } or { ok: false, why } with a sentence for the screen.
+  function addGoal(map, code, spec, entry, thresholds, now = Date.now()) {
+    if (!CODE_RE.test(String(code || ""))) return { ok: false, why: "That drill cannot have a goal." };
+    const list = map[code] || (map[code] = []), lower = !!(entry && entry.lower);
+    const good = arr(entry && entry.runs).filter((r) => r && num(r.score) && !r.died), last = good.length ? good[good.length - 1].score : null;
+    const best = entry && num(entry.best) ? entry.best : null;
+    const fail = (why) => { if (!list.length) delete map[code]; return { ok: false, why }; };
+    const goal = normalizeGoal({ ...spec, since: now, base: last });
+    if (!goal) return fail("That is not a goal this drill can have.");
+    if (list.some((g) => !g.done && g.type === goal.type && g.tier === goal.tier && g.target === goal.target && g.percent === goal.percent)) return fail("You already have that goal.");
+    if (goal.type === "medal") { if (!thresholds) return fail("Medals start after " + 3 + " finished runs of a drill."); if (MEDAL_RANK[goal.tier] <= (MEDAL_RANK[entry && entry.bestMedal] || 0)) return fail("You already earned that medal here."); }
+    if (goal.type === "score" && best !== null && (lower ? goal.target >= best : goal.target <= best)) return fail("Pick a score " + (lower ? "below" : "above") + " your best (" + fmtScore(best, entry && entry.unit) + ").");
+    while (list.length >= MAX_GOALS) { const at = list.findIndex((g) => g.done); if (at < 0) return fail("A drill keeps up to " + MAX_GOALS + " goals. Remove one first."); list.splice(at, 1); }
+    list.push(goal);
+    return { ok: true, goal };
+  }
+  function removeGoal(map, code, id) {
+    if (!map[code]) return false;
+    const n = map[code].length;
+    map[code] = map[code].filter((g) => g.id !== id);
+    if (!map[code].length) delete map[code];
+    return !map[code] || map[code].length !== n;
+  }
+  const goalLabel = (goal, m) => (goal.type === "medal" ? "Reach " + MEDAL_WORD[goal.tier] : goal.type === "score" ? "Score " + fmtScore(goal.target, m.unit) + (m.lower ? " or less" : "") : "Hold " + goal.percent + "% on the body");
+  // One goal against the drill's runs and rounds: { goal, label, met, progress (0..1), value (the number it is measured by now, or null), status (a sentence) }.
+  // m = drillModel (thresholds, unit, lower), entry = the drill's runs entry, plays = the drill's round facts.
+  function evaluateGoal(goal, m, entry, plays) {
+    const label = goalLabel(goal, m), res = (met, progress, value, status) => ({ goal, label, met, progress: met ? 1 : clampNum(progress, 0, 1), value, status });
+    if (goal.done) return res(true, 1, null, "Reached " + shortDate(goal.done));
+    if (goal.type === "body") {
+      const rounds = arr(plays).filter((f) => num(f.at) && f.at >= goal.since && f.trackN > 0).sort((a, b) => a.at - b.at).slice(-BODY_GOAL_ROUNDS);
+      if (!rounds.length) return res(false, 0, null, "No tracked round since you set it (rounds need line-of-sight data).");
+      const on = rounds.reduce((s, f) => s + f.trackOn, 0), n = rounds.reduce((s, f) => s + f.trackN, 0), value = n ? (on / n) * 100 : 0;
+      return res(rounds.length >= BODY_GOAL_ROUNDS && value >= goal.percent, value / goal.percent, value, Math.round(value) + "% on the body over your newest " + plural(rounds.length, "tracked round") + (rounds.length < BODY_GOAL_ROUNDS ? ", it needs " + BODY_GOAL_ROUNDS : ""));
+    }
+    const lower = !!(entry && entry.lower), g = (v) => (lower ? -v : v);
+    const since = arr(entry && entry.runs).filter((r) => r && num(r.score) && num(r.at) && !r.died && r.at >= goal.since);
+    const best = since.length ? (lower ? Math.min(...since.map((r) => r.score)) : Math.max(...since.map((r) => r.score))) : null;
+    const th = m.thresholds, target = goal.type === "medal" ? (th ? th[goal.tier] : null) : goal.target;
+    const met = goal.type === "medal" ? since.some((r) => r.medal && MEDAL_RANK[r.medal] >= MEDAL_RANK[goal.tier]) : best !== null && g(best) >= g(target);
+    let progress = 0;
+    if (best !== null && num(target)) {
+      const base = num(goal.base) ? goal.base : best, span = g(target) - g(base);
+      progress = span > 0 ? (g(best) - g(base)) / span : 0;
+    }
+    const goalScore = num(target) ? fmtScore(target, m.unit) : "";
+    return res(met, progress, best, best === null ? "No finished run since you set it." : "Best since: " + fmtScore(best, m.unit) + (goalScore ? ", the goal is " + goalScore : ""));
+  }
+  const goalBarHtml = (ev) => `<li class="aim-an-goal${ev.met ? " is-done" : ""}" data-goal="${esc(ev.goal.id)}"><div class="aim-an-goal-head"><b>${esc(ev.label)}</b><button type="button" class="aim-an-goal-del" data-goal-del="${esc(ev.goal.id)}" aria-label="Remove the goal: ${esc(ev.label)}" title="Remove this goal">✕</button></div>`
+    + `<div class="aim-an-prog" role="img" aria-label="${Math.round(ev.progress * 100)}% of the way to: ${esc(ev.label)}"><i style="width:${Math.round(ev.progress * 100)}%"></i></div><small>${esc(ev.status)}</small></li>`;
+  // The goals block of a drill's detail: the goals with their bars, then what can be added.
+  function goalsHtml(m) {
+    const evals = arr(m.goals), open = evals.filter((e) => !e.goal.done);
+    const tiers = m.thresholds ? ["bronze", "silver", "gold"].filter((t) => MEDAL_RANK[t] > (MEDAL_RANK[m.bestMedal] || 0) && !open.some((e) => e.goal.type === "medal" && e.goal.tier === t)) : [];
+    const list = evals.length ? `<ul class="aim-an-goals" data-goals>${evals.map(goalBarHtml).join("")}</ul>` : `<p class="aim-an-note" data-goals-empty>No goal for this drill yet.</p>`;
+    const medalBtns = tiers.map((t) => `<button type="button" data-goal-medal="${t}">${medalSvg(t)}Reach ${MEDAL_WORD[t]}</button>`).join("");
+    const score = `<form class="aim-an-goal-form" data-goal-form="score"><label>Score goal<input type="number" name="v" step="any" inputmode="decimal" required placeholder="${esc(m.best === null ? "" : fmtScore(m.best, "").trim())}"></label><button type="submit">Set</button></form>`;
+    const body = m.tracked ? `<form class="aim-an-goal-form" data-goal-form="body"><label>On the body, %<input type="number" name="v" min="1" max="100" step="1" inputmode="numeric" required placeholder="70"></label><button type="submit">Set</button></form>` : "";
+    return `<h4 class="aim-an-sub">Goals</h4>${list}<div class="aim-an-goal-add" data-goal-add>${medalBtns}${score}${body}</div><p class="aim-an-note" data-goal-msg role="status">A goal counts the finished runs after you set it. Reaching one shows a short message.</p>`;
+  }
+  const goalTag = (m) => { const open = arr(m.goals).filter((e) => !e.met); return open.length ? " · goal " + Math.round(open[0].progress * 100) + "%" : arr(m.goals).length ? " · goal reached" : ""; };
+  // The little "goal reached" message, in the style of the other round messages (theme .es-score-toast).
+  function goalToast(text) {
+    try {
+      document.querySelector(".es-score-toast")?.remove();
+      const t = document.createElement("div");
+      t.className = "es-score-toast is-good aim-an-goal-toast"; t.setAttribute("role", "status"); t.textContent = text;
+      document.body.append(t);
+      setTimeout(() => { try { t.remove(); } catch {} }, 4500);
+    } catch {}
+  }
+  // Looks at every goal that is still open and marks the ones reached (saved, then one message). Runs after each finished run (the routines' change event), at start and when the Drills tab is drawn.
+  let goalCheck = null;
+  function checkGoals() {
+    if (goalCheck) return goalCheck;
+    goalCheck = (async () => {
+      try {
+        const map = loadGoals(), codes = Object.keys(map).filter((c) => map[c].some((g) => !g.done));
+        if (!codes.length) return [];
+        const runs = runsNow(), logic = logicNow(), reached = [];
+        await namesReady();
+        for (const code of codes) {
+          let plays = [];
+          if (map[code].some((g) => !g.done && g.type === "body")) plays = (await read("rounds", { code, limit: 40 })).map(roundFacts);
+          const m = drillModel(code, runs[code], logic, plays, nameFor(code, runs));
+          for (const g of map[code]) if (!g.done) { const ev = evaluateGoal(g, m, runs[code], plays); if (ev.met) { g.done = Date.now(); reached.push({ name: m.name, label: ev.label }); } }
+        }
+        if (reached.length) {
+          saveGoals(map);
+          goalToast("Goal reached: " + reached[0].label + " in " + reached[0].name + (reached.length > 1 ? " (+" + (reached.length - 1) + " more)" : ""));
+          if (inlinePanel && inlinePanel.tab === "drills") renderDrills(inlinePanel);
+        }
+        return reached;
+      } catch { return []; }
+    })().finally(() => { goalCheck = null; });
+    return goalCheck;
+  }
+  let goalTimer = 0;
+  const goalsSoon = () => { clearTimeout(goalTimer); goalTimer = setTimeout(checkGoals, 1500); };
+
+  // ---- suggested warm-up (21 Nov 2026) ----
+  const WARM_ROUTINE_ID = "rt-suggested-warmup", WARM_ROUTINE_NAME = "Suggested warm-up";
+  // The routine the suggestion would save: steps from coach.warmupPlan's { steps: [{ code, runs }] }; type = what the gallery calls the drill (the routines page starts a Target Workshop "ball" drill from another tab).
+  function warmupRoutine(plan, nameOf, typeOf) {
+    return { id: WARM_ROUTINE_ID, name: WARM_ROUTINE_NAME, steps: arr(plan && plan.steps).map((s) => ({ code: s.code, name: typeof nameOf === "function" ? nameOf(s.code) : s.code, type: typeof typeOf === "function" ? typeOf(s.code) || "" : "", runs: s.runs, minScore: null, minMedal: null, rank: "" })) };
+  }
+  function warmupHtml(plan, nameOf, exists) {
+    if (!plan) return "";
+    if (plan.steps.length < 2) return `<section class="aim-an-warm" data-warmup><h4>Suggested warm-up</h4><p class="aim-an-note">A warm-up is built from your most played drills. Play three or more rounds of at least two drills and it shows up here.</p></section>`;
+    const why = plan.cold ? `Your first 2 rounds of a session hit ${plan.firstAccuracyPercent}% of your shots, the rounds after them ${plan.middleAccuracyPercent}% (${plan.sessions} sessions). A short warm-up on drills you are good at, before the ones that count, should close that gap.`
+      : `Built from your most played drills: the ones you hit the most with, easiest first, so the first rounds of a session are not the ones that count.`;
+    const steps = plan.steps.map((s, i) => `<li><i>${i + 1}</i><b>${esc(nameOf(s.code))}</b><em>${plural(s.runs, "run")}, you hit ${s.accuracyPercent}% here</em></li>`).join("");
+    return `<section class="aim-an-warm${plan.cold ? " is-cold" : ""}" data-warmup><h4>Suggested warm-up</h4><p>${esc(why)}</p><ol>${steps}</ol>`
+      + `<div class="aim-an-warm-actions"><button type="button" data-warmup-save>${exists ? "Update the routine" : "Add to Routines"}</button><span class="aim-an-warm-msg" data-warmup-msg role="status">${exists ? "A routine named " + WARM_ROUTINE_NAME + " is in Routines already." : ""}</span></div></section>`;
   }
 
   // ---- export ----
@@ -2040,7 +2306,8 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     return drillLoad;
   }
   const shortCode = (code) => String(code).slice(0, 7);
-  const drillLabel = (code) => { const d = drillBook.get(code); return d && d.name ? d.name : shortCode(code); };
+  // The gallery's title, else the name kept with the drill's runs (a drill the gallery no longer lists), else the short code.
+  const drillLabel = (code) => { const d = drillBook.get(code); if (d && d.name) return d.name; const r = runsNow()[code]; return r && typeof r.name === "string" && r.name ? r.name : shortCode(code); };
   // The span for a map name or a drill code. A map keeps its short name; a drill shows its title.
   // map (drills only): the finding's map, for the card when the gallery's list has none for the drill.
   function refHtml(kind, key, map) {
@@ -2377,6 +2644,11 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
       const dopen = closestOf(event.target, "[data-drill-open]");
       if (dopen) { p.drillOpen = dopen.dataset.drillOpen; try { p.content.scrollTop = 0; } catch {} renderDrills(p); return; }
       if (closestOf(event.target, "[data-drill-back]")) { p.drillOpen = null; try { p.content.scrollTop = 0; } catch {} renderDrills(p); return; }
+      const gm = closestOf(event.target, "[data-goal-medal]");
+      if (gm) { goalAction(p, { type: "medal", tier: gm.dataset.goalMedal }); return; }
+      const gd = closestOf(event.target, "[data-goal-del]");
+      if (gd) { goalRemove(p, gd.dataset.goalDel); return; }
+      if (closestOf(event.target, "[data-warmup-save]")) { saveWarmup(p); return; }
       const cr = closestOf(event.target, "[data-cmp-range]");
       if (cr) { p.cmpRange = COMPARE_RANGES.includes(+cr.dataset.cmpRange) ? +cr.dataset.cmpRange : 7; renderCompare(p); return; }
       const tt = closestOf(event.target, "[data-track]");
@@ -2389,6 +2661,15 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
       const fo = closestOf(event.target, "[data-focus]");
       if (fo) { p.focus = fo.dataset.focus; renderProgress(p); return; }
       if (closestOf(event.target, "[data-zoom-reset]")) setZoom(p, { k: 1, tx: 0, ty: 0 });
+    });
+    // the goal forms (score, on the body)
+    content.addEventListener("submit", (event) => {
+      const f = closestOf(event.target, "[data-goal-form]");
+      if (!f) return;
+      if (event.preventDefault) event.preventDefault();
+      const input = f.elements && f.elements.v ? f.elements.v : f.querySelector("input"), v = Number(input && input.value);
+      if (!input || input.value === "" || !isFinite(v)) { goalAction(p, { type: "score", target: NaN }); return; }
+      goalAction(p, f.dataset.goalForm === "body" ? { type: "body", percent: v } : { type: "score", target: v });
     });
     foot.addEventListener("click", (event) => { const b = closestOf(event.target, "[data-export]"); if (b) runExport(p, b.dataset.export); });
     // "Brighten map" slider: updates the picture in place (no re-render, so the slider keeps focus while dragged) and remembers the level.
@@ -2782,7 +3063,7 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
   function renderHeatmap(p = panel) {
     if (!p) return Promise.resolve();
     hideTip(p);
-    return dataFor("heatmap", p).then(async (data) => {
+    return Promise.all([dataFor("heatmap", p), namesReady()]).then(async ([data]) => {
       if (!current(p, "heatmap")) return;
       const f = p.filter, wantFights = f.layer !== "deaths";
       p.content.innerHTML = heatmapHtml(data.days, data.rounds, f, null, wantFights ? undefined : null, p.bright, zoomFor(p, null)); // also settles f.map
@@ -2847,12 +3128,54 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
     hideTip(p);
     return Promise.all([dataFor("drills", p), namesReady()]).then(([data]) => {
       if (!current(p, "drills")) return;
-      const runs = runsNow(), logic = logicNow(), facts = arr(data.rounds).map(roundFacts);
+      const runs = runsNow(), logic = logicNow(), facts = arr(data.rounds).map(roundFacts), goals = loadGoals();
       const models = drillModels(runs, logic, facts, (c) => nameFor(c, runs));
+      for (const m of models) if (goals[m.code]) { const plays = facts.filter((f) => String(f.code) === m.code); m.goals = goals[m.code].map((g) => evaluateGoal(g, m, runs[m.code], plays)); }
       const open = p.drillOpen ? models.find((m) => m.code === p.drillOpen) : null;
       if (p.drillOpen && !open) p.drillOpen = null;
-      p.content.innerHTML = open ? drillDetailHtml(open, runs[open.code]) : drillsHtml(models, p.drillSort);
+      let top = "";
+      if (!open) {
+        let plan = null;
+        try { const C = window.__aimCoach; plan = C && typeof C.warmupPlan === "function" ? C.warmupPlan(arr(data.rounds)) : null; } catch { plan = null; }
+        p.warmPlan = plan;
+        let exists = false;
+        try { exists = !!(window.__aimRoutines && window.__aimRoutines.routines().some((r) => r.id === WARM_ROUTINE_ID)); } catch {}
+        top = warmupHtml(plan, (c) => nameFor(c, runs), exists);
+      }
+      p.content.innerHTML = open ? drillDetailHtml(open, runs[open.code]) : drillsHtml(models, p.drillSort, top);
+      checkGoals();
     }).catch(() => { if (current(p, "drills")) p.content.innerHTML = `<p class="aim-an-msg">Could not read your records.</p>`; });
+  }
+  const drillTypeOf = (code) => { const d = drillBook.get(code); return d && d.mode === "ball" ? "ball" : ""; };
+  // A goal button or form of the open drill: add it, say so (or why not), draw the drill again.
+  function goalAction(p, spec) {
+    const code = p.drillOpen;
+    if (!code) return Promise.resolve();
+    const runs = runsNow(), logic = logicNow(), entry = runs[code] || null, map = loadGoals();
+    let th = null;
+    try { th = logic && entry && typeof logic.thresholds === "function" ? logic.thresholds(entry) : null; } catch { th = null; }
+    const r = addGoal(map, code, spec, entry, th);
+    if (r.ok) saveGoals(map);
+    const text = r.ok ? "Goal set." : r.why;
+    return renderDrills(p).then(() => { const el = p.content && p.content.querySelector ? p.content.querySelector("[data-goal-msg]") : null; if (el) el.textContent = text; });
+  }
+  function goalRemove(p, id) {
+    const code = p.drillOpen, map = loadGoals();
+    if (code && removeGoal(map, code, id)) saveGoals(map);
+    return renderDrills(p);
+  }
+  // The "Add to Routines" button of the suggested warm-up.
+  function saveWarmup(p) {
+    const msg = p.content.querySelector ? p.content.querySelector("[data-warmup-msg]") : null, btn = p.content.querySelector ? p.content.querySelector("[data-warmup-save]") : null;
+    const say = (t) => { if (msg) msg.textContent = t; };
+    try {
+      const R = window.__aimRoutines;
+      if (!R || typeof R.saveRoutine !== "function" || !p.warmPlan || p.warmPlan.steps.length < 2) { say("Routines are not available."); return null; }
+      const runs = runsNow(), saved = R.saveRoutine(warmupRoutine(p.warmPlan, (c) => nameFor(c, runs), drillTypeOf));
+      say(saved ? "Saved as " + WARM_ROUTINE_NAME + ". Open Routines to start it." : "It could not be saved (Routines holds up to 30).");
+      if (saved && btn) btn.textContent = "Update the routine";
+      return saved;
+    } catch { say("It could not be saved."); return null; }
   }
   function renderCompare(p = panel) {
     if (!p) return Promise.resolve();
@@ -2927,14 +3250,17 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
   try { if (window.__aimWatchPage) window.__aimWatchPage(later, { childList: true, subtree: true }); } catch {}
   syncResult();
   syncStatsHost();
+  // goals: look after every finished run (the routines' store announces it), and once shortly after start
+  try { window.addEventListener("aim-routines-change", goalsSoon); setTimeout(checkGoals, 6000); } catch {}
 
   window.__aimAnalyticsUi = {
-    open, close, mountInline, syncStatsHost, loadDrills, startDrill, closeTip,
+    open, close, mountInline, syncStatsHost, loadDrills, startDrill, closeTip, checkGoals, loadGoals, saveGoals, goalToast, goalAction, goalRemove, saveWarmup,
     // pure renderers, for tests
     render: { trackReadoutHtml, trackingHtml, trackingTotals, hitSummary, killerShots, enemyShots, tilePoint, hitPanelHtml, heatCells, heatOptions, fightLayer, countFights, heatmapHtml, mapLook, cellTip, zoomAt, clampPan,
       progressSeries, progressBuckets, progressHtml, niceTicks, xTicks, nodeTip, coachHtml, coachModalHtml, coachVisual, cardVisual, angleHtml, angleOffset, mapCardHtml, drillCardHtml,
       refHtml, withRefs, refsOf, splitNote, coachIcon, cardSummary,
       roundSeconds, roundFacts, groupSessions, totalsOf, compareMetric, compareRows, sessionVersus, changeText, timelineOf, sessionDrills, sessionLabel, sessionHtml, totalsFromDays, periodCompare, compareHtml,
+      mergeRawDays, sessionDrillChanges, changeCellHtml, normalizeGoal, normalizeGoals, addGoal, removeGoal, evaluateGoal, goalsHtml, warmupRoutine, warmupHtml,
       drillModel, drillModels, sortDrills, sparkSvg, drillsHtml, drillDetailHtml, scoreChartSvg, csvCell, toCsv, roundsCsv, daysCsv, exportJson, burstSplit, burstHtml, heatHtml },
     runExport,
     coachIconIds: Object.keys(COACH_ICON),
