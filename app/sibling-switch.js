@@ -103,11 +103,23 @@
       // The first top tab is VALORANT Training, where these drills are listed (same as studio-launch.js).
       const tab = document.querySelector(".hall-tab");
       if (tab && !tab.classList.contains("is-active")) tab.click();
+      const ballAt = Date.now() + 2500; // a Target Workshop (ball) drill has no card in the VALORANT tab: look in the Target Workshop tab after a moment
+      let ballTab = false;
       while (Date.now() < until) {
         const card = document.querySelector(`[data-role="workshop-card"][data-share-code="${info.code}"]`);
         const go = card && card.querySelector(".al-wk-split-go, .al-wk-go");
         if (card) card.scrollIntoView({ block: "center" });
         if (go) { go.click(); return; }
+        if (!card && Date.now() > ballAt) {
+          if (!ballTab) {
+            ballTab = true;
+            const tw = [...document.querySelectorAll("button.hall-tab, [data-action='tab-ball']")].find((b) => /target workshop/i.test(b.textContent) || b.dataset.action === "tab-ball");
+            if (tw && !tw.classList.contains("is-active")) tw.click();
+          }
+          const twCard = document.querySelector(`.tw-card[data-code="${info.code}"]`), twGo = twCard && twCard.querySelector('[data-act="play"]');
+          if (twCard && twCard.scrollIntoView) twCard.scrollIntoView({ block: "center" });
+          if (twGo) { twGo.click(); return; }
+        }
         await wait(150);
       }
       console.warn(`Switch difficulty: no lobby card for ${info.code} (is a search filter hiding it?)`);

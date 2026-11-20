@@ -1,5 +1,5 @@
 // Writes the Valorant Workshop scenarios (situations from real Valorant rounds, humanoid bots on the real maps) into scenarios/.
-//   node tools/make-valorant-scenes.mjs          write scenarios/workshop-*.json, then run:  node scripts/build-scenarios.mjs
+//   node tools/make-valorant-scenes.mjs          write scenarios/valorant-*.json, then run:  node scripts/build-scenarios.mjs
 //   node tools/make-valorant-scenes.mjs --dry    build and check everything, write nothing, print what each scenario is
 // Re-runnable and deterministic: the same files come out every time (a seeded random generator stands in for Math.random while the
 // Studio compiler runs, and every coordinate is taken from a scenario that is already in scenarios/).
@@ -11,7 +11,7 @@
 //  2. The situation is written as a Studio drill (app/studio/drill.js: bots with a move, a rank, trades, flashes, swing triggers,
 //     sound areas) and compiled by the Studio's own compile(), so the swing / sound / trade fields are exactly what the Studio writes.
 //  3. The scene must pass the game's own validator (app/site/next/js/D_iGclxB.js) or nothing is written.
-// Outputs never collide with the existing files: every file is workshop-<map>-<situation>[-easy|-hard].json, sort 300-399, names start
+// Outputs never collide with the existing files: every file is valorant-<map>-<situation>[-easy|-hard].json, sort 300-399, names start
 // with the map. <stem>-easy / <stem>-hard pairs are one drill at two difficulties (app/sibling-switch.js).
 import crypto from "node:crypto";
 import fs from "node:fs";
@@ -23,7 +23,7 @@ const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SCENARIOS = path.join(ROOT, "scenarios");
 const NOW = "2026-11-20 12:00:00";
 export const SORT_BASE = 300;
-export const FILE_PREFIX = "workshop-";
+export const FILE_PREFIX = "valorant-";
 const hex16 = (s) => crypto.createHash("sha1").update(s).digest("hex").slice(0, 16);
 export const shareCodeOf = (name) => hex16("aimlocal-set:" + name); // the recipe in docs/scenario-format.md
 const r1 = (n) => Math.round(n * 10) / 10;

@@ -1,4 +1,4 @@
-// Test for the Valorant Workshop scenarios (tools/make-valorant-scenes.mjs and scenarios/workshop-*.json). Run: node test-valorant-scenes.cjs
+// Test for the Valorant Workshop scenarios (tools/make-valorant-scenes.mjs and scenarios/valorant-*.json). Run: node test-valorant-scenes.cjs
 // Checks every generated scenario as far as the game's own checks can be reproduced:
 //  - the committed files are exactly what the generator makes (it is deterministic)
 //  - item / scene fields, unique names and share codes (also against every other scenario), sort 300-399, sibling pairs
@@ -36,7 +36,7 @@ async function main() {
   // ---- the files are what the generator makes
   const built = await gen.buildAll();
   const files = fs.readdirSync(SCEN).filter((f) => f.startsWith(gen.FILE_PREFIX) && f.endsWith(".json")).sort();
-  assert.deepStrictEqual(files, built.map((b) => b.file).sort(), "scenarios/workshop-*.json differ from the generator's list: run node tools/make-valorant-scenes.mjs");
+  assert.deepStrictEqual(files, built.map((b) => b.file).sort(), "scenarios/valorant-*.json differ from the generator's list: run node tools/make-valorant-scenes.mjs");
   for (const b of built) {
     const onDisk = readJson(path.join(SCEN, b.file));
     assert.deepStrictEqual(onDisk, JSON.parse(JSON.stringify(b.data)), b.file + " is out of date: run node tools/make-valorant-scenes.mjs");
@@ -52,7 +52,7 @@ async function main() {
   for (const file of files) {
     const data = readJson(path.join(SCEN, file)), { item, scene } = data, doc = docOf(data);
     const at = (msg) => file + ": " + msg;
-    assert.ok(/^workshop-[a-z0-9]+(-[a-z0-9]+)*\.json$/.test(file), at("file name"));
+    assert.ok(/^valorant-[a-z0-9]+(-[a-z0-9]+)*\.json$/.test(file), at("file name"));
     // item and scene fields (the same rules as scripts/build-scenarios.mjs)
     for (const key of ["name", "description"]) assert.ok(typeof item[key] === "string" && item[key].trim(), at("item." + key));
     assert.ok(item.description.length <= 400, at("description is short enough for the lobby card"));
