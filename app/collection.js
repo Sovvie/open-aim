@@ -127,7 +127,9 @@ html[data-aim-local]:not(#es) body .es-col-info b { overflow-wrap: anywhere; }
     if (!page) return;
     const nav = document.querySelector(".hall-topnav"), bar = document.querySelector(".hall-bottombar");
     const nr = nav && nav.getBoundingClientRect(), br = bar && bar.getBoundingClientRect();
-    const top = (nr && nr.height ? Math.max(0, Math.round(nr.bottom)) : 64) + "px", bottom = Math.max(0, Math.round(innerHeight - (br && br.height ? br.top : innerHeight - 48))) + "px";
+    // only trusted while the bars sit at the window's edges (the lobby lays itself out again a moment after a resize)
+    const top = (nr && nr.height && Math.abs(nr.top) < 2 ? Math.round(nr.bottom) : 64) + "px";
+    const bottom = Math.max(0, Math.round(innerHeight - (br && br.height && Math.abs(br.bottom - innerHeight) < 2 ? br.top : innerHeight - 48))) + "px";
     if (page.style.top !== top) page.style.top = top;
     if (page.style.bottom !== bottom) page.style.bottom = bottom;
   }
@@ -153,17 +155,16 @@ html[data-aim-local]:not(#es) body .es-col-info b { overflow-wrap: anywhere; }
     paint();
     fit();
     const row = page.querySelector(".es-col-row");
-    if (row) {
-      row.scrollLeft = keepLeft;
-      // the chosen tile in view (a far-right skin was hidden off the strip when the page opened)
-      const on = row.querySelector(".es-col-tile.is-on");
-      if (on) {
-        const r = row.getBoundingClientRect(), t = on.getBoundingClientRect();
-        if (t.left < r.left) row.scrollLeft += t.left - r.left - 12;
-        else if (t.right > r.right) row.scrollLeft += t.right - r.right + 12;
-      }
-    }
+    if (row) { row.scrollLeft = keepLeft; showChosen(); }
     if (want) { const el = page.querySelector(want) || (opts.weaponChanged ? page.querySelector(".es-col-tabs .is-on") : null); if (el && !el.disabled) try { el.focus({ preventScroll: true }); } catch {} }
+  }
+  // The chosen tile in view on the strip (a far-right skin was hidden off the strip when the page opened).
+  function showChosen() {
+    const row = page && page.querySelector(".es-col-row"), on = row && row.querySelector(".es-col-tile.is-on");
+    if (!on) return;
+    const r = row.getBoundingClientRect(), t = on.getBoundingClientRect();
+    if (t.left < r.left) row.scrollLeft += t.left - r.left - 12;
+    else if (t.right > r.right) row.scrollLeft += t.right - r.right + 12;
   }
   function paint() {
     const w = WEAPONS.find((x) => x.id === state.weapon);
@@ -288,7 +289,8 @@ html[data-aim-local]:not(#es) body .es-col-info b { overflow-wrap: anywhere; }
     if (page) fit(); // the lobby's bars settle after the page opened (and change with the window)
   }
   addEventListener("keydown", (e) => { if (e.key === "Escape" && page) close(); });
-  addEventListener("resize", () => { if (page) fit(); });
+  let fitTimer = 0;
+  addEventListener("resize", () => { if (!page) return; fit(); clearTimeout(fitTimer); fitTimer = setTimeout(() => { fit(); showChosen(); }, 200); });
   let queued = false;
   window.__aimWatchPage?.(() => { if (queued) return; queued = true; requestAnimationFrame(() => { queued = false; check(); }); }, { subtree: true, childList: true });
   check();

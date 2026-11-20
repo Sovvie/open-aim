@@ -798,8 +798,10 @@ html[data-aim-local]:not(#es) body .aim-rt-btn:hover { background: var(--es-red-
   function fit() {
     if (!page) return;
     const nav = doc.querySelector(".hall-topnav"), bar = doc.querySelector(".hall-bottombar");
-    const top = nav && nav.getBoundingClientRect().height ? Math.max(0, Math.round(nav.getBoundingClientRect().bottom)) : 64;
-    const barTop = bar && bar.getBoundingClientRect().height ? bar.getBoundingClientRect().top : innerHeight - 48;
+    const nr = nav && nav.getBoundingClientRect(), br = bar && bar.getBoundingClientRect();
+    // only trusted while the bars sit at the window's edges (the lobby lays itself out again a moment after a resize)
+    const top = nr && nr.height && Math.abs(nr.top) < 2 ? Math.round(nr.bottom) : 64;
+    const barTop = br && br.height && Math.abs(br.bottom - innerHeight) < 2 ? br.top : innerHeight - 48;
     const t = top + "px", b = Math.max(0, Math.round(innerHeight - barTop)) + "px";
     if (page.style.top !== t) page.style.top = t; // only written when it changed: fit() also runs on every lobby change (check)
     if (page.style.bottom !== b) page.style.bottom = b;
@@ -844,14 +846,16 @@ html[data-aim-local]:not(#es) body .aim-rt-btn:hover { background: var(--es-red-
       const t = doc.createElement("div");
       t.className = "es-score-toast es-rt-toast" + (good ? " is-good" : ""); t.setAttribute("role", "status"); t.textContent = text;
       doc.body.append(t); setTimeout(() => t.remove(), 4500);
-    } catch {}
+      return t;
+    } catch { return null; }
   }
-  // Starts a step from the page: closes it, says what is starting, and says so when the drill could not be found.
+  // Starts a step from the page: closes it, says what is starting (gone soon after the drill has started, so it does not sit over the
+  // round), and says so when the drill could not be found.
   function playStep(step) {
     const nm = label(step.code, { name: step.name }, names);
     closePage();
-    toast("Starting " + nm + "…", true);
-    startStep(step).then((ok) => { if (!ok) toast("Could not start " + nm + ". Open it from the lobby.", false); });
+    const t = toast("Starting " + nm + "…", true);
+    startStep(step).then((ok) => { if (!ok) toast("Could not start " + nm + ". Open it from the lobby.", false); else if (t) setTimeout(() => t.remove(), 1200); });
   }
   const disarm = () => { clearTimeout(armTimer); view.delId = null; };
   function onField(el) {
@@ -1315,7 +1319,8 @@ html[data-aim-local]:not(#es) body .tw-pv > .es-rt-chip { top: auto; left: 12px;
       if (!(e.target && /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName))) closePage();
     });
     window.addEventListener("aim-routines-change", () => { try { markTab(); } catch {} });
-    window.addEventListener("resize", () => { if (page) fit(); });
+    let fitTimer = 0;
+    window.addEventListener("resize", () => { if (!page) return; fit(); clearTimeout(fitTimer); fitTimer = setTimeout(fit, 200); });
     let queuedCheck = false;
     window.__aimWatchPage?.(() => { if (queuedCheck) return; queuedCheck = true; requestAnimationFrame(() => { queuedCheck = false; check(); }); }, { subtree: true, childList: true });
     loadNames().then(check);
