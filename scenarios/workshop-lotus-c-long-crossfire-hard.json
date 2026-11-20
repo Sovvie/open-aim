@@ -1,0 +1,347 @@
+{
+ "item": {
+  "createTime": "2026-11-20 12:00:00",
+  "description": "Three accurate defenders on C Long at 20 to 30 metres. When you kill the first, the one on the high ground swings in to trade within a second. Dying ends the round.",
+  "docBytes": 3469,
+  "featured": false,
+  "mapId": "jam",
+  "name": "Lotus — C Long, two-angle crossfire (Hard)",
+  "parSeconds": null,
+  "playCount": 0,
+  "sceneKey": "set-04b1d6019da50daf",
+  "shareCode": "04b1d6019da50daf",
+  "sort": 328,
+  "status": 1,
+  "type": "hold",
+  "updateTime": "2026-11-20 12:00:00"
+ },
+ "scene": {
+  "authorNickname": "openVaim",
+  "authorUid": "workshop",
+  "blockCount": 0,
+  "createTime": "2026-11-20 12:00:00",
+  "description": "Three accurate defenders on C Long at 20 to 30 metres. When you kill the first, the one on the high ground swings in to trade within a second. Dying ends the round.",
+  "docBytes": 3469,
+  "name": "Lotus — C Long, two-angle crossfire (Hard)",
+  "playCount": 0,
+  "sceneHash": "7ef11fbd127b83e9",
+  "sceneKey": "set-04b1d6019da50daf",
+  "schemaVersion": 2,
+  "shareCode": "04b1d6019da50daf",
+  "updateTime": "2026-11-20 12:00:00",
+  "aimShuffle": {
+   "groups": [
+    {
+     "actors": [
+      "actor-1"
+     ]
+    },
+    {
+     "actors": [
+      "actor-2"
+     ]
+    },
+    {
+     "actors": [
+      "actor-3"
+     ]
+    }
+   ]
+  },
+  "doc": {
+   "schemaVersion": 2,
+   "meta": {
+    "id": "studio-2684f18ae7135530",
+    "name": "Lotus — C Long, two-angle crossfire (Hard)",
+    "seed": 210140704,
+    "createdAt": 0
+   },
+   "environment": {
+    "skyColor": "#111820",
+    "fogNear": 14,
+    "fogFar": 33,
+    "ambientIntensity": 2,
+    "keyLightIntensity": 3,
+    "fogEnabled": false,
+    "map": "jam"
+   },
+   "blocks": [],
+   "playerSpawn": {
+    "position": {
+     "x": -37,
+     "y": 1,
+     "z": -52.26
+    },
+    "yaw": 3.491
+   },
+   "spawners": [
+    {
+     "id": "spawner-1",
+     "name": "Holder 1",
+     "kind": "area",
+     "actorTemplateId": "actor-1",
+     "position": {
+      "x": -26.27,
+      "y": 1.8,
+      "z": -25.09
+     },
+     "size": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+     },
+     "rotationY": 3.518,
+     "faceTarget": true,
+     "groundSnap": true,
+     "maxAlive": 1,
+     "spawnDelay": [
+      0.05,
+      0.05
+     ]
+    },
+    {
+     "id": "spawner-2",
+     "name": "Holder 2",
+     "kind": "area",
+     "actorTemplateId": "actor-2",
+     "position": {
+      "x": -28.48,
+      "y": 1.8,
+      "z": -35.36
+     },
+     "size": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+     },
+     "rotationY": 3.609,
+     "faceTarget": true,
+     "groundSnap": true,
+     "maxAlive": 1,
+     "spawnDelay": [
+      0.05,
+      0.05
+     ]
+    },
+    {
+     "id": "spawner-3",
+     "name": "Holder 3",
+     "kind": "area",
+     "actorTemplateId": "actor-3",
+     "position": {
+      "x": -20.9,
+      "y": 1.73,
+      "z": -29.9
+     },
+     "size": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+     },
+     "rotationY": 3.766,
+     "faceTarget": true,
+     "groundSnap": true,
+     "maxAlive": 1,
+     "spawnDelay": [
+      0.3,
+      0.6
+     ],
+     "afterKill": [
+      "actor-1",
+      "actor-1-spot2",
+      "actor-1-spot3",
+      "actor-1-spot4",
+      "actor-1-spot5",
+      "actor-1-spot6",
+      "actor-1-spot7",
+      "actor-1-spot8",
+      "actor-1-spot9",
+      "actor-1-spot10",
+      "actor-1-spot11",
+      "actor-1-spot12",
+      "actor-1-spot13",
+      "actor-1-spot14",
+      "actor-1-spot15",
+      "actor-1-spot16",
+      "actor-1-spot17",
+      "actor-1-spot18",
+      "actor-1-spot19",
+      "actor-1-spot20",
+      "actor-1-spot21",
+      "actor-1-spot22",
+      "actor-1-spot23",
+      "actor-1-spot24",
+      "actor-1-spot25",
+      "actor-1-spot26",
+      "actor-1-spot27",
+      "actor-1-spot28",
+      "actor-1-spot29",
+      "actor-1-spot30",
+      "actor-1-spot31",
+      "actor-1-spot32",
+      "actor-1-spot33",
+      "actor-1-spot34",
+      "actor-1-spot35",
+      "actor-1-spot36",
+      "actor-1-spot37",
+      "actor-1-spot38",
+      "actor-1-spot39",
+      "actor-1-spot40",
+      "actor-1-spot41",
+      "actor-1-spot42",
+      "actor-1-spot43",
+      "actor-1-spot44",
+      "actor-1-spot45",
+      "actor-1-spot46",
+      "actor-1-spot47",
+      "actor-1-spot48",
+      "actor-1-spot49",
+      "actor-1-spot50",
+      "actor-1-spot51",
+      "actor-1-spot52",
+      "actor-1-spot53",
+      "actor-1-spot54",
+      "actor-1-spot55",
+      "actor-1-spot56",
+      "actor-1-spot57",
+      "actor-1-spot58",
+      "actor-1-spot59",
+      "actor-1-spot60",
+      "actor-1-spot61",
+      "actor-1-spot62",
+      "actor-1-spot63",
+      "actor-1-spot64"
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "id": "actor-1",
+     "name": "Holder 1",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "shooter",
+       "difficulty": "hard",
+       "reaction": [
+        0.34,
+        0.44
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 2.8,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      },
+      {
+       "kind": "respawn",
+       "delay": [
+        1.5,
+        1.8
+       ],
+       "mode": "inPlace"
+      }
+     ],
+     "health": 150
+    },
+    {
+     "id": "actor-2",
+     "name": "Holder 2",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "motion": "crouch",
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "shooter",
+       "difficulty": "hard",
+       "reaction": [
+        0.34,
+        0.44
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 2.8,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      },
+      {
+       "kind": "respawn",
+       "delay": [
+        1.5,
+        1.8
+       ],
+       "mode": "inPlace"
+      }
+     ],
+     "health": 150
+    },
+    {
+     "id": "actor-3",
+     "name": "Holder 3",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "shooter",
+       "difficulty": "hard",
+       "reaction": [
+        0.34,
+        0.44
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 2.8,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      },
+      {
+       "kind": "respawn",
+       "delay": [
+        0.4,
+        0.9
+       ],
+       "mode": "never"
+      }
+     ],
+     "health": 150
+    }
+   ],
+   "rules": {
+    "duration": 75,
+    "scoring": "clicking",
+    "weapon": "vandal",
+    "playerMovable": true,
+    "fireMode": "hold",
+    "playerDeath": "endRound"
+   }
+  }
+ }
+}

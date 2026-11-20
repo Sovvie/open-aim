@@ -1,0 +1,166 @@
+{
+ "item": {
+  "createTime": "2026-11-20 12:00:00",
+  "description": "The Operator at the end of C Long jiggles side to side with unpredictable stops and shoots almost at once when you scope. Time your shot on a stop. Dying ends the round.",
+  "docBytes": 1249,
+  "featured": false,
+  "mapId": "triad",
+  "name": "Haven — C Long, sniper duel (Hard)",
+  "parSeconds": null,
+  "playCount": 0,
+  "sceneKey": "set-ef2eb6c65d50511e",
+  "shareCode": "ef2eb6c65d50511e",
+  "sort": 320,
+  "status": 1,
+  "type": "hold",
+  "updateTime": "2026-11-20 12:00:00"
+ },
+ "scene": {
+  "authorNickname": "openVaim",
+  "authorUid": "workshop",
+  "blockCount": 0,
+  "createTime": "2026-11-20 12:00:00",
+  "description": "The Operator at the end of C Long jiggles side to side with unpredictable stops and shoots almost at once when you scope. Time your shot on a stop. Dying ends the round.",
+  "docBytes": 1249,
+  "name": "Haven — C Long, sniper duel (Hard)",
+  "playCount": 0,
+  "sceneHash": "d132b64390fc3572",
+  "sceneKey": "set-ef2eb6c65d50511e",
+  "schemaVersion": 2,
+  "shareCode": "ef2eb6c65d50511e",
+  "updateTime": "2026-11-20 12:00:00",
+  "aimShuffle": {
+   "groups": [
+    {
+     "actors": [
+      "actor-1"
+     ],
+     "keepWeapon": true
+    }
+   ]
+  },
+  "doc": {
+   "schemaVersion": 2,
+   "meta": {
+    "id": "studio-60404b683780484b",
+    "name": "Haven — C Long, sniper duel (Hard)",
+    "seed": 234647146,
+    "createdAt": 0
+   },
+   "environment": {
+    "skyColor": "#111820",
+    "fogNear": 14,
+    "fogFar": 33,
+    "ambientIntensity": 2,
+    "keyLightIntensity": 3,
+    "fogEnabled": false,
+    "map": "triad"
+   },
+   "blocks": [],
+   "playerSpawn": {
+    "position": {
+     "x": -96.5,
+     "y": 2.03,
+     "z": 27.3
+    },
+    "yaw": 4.677
+   },
+   "spawners": [
+    {
+     "id": "spawner-1",
+     "name": "Strafer 1",
+     "kind": "area",
+     "actorTemplateId": "actor-1",
+     "position": {
+      "x": -54.1,
+      "y": 1.33,
+      "z": 22.6
+     },
+     "size": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+     },
+     "rotationY": 4.823,
+     "faceTarget": true,
+     "groundSnap": true,
+     "maxAlive": 1,
+     "spawnDelay": [
+      0.05,
+      0.05
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "id": "actor-1",
+     "name": "Strafer 1",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "operator"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "strafe",
+       "speed": [
+        5.4,
+        5.4
+       ],
+       "dwell": [
+        0.03,
+        0.25
+       ],
+       "travel": [
+        0.72,
+        1.6
+       ],
+       "tap": [
+        0.35,
+        0.5,
+        1.2
+       ],
+       "counterStrafe": true
+      },
+      {
+       "kind": "shooter",
+       "difficulty": "hard",
+       "reaction": [
+        0.22,
+        0.3
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 1.6,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      },
+      {
+       "kind": "respawn",
+       "delay": [
+        2.5,
+        2.8
+       ],
+       "mode": "reSpawner"
+      }
+     ],
+     "health": 150
+    }
+   ],
+   "rules": {
+    "duration": 90,
+    "scoring": "clicking",
+    "weapon": "operator",
+    "playerMovable": true,
+    "fireMode": "hold",
+    "playerDeath": "endRound"
+   }
+  }
+ }
+}

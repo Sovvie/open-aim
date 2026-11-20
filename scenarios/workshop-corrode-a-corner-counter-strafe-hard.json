@@ -1,0 +1,343 @@
+{
+ "item": {
+  "createTime": "2026-11-20 12:00:00",
+  "description": "Three accurate enemies with unpredictable strafes and quick stops. Run-and-gun loses this: counter-strafe, tap, shoot. Dying ends the round.",
+  "docBytes": 2727,
+  "featured": false,
+  "mapId": "rook",
+  "name": "Corrode — A Corner, counter-strafe test (Hard)",
+  "parSeconds": null,
+  "playCount": 0,
+  "sceneKey": "set-c40a281d1337c5d3",
+  "shareCode": "c40a281d1337c5d3",
+  "sort": 324,
+  "status": 1,
+  "type": "hold",
+  "updateTime": "2026-11-20 12:00:00"
+ },
+ "scene": {
+  "authorNickname": "openVaim",
+  "authorUid": "workshop",
+  "blockCount": 0,
+  "createTime": "2026-11-20 12:00:00",
+  "description": "Three accurate enemies with unpredictable strafes and quick stops. Run-and-gun loses this: counter-strafe, tap, shoot. Dying ends the round.",
+  "docBytes": 2727,
+  "name": "Corrode — A Corner, counter-strafe test (Hard)",
+  "playCount": 0,
+  "sceneHash": "6df1ce2d2dcde99a",
+  "sceneKey": "set-c40a281d1337c5d3",
+  "schemaVersion": 2,
+  "shareCode": "c40a281d1337c5d3",
+  "updateTime": "2026-11-20 12:00:00",
+  "aimShuffle": {
+   "groups": [
+    {
+     "actors": [
+      "actor-1"
+     ]
+    },
+    {
+     "actors": [
+      "actor-2"
+     ]
+    },
+    {
+     "actors": [
+      "actor-3"
+     ]
+    }
+   ]
+  },
+  "doc": {
+   "schemaVersion": 2,
+   "meta": {
+    "id": "studio-db9a77139c9021d7",
+    "name": "Corrode — A Corner, counter-strafe test (Hard)",
+    "seed": 203097871,
+    "createdAt": 0
+   },
+   "environment": {
+    "skyColor": "#111820",
+    "fogNear": 14,
+    "fogFar": 33,
+    "ambientIntensity": 2,
+    "keyLightIntensity": 3,
+    "fogEnabled": false,
+    "map": "rook"
+   },
+   "blocks": [],
+   "playerSpawn": {
+    "position": {
+     "x": -15.1,
+     "y": 6,
+     "z": -58.1
+    },
+    "yaw": 3.986
+   },
+   "spawners": [
+    {
+     "id": "spawner-1",
+     "name": "Strafer 1",
+     "kind": "area",
+     "actorTemplateId": "actor-1",
+     "position": {
+      "x": -8.9,
+      "y": 5.35,
+      "z": -48.2
+     },
+     "size": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+     },
+     "rotationY": 3.701,
+     "faceTarget": true,
+     "groundSnap": true,
+     "maxAlive": 1,
+     "spawnDelay": [
+      0.05,
+      0.05
+     ]
+    },
+    {
+     "id": "spawner-2",
+     "name": "Strafer 2",
+     "kind": "area",
+     "actorTemplateId": "actor-2",
+     "position": {
+      "x": -4.7,
+      "y": 6.3,
+      "z": -50.5
+     },
+     "size": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+     },
+     "rotationY": 4.081,
+     "faceTarget": true,
+     "groundSnap": true,
+     "maxAlive": 1,
+     "spawnDelay": [
+      0.05,
+      0.05
+     ]
+    },
+    {
+     "id": "spawner-3",
+     "name": "Strafer 3",
+     "kind": "area",
+     "actorTemplateId": "actor-3",
+     "position": {
+      "x": -4.6,
+      "y": 6.3,
+      "z": -59.3
+     },
+     "size": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+     },
+     "rotationY": 4.826,
+     "faceTarget": true,
+     "groundSnap": true,
+     "maxAlive": 1,
+     "spawnDelay": [
+      0.05,
+      0.05
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "id": "actor-1",
+     "name": "Strafer 1",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "strafe",
+       "speed": [
+        5.4,
+        5.4
+       ],
+       "dwell": [
+        0.03,
+        0.25
+       ],
+       "travel": [
+        1.35,
+        3
+       ],
+       "tap": [
+        0.35,
+        0.5,
+        1.2
+       ],
+       "counterStrafe": true
+      },
+      {
+       "kind": "shooter",
+       "difficulty": "hard",
+       "reaction": [
+        0.28,
+        0.36
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 2.2,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      },
+      {
+       "kind": "respawn",
+       "delay": [
+        1.5,
+        1.8
+       ],
+       "mode": "reSpawner"
+      }
+     ],
+     "health": 150
+    },
+    {
+     "id": "actor-2",
+     "name": "Strafer 2",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "strafe",
+       "speed": [
+        5.4,
+        5.4
+       ],
+       "dwell": [
+        0.03,
+        0.25
+       ],
+       "travel": [
+        1.35,
+        3
+       ],
+       "tap": [
+        0.35,
+        0.5,
+        1.2
+       ],
+       "counterStrafe": true
+      },
+      {
+       "kind": "shooter",
+       "difficulty": "hard",
+       "reaction": [
+        0.28,
+        0.36
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 2.2,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      },
+      {
+       "kind": "respawn",
+       "delay": [
+        1.5,
+        1.8
+       ],
+       "mode": "reSpawner"
+      }
+     ],
+     "health": 150
+    },
+    {
+     "id": "actor-3",
+     "name": "Strafer 3",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "strafe",
+       "speed": [
+        5.4,
+        5.4
+       ],
+       "dwell": [
+        0.03,
+        0.25
+       ],
+       "travel": [
+        1.35,
+        3
+       ],
+       "tap": [
+        0.35,
+        0.5,
+        1.2
+       ],
+       "counterStrafe": true
+      },
+      {
+       "kind": "shooter",
+       "difficulty": "hard",
+       "reaction": [
+        0.28,
+        0.36
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 2.2,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      },
+      {
+       "kind": "respawn",
+       "delay": [
+        1.5,
+        1.8
+       ],
+       "mode": "reSpawner"
+      }
+     ],
+     "health": 150
+    }
+   ],
+   "rules": {
+    "duration": 60,
+    "scoring": "clicking",
+    "weapon": "vandal",
+    "playerMovable": true,
+    "fireMode": "hold",
+    "playerDeath": "endRound"
+   }
+  }
+ }
+}

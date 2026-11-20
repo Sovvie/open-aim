@@ -1,0 +1,144 @@
+{
+ "item": {
+  "createTime": "2026-11-20 12:00:00",
+  "description": "A long Operator-versus-Operator duel down C Long, about 43 metres. The enemy holds one angle and shoots a little slowly. Scope in, find it, shoot first.",
+  "docBytes": 1101,
+  "featured": false,
+  "mapId": "triad",
+  "name": "Haven — C Long, sniper duel (Easy)",
+  "parSeconds": null,
+  "playCount": 0,
+  "sceneKey": "set-d567b6e26c77ed21",
+  "shareCode": "d567b6e26c77ed21",
+  "sort": 319,
+  "status": 1,
+  "type": "hold",
+  "updateTime": "2026-11-20 12:00:00"
+ },
+ "scene": {
+  "authorNickname": "openVaim",
+  "authorUid": "workshop",
+  "blockCount": 0,
+  "createTime": "2026-11-20 12:00:00",
+  "description": "A long Operator-versus-Operator duel down C Long, about 43 metres. The enemy holds one angle and shoots a little slowly. Scope in, find it, shoot first.",
+  "docBytes": 1101,
+  "name": "Haven — C Long, sniper duel (Easy)",
+  "playCount": 0,
+  "sceneHash": "e6dd5ff7bc1fdc5b",
+  "sceneKey": "set-d567b6e26c77ed21",
+  "schemaVersion": 2,
+  "shareCode": "d567b6e26c77ed21",
+  "updateTime": "2026-11-20 12:00:00",
+  "aimShuffle": {
+   "groups": [
+    {
+     "actors": [
+      "actor-1"
+     ],
+     "keepWeapon": true
+    }
+   ]
+  },
+  "doc": {
+   "schemaVersion": 2,
+   "meta": {
+    "id": "studio-6a3f289e61aa14f2",
+    "name": "Haven — C Long, sniper duel (Easy)",
+    "seed": 56055795,
+    "createdAt": 0
+   },
+   "environment": {
+    "skyColor": "#111820",
+    "fogNear": 14,
+    "fogFar": 33,
+    "ambientIntensity": 2,
+    "keyLightIntensity": 3,
+    "fogEnabled": false,
+    "map": "triad"
+   },
+   "blocks": [],
+   "playerSpawn": {
+    "position": {
+     "x": -96.5,
+     "y": 2.03,
+     "z": 27.3
+    },
+    "yaw": 4.677
+   },
+   "spawners": [
+    {
+     "id": "spawner-1",
+     "name": "Holder 1",
+     "kind": "area",
+     "actorTemplateId": "actor-1",
+     "position": {
+      "x": -54.1,
+      "y": 1.33,
+      "z": 22.6
+     },
+     "size": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+     },
+     "rotationY": 4.823,
+     "faceTarget": true,
+     "groundSnap": true,
+     "maxAlive": 1,
+     "spawnDelay": [
+      0.05,
+      0.05
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "id": "actor-1",
+     "name": "Holder 1",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "operator"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "shooter",
+       "difficulty": "easy",
+       "reaction": [
+        0.6,
+        0.75
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 5.5,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      },
+      {
+       "kind": "respawn",
+       "delay": [
+        2.5,
+        2.8
+       ],
+       "mode": "inPlace"
+      }
+     ],
+     "health": 150
+    }
+   ],
+   "rules": {
+    "duration": 90,
+    "scoring": "clicking",
+    "weapon": "operator",
+    "playerMovable": true,
+    "fireMode": "hold"
+   }
+  }
+ }
+}

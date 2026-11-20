@@ -1,0 +1,328 @@
+{
+ "item": {
+  "createTime": "2026-11-20 12:00:00",
+  "description": "One enemy swings wide out of top mid from one of three hiding places, stops in the open and shoots. Hold your crosshair on the edge, then take the duel. 60 seconds, bots shoot slowly.",
+  "docBytes": 2515,
+  "featured": false,
+  "mapId": "juliett",
+  "name": "Sunset — Wide-swing duel (Easy)",
+  "parSeconds": null,
+  "playCount": 0,
+  "sceneKey": "set-0a4f1580bb95603f",
+  "shareCode": "0a4f1580bb95603f",
+  "sort": 300,
+  "status": 1,
+  "type": "hold",
+  "updateTime": "2026-11-20 12:00:00"
+ },
+ "scene": {
+  "authorNickname": "openVaim",
+  "authorUid": "workshop",
+  "blockCount": 0,
+  "createTime": "2026-11-20 12:00:00",
+  "description": "One enemy swings wide out of top mid from one of three hiding places, stops in the open and shoots. Hold your crosshair on the edge, then take the duel. 60 seconds, bots shoot slowly.",
+  "docBytes": 2515,
+  "name": "Sunset — Wide-swing duel (Easy)",
+  "playCount": 0,
+  "sceneHash": "c05a62531ca4c60a",
+  "sceneKey": "set-0a4f1580bb95603f",
+  "schemaVersion": 2,
+  "shareCode": "0a4f1580bb95603f",
+  "updateTime": "2026-11-20 12:00:00",
+  "aimShuffle": {
+   "groups": [
+    {
+     "actors": [
+      "actor-1",
+      "actor-1-spot2",
+      "actor-1-spot3"
+     ]
+    }
+   ]
+  },
+  "doc": {
+   "schemaVersion": 2,
+   "meta": {
+    "id": "studio-c91fa4d9e2ffd8eb",
+    "name": "Sunset — Wide-swing duel (Easy)",
+    "seed": 28552768,
+    "createdAt": 0
+   },
+   "environment": {
+    "skyColor": "#111820",
+    "fogNear": 14,
+    "fogFar": 33,
+    "ambientIntensity": 2,
+    "keyLightIntensity": 3,
+    "fogEnabled": false,
+    "map": "juliett"
+   },
+   "blocks": [],
+   "playerSpawn": {
+    "position": {
+     "x": -2.4,
+     "y": 2.04,
+     "z": 13.1
+    },
+    "yaw": 6.161
+   },
+   "spawners": [],
+   "actors": [
+    {
+     "id": "actor-1",
+     "name": "Peeker 1",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "cross",
+       "waypoints": [
+        {
+         "x": -4.7,
+         "y": 4,
+         "z": -23.1
+        },
+        {
+         "x": -2.1,
+         "y": 4,
+         "z": -23.1
+        },
+        {
+         "x": -4.7,
+         "y": 4,
+         "z": -23.1
+        }
+       ],
+       "speed": 5.4,
+       "respawn": true,
+       "interval": [
+        1.6,
+        2.1
+       ],
+       "killImmediate": false,
+       "counterStrafe": true,
+       "killDelay": [
+        1.5,
+        1.8
+       ],
+       "pauses": [
+        {
+         "at": 1,
+         "wait": 2.2
+        }
+       ]
+      },
+      {
+       "kind": "shooter",
+       "difficulty": "easy",
+       "reaction": [
+        0.75,
+        0.9
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 7,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      }
+     ],
+     "health": 150
+    },
+    {
+     "id": "actor-1-spot2",
+     "name": "Peeker 1",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "cross",
+       "waypoints": [
+        {
+         "x": -4.6,
+         "y": 4,
+         "z": -22.5
+        },
+        {
+         "x": -2.2,
+         "y": 4,
+         "z": -22.4
+        },
+        {
+         "x": -4.6,
+         "y": 4,
+         "z": -22.5
+        }
+       ],
+       "speed": 5.4,
+       "respawn": true,
+       "interval": [
+        1.6,
+        2.1
+       ],
+       "killImmediate": false,
+       "counterStrafe": true,
+       "killDelay": [
+        1.5,
+        1.8
+       ],
+       "pauses": [
+        {
+         "at": 1,
+         "wait": 2.2
+        }
+       ]
+      },
+      {
+       "kind": "shooter",
+       "difficulty": "easy",
+       "reaction": [
+        0.75,
+        0.9
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 7,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      }
+     ],
+     "health": 150
+    },
+    {
+     "id": "actor-1-spot3",
+     "name": "Peeker 1",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "cross",
+       "waypoints": [
+        {
+         "x": -4.9,
+         "y": 4,
+         "z": -25.3
+        },
+        {
+         "x": -1.4,
+         "y": 4,
+         "z": -25.3
+        },
+        {
+         "x": -4.9,
+         "y": 4,
+         "z": -25.3
+        }
+       ],
+       "speed": 5.4,
+       "respawn": true,
+       "interval": [
+        1.6,
+        2.1
+       ],
+       "killImmediate": false,
+       "counterStrafe": true,
+       "killDelay": [
+        1.5,
+        1.8
+       ],
+       "pauses": [
+        {
+         "at": 1,
+         "wait": 2.2
+        }
+       ]
+      },
+      {
+       "kind": "shooter",
+       "difficulty": "easy",
+       "reaction": [
+        0.75,
+        0.9
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 7,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      }
+     ],
+     "health": 150
+    }
+   ],
+   "rules": {
+    "duration": 60,
+    "scoring": "clicking",
+    "weapon": "vandal",
+    "playerMovable": true,
+    "fireMode": "hold"
+   },
+   "dispatchers": [
+    {
+     "id": "dispatcher-1",
+     "name": "Peeker 1",
+     "routes": [
+      {
+       "templateId": "actor-1",
+       "streak": [
+        1,
+        1
+       ]
+      },
+      {
+       "templateId": "actor-1-spot2",
+       "streak": [
+        1,
+        1
+       ]
+      },
+      {
+       "templateId": "actor-1-spot3",
+       "streak": [
+        1,
+        1
+       ]
+      }
+     ],
+     "order": "random",
+     "maxAlive": 1,
+     "interval": [
+      1.6,
+      2.6
+     ],
+     "faceTarget": true,
+     "killDelay": [
+      1.5,
+      1.8
+     ]
+    }
+   ]
+  }
+ }
+}

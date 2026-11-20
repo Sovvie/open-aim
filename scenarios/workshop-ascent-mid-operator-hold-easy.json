@@ -1,0 +1,174 @@
+{
+ "item": {
+  "createTime": "2026-11-20 12:00:00",
+  "description": "You hold mid with an Operator. One rifleman makes a wide swing across the open, stops and shoots. Hold the scope on the edge and take the shot as it appears. 90 seconds, bots shoot slowly.",
+  "docBytes": 1267,
+  "featured": false,
+  "mapId": "ascent",
+  "name": "Ascent — Mid, Operator hold (Easy)",
+  "parSeconds": null,
+  "playCount": 0,
+  "sceneKey": "set-b0231054306b0014",
+  "shareCode": "b0231054306b0014",
+  "sort": 312,
+  "status": 1,
+  "type": "hold",
+  "updateTime": "2026-11-20 12:00:00"
+ },
+ "scene": {
+  "authorNickname": "openVaim",
+  "authorUid": "workshop",
+  "blockCount": 0,
+  "createTime": "2026-11-20 12:00:00",
+  "description": "You hold mid with an Operator. One rifleman makes a wide swing across the open, stops and shoots. Hold the scope on the edge and take the shot as it appears. 90 seconds, bots shoot slowly.",
+  "docBytes": 1267,
+  "name": "Ascent — Mid, Operator hold (Easy)",
+  "playCount": 0,
+  "sceneHash": "cc36a390473990b8",
+  "sceneKey": "set-b0231054306b0014",
+  "schemaVersion": 2,
+  "shareCode": "b0231054306b0014",
+  "updateTime": "2026-11-20 12:00:00",
+  "aimShuffle": {
+   "groups": [
+    {
+     "actors": [
+      "actor-1"
+     ]
+    }
+   ]
+  },
+  "doc": {
+   "schemaVersion": 2,
+   "meta": {
+    "id": "studio-c86d0a6159a4654f",
+    "name": "Ascent — Mid, Operator hold (Easy)",
+    "seed": 256954680,
+    "createdAt": 0
+   },
+   "environment": {
+    "skyColor": "#111820",
+    "fogNear": 14,
+    "fogFar": 33,
+    "ambientIntensity": 2,
+    "keyLightIntensity": 3,
+    "fogEnabled": false,
+    "map": "ascent"
+   },
+   "blocks": [],
+   "playerSpawn": {
+    "position": {
+     "x": -58.1,
+     "y": 2.02,
+     "z": -8.2
+    },
+    "yaw": 4.957
+   },
+   "spawners": [],
+   "actors": [
+    {
+     "id": "actor-1",
+     "name": "Peeker 1",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "cross",
+       "waypoints": [
+        {
+         "x": -38.4,
+         "y": 2,
+         "z": -20.24
+        },
+        {
+         "x": -38.48,
+         "y": 2.03,
+         "z": -13.04
+        },
+        {
+         "x": -38.4,
+         "y": 2,
+         "z": -20.24
+        }
+       ],
+       "speed": 5.4,
+       "respawn": true,
+       "interval": [
+        2,
+        2.5
+       ],
+       "killImmediate": false,
+       "counterStrafe": true,
+       "killDelay": [
+        1.5,
+        1.8
+       ],
+       "pauses": [
+        {
+         "at": 1,
+         "wait": 2.4
+        }
+       ]
+      },
+      {
+       "kind": "shooter",
+       "difficulty": "easy",
+       "reaction": [
+        0.75,
+        0.9
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 7,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      }
+     ],
+     "health": 150
+    }
+   ],
+   "rules": {
+    "duration": 90,
+    "scoring": "clicking",
+    "weapon": "operator",
+    "playerMovable": true,
+    "fireMode": "hold"
+   },
+   "dispatchers": [
+    {
+     "id": "dispatcher-1",
+     "name": "Peeker 1",
+     "routes": [
+      {
+       "templateId": "actor-1",
+       "streak": [
+        1,
+        1
+       ]
+      }
+     ],
+     "order": "sequence",
+     "maxAlive": 1,
+     "interval": [
+      2,
+      4
+     ],
+     "faceTarget": true,
+     "killDelay": [
+      1.5,
+      1.8
+     ]
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,263 @@
+{
+ "item": {
+  "createTime": "2026-11-20 12:00:00",
+  "description": "You hold mid with an Operator against a fast, strafing wide swing, while a second enemy sits crouched at a side angle and covers it. Scope, shoot, and do not get greedy. Dying ends the round.",
+  "docBytes": 2040,
+  "featured": false,
+  "mapId": "ascent",
+  "name": "Ascent — Mid, Operator hold (Hard)",
+  "parSeconds": null,
+  "playCount": 0,
+  "sceneKey": "set-7058fa2ec2e8787f",
+  "shareCode": "7058fa2ec2e8787f",
+  "sort": 313,
+  "status": 1,
+  "type": "hold",
+  "updateTime": "2026-11-20 12:00:00"
+ },
+ "scene": {
+  "authorNickname": "openVaim",
+  "authorUid": "workshop",
+  "blockCount": 0,
+  "createTime": "2026-11-20 12:00:00",
+  "description": "You hold mid with an Operator against a fast, strafing wide swing, while a second enemy sits crouched at a side angle and covers it. Scope, shoot, and do not get greedy. Dying ends the round.",
+  "docBytes": 2040,
+  "name": "Ascent — Mid, Operator hold (Hard)",
+  "playCount": 0,
+  "sceneHash": "08132e63ecb2192f",
+  "sceneKey": "set-7058fa2ec2e8787f",
+  "schemaVersion": 2,
+  "shareCode": "7058fa2ec2e8787f",
+  "updateTime": "2026-11-20 12:00:00",
+  "aimShuffle": {
+   "groups": [
+    {
+     "actors": [
+      "actor-1"
+     ]
+    },
+    {
+     "actors": [
+      "actor-2"
+     ]
+    }
+   ]
+  },
+  "doc": {
+   "schemaVersion": 2,
+   "meta": {
+    "id": "studio-5c87458a907880c9",
+    "name": "Ascent — Mid, Operator hold (Hard)",
+    "seed": 65801580,
+    "createdAt": 0
+   },
+   "environment": {
+    "skyColor": "#111820",
+    "fogNear": 14,
+    "fogFar": 33,
+    "ambientIntensity": 2,
+    "keyLightIntensity": 3,
+    "fogEnabled": false,
+    "map": "ascent"
+   },
+   "blocks": [],
+   "playerSpawn": {
+    "position": {
+     "x": -58.1,
+     "y": 2.02,
+     "z": -8.2
+    },
+    "yaw": 4.957
+   },
+   "spawners": [
+    {
+     "id": "spawner-2",
+     "name": "Holder 1",
+     "kind": "area",
+     "actorTemplateId": "actor-2",
+     "position": {
+      "x": -41.7,
+      "y": 2.3,
+      "z": -1.1
+     },
+     "size": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+     },
+     "rotationY": 4.304,
+     "faceTarget": true,
+     "groundSnap": true,
+     "maxAlive": 1,
+     "spawnDelay": [
+      0.05,
+      0.05
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "id": "actor-2",
+     "name": "Holder 1",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "motion": "crouch",
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "shooter",
+       "difficulty": "hard",
+       "reaction": [
+        0.34,
+        0.44
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 2.8,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      },
+      {
+       "kind": "respawn",
+       "delay": [
+        3,
+        3.3
+       ],
+       "mode": "inPlace"
+      }
+     ],
+     "health": 150
+    },
+    {
+     "id": "actor-1",
+     "name": "Peeker 1",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "cross",
+       "waypoints": [
+        {
+         "x": -38.4,
+         "y": 2,
+         "z": -20.24
+        },
+        {
+         "x": -38.48,
+         "y": 2.03,
+         "z": -13.04
+        },
+        {
+         "x": -38.839,
+         "y": 2.03,
+         "z": -14.496
+        },
+        {
+         "x": -38.223,
+         "y": 2.03,
+         "z": -12
+        },
+        {
+         "x": -38.4,
+         "y": 2,
+         "z": -20.24
+        }
+       ],
+       "speed": 5.4,
+       "respawn": true,
+       "interval": [
+        0.9,
+        1.4
+       ],
+       "killImmediate": false,
+       "counterStrafe": true,
+       "killDelay": [
+        1.5,
+        1.8
+       ],
+       "pauses": [
+        {
+         "at": 1,
+         "wait": 0.1
+        },
+        {
+         "at": 2,
+         "wait": 0.15
+        },
+        {
+         "at": 3,
+         "wait": 0.25
+        }
+       ]
+      },
+      {
+       "kind": "shooter",
+       "difficulty": "hard",
+       "reaction": [
+        0.34,
+        0.44
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 2.8,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      }
+     ],
+     "health": 150
+    }
+   ],
+   "rules": {
+    "duration": 90,
+    "scoring": "clicking",
+    "weapon": "operator",
+    "playerMovable": true,
+    "fireMode": "hold",
+    "playerDeath": "endRound"
+   },
+   "dispatchers": [
+    {
+     "id": "dispatcher-1",
+     "name": "Peeker 1",
+     "routes": [
+      {
+       "templateId": "actor-1",
+       "streak": [
+        1,
+        1
+       ]
+      }
+     ],
+     "order": "sequence",
+     "maxAlive": 1,
+     "interval": [
+      0.9,
+      2.4
+     ],
+     "faceTarget": true,
+     "killDelay": [
+      1.5,
+      1.8
+     ]
+    }
+   ]
+  }
+ }
+}
