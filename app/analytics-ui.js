@@ -556,6 +556,9 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-panel .aim-an-card { text-tra
 /* ---- ui-result review (20 Nov 2026): result-screen hit report ---- */
 /* the base site forces border-radius: 8px !important on every button: the report's tabs stay square like the theme's */
 html[data-aim-local]:not(#es) body .aim-an-hit .aim-an-hit-tabs button { border-radius: 0 !important; }
+/* beside the card (no Position map) the report enters with that screen's own pace: the card pops in 0.42s and the game's
+   bots card in 0.34s, so a 0.7s slide (the map board's column timing) finished well after everything else */
+.aim-an-hit.aim-an-hit-side.aim-an-hit-enter { animation-duration: 0.42s; }
 `;
   function injectCss() {
     try {
