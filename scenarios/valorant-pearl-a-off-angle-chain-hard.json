@@ -1,0 +1,563 @@
+{
+ "item": {
+  "createTime": "2026-11-20 12:00:00",
+  "description": "Pearl A: 4 accurate enemies, but only one at a time. Each shows up at a new angle (left, right, near, far) within half a second of the kill before. Clear your angle, then look for the next one at a place you did not check. Dying ends the round.",
+  "docBytes": 6337,
+  "featured": false,
+  "mapId": "pitt",
+  "name": "Pearl — A site, off-angle chain (Hard)",
+  "parSeconds": null,
+  "playCount": 0,
+  "sceneKey": "set-eddc37c0aacaae04",
+  "shareCode": "eddc37c0aacaae04",
+  "sort": 337,
+  "status": 1,
+  "type": "hold",
+  "updateTime": "2026-11-20 12:00:00"
+ },
+ "scene": {
+  "authorNickname": "openVaim",
+  "authorUid": "workshop",
+  "blockCount": 0,
+  "createTime": "2026-11-20 12:00:00",
+  "description": "Pearl A: 4 accurate enemies, but only one at a time. Each shows up at a new angle (left, right, near, far) within half a second of the kill before. Clear your angle, then look for the next one at a place you did not check. Dying ends the round.",
+  "docBytes": 6337,
+  "name": "Pearl — A site, off-angle chain (Hard)",
+  "playCount": 0,
+  "sceneHash": "96cd2c8fc31f3d5f",
+  "sceneKey": "set-eddc37c0aacaae04",
+  "schemaVersion": 2,
+  "shareCode": "eddc37c0aacaae04",
+  "updateTime": "2026-11-20 12:00:00",
+  "aimShuffle": {
+   "groups": [
+    {
+     "actors": [
+      "actor-1"
+     ]
+    },
+    {
+     "actors": [
+      "actor-2"
+     ]
+    },
+    {
+     "actors": [
+      "actor-3"
+     ]
+    },
+    {
+     "actors": [
+      "actor-4"
+     ]
+    }
+   ]
+  },
+  "doc": {
+   "schemaVersion": 2,
+   "meta": {
+    "id": "studio-a18cebf2cb44925c",
+    "name": "Pearl — A site, off-angle chain (Hard)",
+    "seed": 108795875,
+    "createdAt": 0
+   },
+   "environment": {
+    "skyColor": "#111820",
+    "fogNear": 14,
+    "fogFar": 33,
+    "ambientIntensity": 2,
+    "keyLightIntensity": 3,
+    "fogEnabled": false,
+    "map": "pitt"
+   },
+   "blocks": [],
+   "playerSpawn": {
+    "position": {
+     "x": 52.2,
+     "y": 6.07,
+     "z": -44.1
+    },
+    "yaw": 0
+   },
+   "spawners": [
+    {
+     "id": "spawner-1",
+     "name": "Holder 1",
+     "kind": "area",
+     "actorTemplateId": "actor-1",
+     "position": {
+      "x": 49.9,
+      "y": 6.3,
+      "z": -59.9
+     },
+     "size": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+     },
+     "rotationY": 0.145,
+     "faceTarget": true,
+     "groundSnap": true,
+     "maxAlive": 1,
+     "spawnDelay": [
+      0.05,
+      0.05
+     ]
+    },
+    {
+     "id": "spawner-2",
+     "name": "Holder 2",
+     "kind": "area",
+     "actorTemplateId": "actor-2",
+     "position": {
+      "x": 39.4,
+      "y": 5.3,
+      "z": -54.2
+     },
+     "size": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+     },
+     "rotationY": 0.903,
+     "faceTarget": true,
+     "groundSnap": true,
+     "maxAlive": 1,
+     "spawnDelay": [
+      0.3,
+      0.6
+     ],
+     "afterKill": [
+      "actor-1",
+      "actor-1-spot2",
+      "actor-1-spot3",
+      "actor-1-spot4",
+      "actor-1-spot5",
+      "actor-1-spot6",
+      "actor-1-spot7",
+      "actor-1-spot8",
+      "actor-1-spot9",
+      "actor-1-spot10",
+      "actor-1-spot11",
+      "actor-1-spot12",
+      "actor-1-spot13",
+      "actor-1-spot14",
+      "actor-1-spot15",
+      "actor-1-spot16",
+      "actor-1-spot17",
+      "actor-1-spot18",
+      "actor-1-spot19",
+      "actor-1-spot20",
+      "actor-1-spot21",
+      "actor-1-spot22",
+      "actor-1-spot23",
+      "actor-1-spot24",
+      "actor-1-spot25",
+      "actor-1-spot26",
+      "actor-1-spot27",
+      "actor-1-spot28",
+      "actor-1-spot29",
+      "actor-1-spot30",
+      "actor-1-spot31",
+      "actor-1-spot32",
+      "actor-1-spot33",
+      "actor-1-spot34",
+      "actor-1-spot35",
+      "actor-1-spot36",
+      "actor-1-spot37",
+      "actor-1-spot38",
+      "actor-1-spot39",
+      "actor-1-spot40",
+      "actor-1-spot41",
+      "actor-1-spot42",
+      "actor-1-spot43",
+      "actor-1-spot44",
+      "actor-1-spot45",
+      "actor-1-spot46",
+      "actor-1-spot47",
+      "actor-1-spot48",
+      "actor-1-spot49",
+      "actor-1-spot50",
+      "actor-1-spot51",
+      "actor-1-spot52",
+      "actor-1-spot53",
+      "actor-1-spot54",
+      "actor-1-spot55",
+      "actor-1-spot56",
+      "actor-1-spot57",
+      "actor-1-spot58",
+      "actor-1-spot59",
+      "actor-1-spot60",
+      "actor-1-spot61",
+      "actor-1-spot62",
+      "actor-1-spot63",
+      "actor-1-spot64"
+     ]
+    },
+    {
+     "id": "spawner-3",
+     "name": "Strafer 1",
+     "kind": "area",
+     "actorTemplateId": "actor-3",
+     "position": {
+      "x": 56.1,
+      "y": 3.3,
+      "z": -64.3
+     },
+     "size": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+     },
+     "rotationY": 6.092,
+     "faceTarget": true,
+     "groundSnap": true,
+     "maxAlive": 1,
+     "spawnDelay": [
+      0.3,
+      0.6
+     ],
+     "afterKill": [
+      "actor-2",
+      "actor-2-spot2",
+      "actor-2-spot3",
+      "actor-2-spot4",
+      "actor-2-spot5",
+      "actor-2-spot6",
+      "actor-2-spot7",
+      "actor-2-spot8",
+      "actor-2-spot9",
+      "actor-2-spot10",
+      "actor-2-spot11",
+      "actor-2-spot12",
+      "actor-2-spot13",
+      "actor-2-spot14",
+      "actor-2-spot15",
+      "actor-2-spot16",
+      "actor-2-spot17",
+      "actor-2-spot18",
+      "actor-2-spot19",
+      "actor-2-spot20",
+      "actor-2-spot21",
+      "actor-2-spot22",
+      "actor-2-spot23",
+      "actor-2-spot24",
+      "actor-2-spot25",
+      "actor-2-spot26",
+      "actor-2-spot27",
+      "actor-2-spot28",
+      "actor-2-spot29",
+      "actor-2-spot30",
+      "actor-2-spot31",
+      "actor-2-spot32",
+      "actor-2-spot33",
+      "actor-2-spot34",
+      "actor-2-spot35",
+      "actor-2-spot36",
+      "actor-2-spot37",
+      "actor-2-spot38",
+      "actor-2-spot39",
+      "actor-2-spot40",
+      "actor-2-spot41",
+      "actor-2-spot42",
+      "actor-2-spot43",
+      "actor-2-spot44",
+      "actor-2-spot45",
+      "actor-2-spot46",
+      "actor-2-spot47",
+      "actor-2-spot48",
+      "actor-2-spot49",
+      "actor-2-spot50",
+      "actor-2-spot51",
+      "actor-2-spot52",
+      "actor-2-spot53",
+      "actor-2-spot54",
+      "actor-2-spot55",
+      "actor-2-spot56",
+      "actor-2-spot57",
+      "actor-2-spot58",
+      "actor-2-spot59",
+      "actor-2-spot60",
+      "actor-2-spot61",
+      "actor-2-spot62",
+      "actor-2-spot63",
+      "actor-2-spot64"
+     ]
+    },
+    {
+     "id": "spawner-4",
+     "name": "Holder 3",
+     "kind": "area",
+     "actorTemplateId": "actor-4",
+     "position": {
+      "x": 46.6,
+      "y": 5.14,
+      "z": -58.2
+     },
+     "size": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+     },
+     "rotationY": 0.378,
+     "faceTarget": true,
+     "groundSnap": true,
+     "maxAlive": 1,
+     "spawnDelay": [
+      0.3,
+      0.6
+     ],
+     "afterKill": [
+      "actor-3",
+      "actor-3-spot2",
+      "actor-3-spot3",
+      "actor-3-spot4",
+      "actor-3-spot5",
+      "actor-3-spot6",
+      "actor-3-spot7",
+      "actor-3-spot8",
+      "actor-3-spot9",
+      "actor-3-spot10",
+      "actor-3-spot11",
+      "actor-3-spot12",
+      "actor-3-spot13",
+      "actor-3-spot14",
+      "actor-3-spot15",
+      "actor-3-spot16",
+      "actor-3-spot17",
+      "actor-3-spot18",
+      "actor-3-spot19",
+      "actor-3-spot20",
+      "actor-3-spot21",
+      "actor-3-spot22",
+      "actor-3-spot23",
+      "actor-3-spot24",
+      "actor-3-spot25",
+      "actor-3-spot26",
+      "actor-3-spot27",
+      "actor-3-spot28",
+      "actor-3-spot29",
+      "actor-3-spot30",
+      "actor-3-spot31",
+      "actor-3-spot32",
+      "actor-3-spot33",
+      "actor-3-spot34",
+      "actor-3-spot35",
+      "actor-3-spot36",
+      "actor-3-spot37",
+      "actor-3-spot38",
+      "actor-3-spot39",
+      "actor-3-spot40",
+      "actor-3-spot41",
+      "actor-3-spot42",
+      "actor-3-spot43",
+      "actor-3-spot44",
+      "actor-3-spot45",
+      "actor-3-spot46",
+      "actor-3-spot47",
+      "actor-3-spot48",
+      "actor-3-spot49",
+      "actor-3-spot50",
+      "actor-3-spot51",
+      "actor-3-spot52",
+      "actor-3-spot53",
+      "actor-3-spot54",
+      "actor-3-spot55",
+      "actor-3-spot56",
+      "actor-3-spot57",
+      "actor-3-spot58",
+      "actor-3-spot59",
+      "actor-3-spot60",
+      "actor-3-spot61",
+      "actor-3-spot62",
+      "actor-3-spot63",
+      "actor-3-spot64"
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "id": "actor-1",
+     "name": "Holder 1",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "shooter",
+       "difficulty": "hard",
+       "reaction": [
+        0.34,
+        0.44
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 2.8,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      },
+      {
+       "kind": "respawn",
+       "delay": [
+        0.4,
+        0.9
+       ],
+       "mode": "never"
+      }
+     ],
+     "health": 150
+    },
+    {
+     "id": "actor-2",
+     "name": "Holder 2",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "motion": "crouch",
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "shooter",
+       "difficulty": "hard",
+       "reaction": [
+        0.34,
+        0.44
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 2.8,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      },
+      {
+       "kind": "respawn",
+       "delay": [
+        0.4,
+        0.9
+       ],
+       "mode": "never"
+      }
+     ],
+     "health": 150
+    },
+    {
+     "id": "actor-3",
+     "name": "Strafer 1",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "strafe",
+       "speed": [
+        5.4,
+        5.4
+       ],
+       "dwell": [
+        0.15,
+        0.6
+       ],
+       "travel": [
+        0.96,
+        1.6
+       ],
+       "counterStrafe": true
+      },
+      {
+       "kind": "shooter",
+       "difficulty": "hard",
+       "reaction": [
+        0.34,
+        0.44
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 2.8,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      },
+      {
+       "kind": "respawn",
+       "delay": [
+        0.4,
+        0.9
+       ],
+       "mode": "never"
+      }
+     ],
+     "health": 150
+    },
+    {
+     "id": "actor-4",
+     "name": "Holder 3",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "shooter",
+       "difficulty": "hard",
+       "reaction": [
+        0.34,
+        0.44
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 2.8,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      },
+      {
+       "kind": "respawn",
+       "delay": [
+        0.4,
+        0.9
+       ],
+       "mode": "never"
+      }
+     ],
+     "health": 150
+    }
+   ],
+   "rules": {
+    "duration": 60,
+    "scoring": "clicking",
+    "weapon": "vandal",
+    "playerMovable": true,
+    "fireMode": "hold",
+    "playerDeath": "endRound"
+   }
+  }
+ }
+}

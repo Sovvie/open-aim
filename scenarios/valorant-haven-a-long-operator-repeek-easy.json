@@ -1,0 +1,174 @@
+{
+ "item": {
+  "createTime": "2026-11-20 12:00:00",
+  "description": "Haven A Long: you hold a long lane with an Operator. One enemy peeks for about a second, hides for three to five seconds and peeks again. Count the gap, scope before it comes, and shoot as it appears. Bots shoot slowly.",
+  "docBytes": 1275,
+  "featured": false,
+  "mapId": "triad",
+  "name": "Haven — A Long, Operator repeek (Easy)",
+  "parSeconds": null,
+  "playCount": 0,
+  "sceneKey": "set-5314566cd76cc1c4",
+  "shareCode": "5314566cd76cc1c4",
+  "sort": 364,
+  "status": 1,
+  "type": "hold",
+  "updateTime": "2026-11-20 12:00:00"
+ },
+ "scene": {
+  "authorNickname": "openVaim",
+  "authorUid": "workshop",
+  "blockCount": 0,
+  "createTime": "2026-11-20 12:00:00",
+  "description": "Haven A Long: you hold a long lane with an Operator. One enemy peeks for about a second, hides for three to five seconds and peeks again. Count the gap, scope before it comes, and shoot as it appears. Bots shoot slowly.",
+  "docBytes": 1275,
+  "name": "Haven — A Long, Operator repeek (Easy)",
+  "playCount": 0,
+  "sceneHash": "4cfff0c5fac3605a",
+  "sceneKey": "set-5314566cd76cc1c4",
+  "schemaVersion": 2,
+  "shareCode": "5314566cd76cc1c4",
+  "updateTime": "2026-11-20 12:00:00",
+  "aimShuffle": {
+   "groups": [
+    {
+     "actors": [
+      "actor-1"
+     ]
+    }
+   ]
+  },
+  "doc": {
+   "schemaVersion": 2,
+   "meta": {
+    "id": "studio-2d95d8f71874beb9",
+    "name": "Haven — A Long, Operator repeek (Easy)",
+    "seed": 242388826,
+    "createdAt": 0
+   },
+   "environment": {
+    "skyColor": "#111820",
+    "fogNear": 14,
+    "fogFar": 33,
+    "ambientIntensity": 2,
+    "keyLightIntensity": 3,
+    "fogEnabled": false,
+    "map": "triad"
+   },
+   "blocks": [],
+   "playerSpawn": {
+    "position": {
+     "x": -73.8,
+     "y": 1.03,
+     "z": -67.9
+    },
+    "yaw": 3.552
+   },
+   "spawners": [],
+   "actors": [
+    {
+     "id": "actor-1",
+     "name": "Peeker 1",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "cross",
+       "waypoints": [
+        {
+         "x": -65.2,
+         "y": 3.03,
+         "z": -38.3
+        },
+        {
+         "x": -64.9,
+         "y": 2.83,
+         "z": -47.4
+        },
+        {
+         "x": -65.2,
+         "y": 3.03,
+         "z": -38.3
+        }
+       ],
+       "speed": 5.4,
+       "respawn": true,
+       "interval": [
+        2.8,
+        3.3
+       ],
+       "killImmediate": false,
+       "counterStrafe": true,
+       "killDelay": [
+        3,
+        3.3
+       ],
+       "pauses": [
+        {
+         "at": 1,
+         "wait": 1.1
+        }
+       ]
+      },
+      {
+       "kind": "shooter",
+       "difficulty": "easy",
+       "reaction": [
+        0.75,
+        0.9
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 7,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      }
+     ],
+     "health": 150
+    }
+   ],
+   "rules": {
+    "duration": 90,
+    "scoring": "clicking",
+    "weapon": "operator",
+    "playerMovable": true,
+    "fireMode": "hold"
+   },
+   "dispatchers": [
+    {
+     "id": "dispatcher-1",
+     "name": "Peeker 1",
+     "routes": [
+      {
+       "templateId": "actor-1",
+       "streak": [
+        1,
+        1
+       ]
+      }
+     ],
+     "order": "sequence",
+     "maxAlive": 1,
+     "interval": [
+      2.8,
+      4.8
+     ],
+     "faceTarget": true,
+     "killDelay": [
+      3,
+      3.3
+     ]
+    }
+   ]
+  }
+ }
+}

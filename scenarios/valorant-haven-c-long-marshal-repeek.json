@@ -1,0 +1,272 @@
+{
+ "item": {
+  "createTime": "2026-11-20 12:00:00",
+  "description": "A long Marshal lane down C Long, about 43 metres. A rifleman peeks for about a second, hides for one to three seconds and repeeks, strafing or standing. One body shot is not a kill: quick-scope for the head, or shoot twice. Dying ends the round.",
+  "docBytes": 2056,
+  "featured": false,
+  "mapId": "triad",
+  "name": "Haven — C Long, Marshal repeek",
+  "parSeconds": null,
+  "playCount": 0,
+  "sceneKey": "set-68fb36b33c69c2ac",
+  "shareCode": "68fb36b33c69c2ac",
+  "sort": 366,
+  "status": 1,
+  "type": "hold",
+  "updateTime": "2026-11-20 12:00:00"
+ },
+ "scene": {
+  "authorNickname": "openVaim",
+  "authorUid": "workshop",
+  "blockCount": 0,
+  "createTime": "2026-11-20 12:00:00",
+  "description": "A long Marshal lane down C Long, about 43 metres. A rifleman peeks for about a second, hides for one to three seconds and repeeks, strafing or standing. One body shot is not a kill: quick-scope for the head, or shoot twice. Dying ends the round.",
+  "docBytes": 2056,
+  "name": "Haven — C Long, Marshal repeek",
+  "playCount": 0,
+  "sceneHash": "00487545c36cd348",
+  "sceneKey": "set-68fb36b33c69c2ac",
+  "schemaVersion": 2,
+  "shareCode": "68fb36b33c69c2ac",
+  "updateTime": "2026-11-20 12:00:00",
+  "aimShuffle": {
+   "groups": [
+    {
+     "actors": [
+      "actor-1",
+      "actor-1-spot2"
+     ]
+    }
+   ]
+  },
+  "doc": {
+   "schemaVersion": 2,
+   "meta": {
+    "id": "studio-b52eb32a5c127d77",
+    "name": "Haven — C Long, Marshal repeek",
+    "seed": 223904066,
+    "createdAt": 0
+   },
+   "environment": {
+    "skyColor": "#111820",
+    "fogNear": 14,
+    "fogFar": 33,
+    "ambientIntensity": 2,
+    "keyLightIntensity": 3,
+    "fogEnabled": false,
+    "map": "triad"
+   },
+   "blocks": [],
+   "playerSpawn": {
+    "position": {
+     "x": -96.5,
+     "y": 2.03,
+     "z": 27.3
+    },
+    "yaw": 4.677
+   },
+   "spawners": [],
+   "actors": [
+    {
+     "id": "actor-1",
+     "name": "Peeker 1",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "cross",
+       "waypoints": [
+        {
+         "x": -57.3,
+         "y": 1.06,
+         "z": 17.1
+        },
+        {
+         "x": -54.1,
+         "y": 1.03,
+         "z": 22.6
+        },
+        {
+         "x": -54.21,
+         "y": 1.03,
+         "z": 21.606
+        },
+        {
+         "x": -54.021,
+         "y": 1.03,
+         "z": 23.31
+        },
+        {
+         "x": -57.3,
+         "y": 1.06,
+         "z": 17.1
+        }
+       ],
+       "speed": 5.4,
+       "respawn": true,
+       "interval": [
+        1.2,
+        1.7
+       ],
+       "killImmediate": false,
+       "counterStrafe": true,
+       "killDelay": [
+        2,
+        2.3
+       ],
+       "pauses": [
+        {
+         "at": 1,
+         "wait": 0.1
+        },
+        {
+         "at": 2,
+         "wait": 0.15
+        },
+        {
+         "at": 3,
+         "wait": 0.25
+        }
+       ]
+      },
+      {
+       "kind": "shooter",
+       "difficulty": "hard",
+       "reaction": [
+        0.42,
+        0.52
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 3.5,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      }
+     ],
+     "health": 150
+    },
+    {
+     "id": "actor-1-spot2",
+     "name": "Peeker 1",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "cross",
+       "waypoints": [
+        {
+         "x": -57.3,
+         "y": 1.06,
+         "z": 17.1
+        },
+        {
+         "x": -54.1,
+         "y": 1.03,
+         "z": 22.6
+        },
+        {
+         "x": -57.3,
+         "y": 1.06,
+         "z": 17.1
+        }
+       ],
+       "speed": 5.4,
+       "respawn": true,
+       "interval": [
+        1.2,
+        1.7
+       ],
+       "killImmediate": false,
+       "counterStrafe": true,
+       "killDelay": [
+        2,
+        2.3
+       ],
+       "pauses": [
+        {
+         "at": 1,
+         "wait": 1
+        }
+       ]
+      },
+      {
+       "kind": "shooter",
+       "difficulty": "hard",
+       "reaction": [
+        0.42,
+        0.52
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 3.5,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      }
+     ],
+     "health": 150
+    }
+   ],
+   "rules": {
+    "duration": 90,
+    "scoring": "clicking",
+    "weapon": "marshal",
+    "playerMovable": true,
+    "fireMode": "hold",
+    "playerDeath": "endRound"
+   },
+   "dispatchers": [
+    {
+     "id": "dispatcher-1",
+     "name": "Peeker 1",
+     "routes": [
+      {
+       "templateId": "actor-1",
+       "streak": [
+        1,
+        1
+       ],
+       "group": 0
+      },
+      {
+       "templateId": "actor-1-spot2",
+       "streak": [
+        1,
+        1
+       ],
+       "group": 0
+      }
+     ],
+     "order": "sequence",
+     "maxAlive": 1,
+     "interval": [
+      1.2,
+      3.4
+     ],
+     "faceTarget": true,
+     "killDelay": [
+      2,
+      2.3
+     ]
+    }
+   ]
+  }
+ }
+}

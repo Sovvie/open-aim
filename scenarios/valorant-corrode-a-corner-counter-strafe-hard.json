@@ -24,7 +24,7 @@
   "docBytes": 2727,
   "name": "Corrode — A Corner, counter-strafe test (Hard)",
   "playCount": 0,
-  "sceneHash": "6df1ce2d2dcde99a",
+  "sceneHash": "7dd1fe3e9012d386",
   "sceneKey": "set-c40a281d1337c5d3",
   "schemaVersion": 2,
   "shareCode": "c40a281d1337c5d3",
@@ -72,7 +72,7 @@
      "y": 6,
      "z": -58.1
     },
-    "yaw": 3.986
+    "yaw": 3.868
    },
    "spawners": [
     {

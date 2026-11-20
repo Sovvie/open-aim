@@ -24,7 +24,7 @@
   "docBytes": 3544,
   "name": "Sunset — A site, clear in order (Easy)",
   "playCount": 0,
-  "sceneHash": "a1ed9f48f1980313",
+  "sceneHash": "da37305dfd8e8926",
   "sceneKey": "set-5db7d0c3bef3a337",
   "schemaVersion": 2,
   "shareCode": "5db7d0c3bef3a337",
@@ -82,7 +82,7 @@
      "y": 0.02,
      "z": 14.2
     },
-    "yaw": 4.712
+    "yaw": 6.124
    },
    "spawners": [
     {

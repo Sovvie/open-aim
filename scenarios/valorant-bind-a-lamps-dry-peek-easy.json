@@ -2,7 +2,7 @@
  "item": {
   "createTime": "2026-11-20 12:00:00",
   "description": "You dry-peek out of Lamps into two defenders on A site who are already aiming at the corner. Show just enough of yourself to see them, shoot, and step back. They shoot slowly and return after a few seconds.",
-  "docBytes": 1709,
+  "docBytes": 1707,
   "featured": false,
   "mapId": "duality",
   "name": "Bind — A Lamps, dry peek (Easy)",
@@ -21,10 +21,10 @@
   "blockCount": 0,
   "createTime": "2026-11-20 12:00:00",
   "description": "You dry-peek out of Lamps into two defenders on A site who are already aiming at the corner. Show just enough of yourself to see them, shoot, and step back. They shoot slowly and return after a few seconds.",
-  "docBytes": 1709,
+  "docBytes": 1707,
   "name": "Bind — A Lamps, dry peek (Easy)",
   "playCount": 0,
-  "sceneHash": "74ad5595695735df",
+  "sceneHash": "06319c27d927b60c",
   "sceneKey": "set-f4feb8ab9013da1a",
   "schemaVersion": 2,
   "shareCode": "f4feb8ab9013da1a",
@@ -67,7 +67,7 @@
      "y": 2.05,
      "z": -105.2
     },
-    "yaw": 3.815
+    "yaw": 4.039
    },
    "spawners": [
     {
@@ -76,16 +76,16 @@
      "kind": "area",
      "actorTemplateId": "actor-1",
      "position": {
-      "x": 10.8,
-      "y": 2.3,
-      "z": -90.4
+      "x": 4.8,
+      "y": 2.35,
+      "z": -83.1
      },
      "size": {
       "x": 0,
       "y": 0,
       "z": 0
      },
-     "rotationY": 3.707,
+     "rotationY": 3.294,
      "faceTarget": true,
      "groundSnap": true,
      "maxAlive": 1,
@@ -100,16 +100,16 @@
      "kind": "area",
      "actorTemplateId": "actor-2",
      "position": {
-      "x": 14.7,
-      "y": 1.35,
-      "z": -106.7
+      "x": 10.8,
+      "y": 2.3,
+      "z": -90.4
      },
      "size": {
       "x": 0,
       "y": 0,
       "z": 0
      },
-     "rotationY": 4.825,
+     "rotationY": 3.707,
      "faceTarget": true,
      "groundSnap": true,
      "maxAlive": 1,

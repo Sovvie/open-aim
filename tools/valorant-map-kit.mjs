@@ -123,6 +123,15 @@ export async function loadMapKit(id) {
   return { id, levelsAt, floorAt, sees, clear, standsOn };
 }
 
+// Maps the app can play but ships no floor / collision data for (Abyss). A kit for them only knows the points that existing scenarios
+// already use (`points`: {x, y, z}), so a scenario on such a map may stand only on those exact points, and sight lines are unchecked.
+export const MAPS_WITHOUT_DATA = ["infinity"];
+export function loadPointKit(id, points) {
+  const near = (x, z) => points.filter((p) => Math.hypot(p.x - x, p.z - z) < 0.15).map((p) => p.y).sort((a, b) => a - b);
+  const floorAt = (x, z, y = 0) => { const l = near(x, z); return l.length ? l.reduce((best, v) => (Math.abs(v - y) < Math.abs(best - y) ? v : best), l[0]) : null; };
+  return { id, dataless: true, points, levelsAt: near, floorAt, sees: () => true, clear: () => true, standsOn: (p, tol = 0.6) => near(p.x, p.z).some((y) => Math.abs(y - p.y) < tol) };
+}
+
 // ---------- positions ----------
 const TAU = Math.PI * 2;
 export const yawTo = (a, b) => Math.atan2(-(b.x - a.x), -(b.z - a.z)); // game yaw: 0 looks down -z, positive turns left

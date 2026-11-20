@@ -17,7 +17,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { loadMapKit, loadGameCheck, walkable, yawTo, dist2 } from "./valorant-map-kit.mjs";
+import { loadMapKit, loadPointKit, MAPS_WITHOUT_DATA, loadGameCheck, walkable, findCover, yawTo, dist2 } from "./valorant-map-kit.mjs";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SCENARIOS = path.join(ROOT, "scenarios");
@@ -55,6 +55,10 @@ export function readBank(file) {
       const p = (q) => ({ x: r2(q.x), y: r2(q.y), z: r2(q.z) });
       return { cover: p(w[0]), spot: p(spot), flash: flash ? flash.agent || "phoenix" : null };
     },
+    // every peeker of the scenario with its route, in file order
+    peeks() {
+      return doc.actors.filter((a) => a.behaviors.some((x) => x.kind === "cross")).map((a) => ({ id: a.id, ...this.peek(a.id) }));
+    },
     hold(id) {
       const found = [...at.values()].find((p) => p.id === id);
       if (!found) throw new Error(`${file}: ${id} has no spot`);
@@ -66,14 +70,16 @@ export function readBank(file) {
 }
 
 // ---------- choosing spots ----------
+const onFloor = (kit, p) => kit.levelsAt(p.x, p.z).some((y) => Math.abs(y - p.y) < 0.35);
 const bearing = (start, p) => { const d = deg(yawTo(start, p) - (start.facing * Math.PI) / 180); return ((d % 360) + 540) % 360 - 180; };
 // Holder spots the player can see from the start, spread out in bearing. Deterministic: nearest first, each at least `minSep` degrees
 // from the ones already taken, then returned left to right.
-export function pickSpread(kit, start, spots, { n, minD = 8, maxD = 40, angMax = 70, minSep = 8 }) {
+// floor: true keeps only spots on real walkable floor (a spot on a box top would be dropped by the game onto the floor below it).
+export function pickSpread(kit, start, spots, { n, minD = 8, maxD = 40, angMax = 70, minSep = 8, floor = false }) {
   const eye = { x: start.x, y: start.y, z: start.z };
   const ok = spots.filter((p) => {
     const d = dist2(start, p);
-    return d >= minD && d <= maxD && Math.abs(bearing(start, p)) <= angMax && kit.standsOn(p, 0.5) && kit.sees(eye, p);
+    return d >= minD && d <= maxD && Math.abs(bearing(start, p)) <= angMax && kit.standsOn(p, 0.5) && kit.sees(eye, p) && (!floor || onFloor(kit, p));
   }).sort((a, b) => dist2(start, a) - dist2(start, b) || a.x - b.x || a.z - b.z);
   const out = [];
   for (const p of ok) if (out.length < n && out.every((q) => Math.abs(bearing(start, p) - bearing(start, q)) >= minSep)) out.push(p);
@@ -97,9 +103,15 @@ export function bestStart(kit, bank, { minD = 10, maxD = 40, angMax = 60, minSep
   if (!best) throw new Error(bank.file + ": no start with " + n + " visible spots");
   // turn exactly toward the middle of what it sees
   const mean = best.seen.reduce((a, p) => a + bearing(best.start, p), 0) / best.seen.length;
-  best.start.facing = r1(((best.start.facing - mean) % 360 + 360) % 360);
+  best.start.facing = r1(((best.start.facing + mean) % 360 + 360) % 360); // bearing = direction of the bot minus facing, so add the mean to centre it
   return best.start;
 }
+
+// Turn the player so the middle of the given bots is straight ahead (a start used for a different drill may face away from them).
+const faceMean = (start, ps) => {
+  const m = ps.reduce((a, p) => a + bearing(start, p.route ? p.route[1] : p.spot || p), 0) / ps.length;
+  return { ...start, facing: r1((((start.facing + m) % 360) + 360) % 360) % 360 };
+};
 
 // ---------- difficulty ----------
 // Rank names are the Studio's (RANKS in drill.js): reaction time and aim error of the bots that shoot back.
@@ -209,12 +221,13 @@ scene({
   tiers: {
     easy: (kit) => {
       const b = readBank(SUNSET_A), spots = pickSpread(kit, b.start, b.spots, { n: 5, minD: 10, maxD: 46, angMax: 120, minSep: 8 });
-      return { start: b.start, round: { time: 75, die: false }, items: spots.map((p) => holder(p, { shoots: "bronze", back: false })),
+      return { start: faceMean(b.start, spots), round: { time: 75, die: false }, items: spots.map((p) => holder(p, { shoots: "bronze", back: false })),
         desc: L("Five enemies hold different angles on the way into A site, near ones and far ones. Clear one angle at a time, nearest first, and do not let a second one see you while you fight the first. They shoot slowly and do not come back.") };
     },
     hard: (kit) => {
       const b = readBank(SUNSET_A), spots = pickSpread(kit, b.start, b.spots, { n: 7, minD: 12, maxD: 48, angMax: 120, minSep: 7 });
-      return { start: b.start, round: { time: 75, die: true }, items: spots.map((p, i) => (i % 3 === 1 ? strafer(p, { shoots: "diamond", back: false, width: 1.4 }) : holder(p, { shoots: "diamond", back: false, crouch: i % 3 === 2 }))),
+      const easySpots = pickSpread(kit, b.start, b.spots, { n: 5, minD: 10, maxD: 46, angMax: 120, minSep: 8 }); // both tiers face the same way
+      return { start: faceMean(b.start, easySpots), round: { time: 75, die: true }, items: spots.map((p, i) => (i % 3 === 1 ? strafer(p, { shoots: "diamond", back: false, width: 1.4 }) : holder(p, { shoots: "diamond", back: false, crouch: i % 3 === 2 }))),
         desc: L("Seven enemies on the A site angles, some crouching and some with a small strafe, and they hit you fast. Clear each angle and know where the next one is. They do not come back, and dying ends the round.") };
     },
   },
@@ -254,15 +267,13 @@ scene({
   stem: "sunset-a-spray-transfer", map: "juliett", title: "Sunset — A site, spray transfer",
   tiers: {
     easy: () => {
-      const b = readBank(SUNSET_A);
-      return { start: b.start, round: { time: 60, die: false },
-        items: [holder({ x: 30.5, y: 1, z: -12 }, { shoots: "bronze" }), holder({ x: 33.5, y: 1, z: -10.5 }, { shoots: "bronze" }), holder({ x: 36.1, y: 1, z: -5.5 }, { shoots: "bronze" })],
+      const b = readBank(SUNSET_A), items = [holder({ x: 30.5, y: 1, z: -12 }, { shoots: "bronze" }), holder({ x: 33.5, y: 1, z: -10.5 }, { shoots: "bronze" }), holder({ x: 36.1, y: 1, z: -5.5 }, { shoots: "bronze" })];
+      return { start: faceMean(b.start, items), round: { time: 60, die: false }, items,
         desc: L("Three enemies stand a few metres apart on A site, about 25 metres away. Kill one and move your crosshair to the next without stopping the spray. Bots shoot slowly and come back after a moment.") };
     },
     hard: () => {
-      const b = readBank(SUNSET_A);
-      return { start: b.start, round: { time: 60, die: true },
-        items: [holder({ x: 30.5, y: 1, z: -12 }, { shoots: "diamond", back: true, backAfter: 1.2 }), strafer({ x: 33.5, y: 1, z: -10.5 }, { shoots: "diamond", width: 1.4, backAfter: 1.2 }), holder({ x: 36.1, y: 1, z: -5.5 }, { shoots: "diamond", crouch: true, backAfter: 1.2 })],
+      const b = readBank(SUNSET_A), items = [holder({ x: 30.5, y: 1, z: -12 }, { shoots: "diamond", back: true, backAfter: 1.2 }), strafer({ x: 33.5, y: 1, z: -10.5 }, { shoots: "diamond", width: 1.4, backAfter: 1.2 }), holder({ x: 36.1, y: 1, z: -5.5 }, { shoots: "diamond", crouch: true, backAfter: 1.2 })];
+      return { start: faceMean(b.start, items), round: { time: 60, die: true }, items,
         desc: L("Three accurate enemies close together on A site: one standing, one strafing, one crouching. Transfer your spray between them fast. Dying ends the round.") };
     },
   },
@@ -330,7 +341,7 @@ scene({
     easy: () => {
       const b = readBank(HAV_A);
       const flasher = peeker(b.peek("actor-1"), { shoots: "bronze", flash: { on: true, agent: "phoenix", curve: "right", wait: 1.4, height: 2.2 }, look: "phoenix", backAfter: 3 });
-      const entry = peeker(b.peek("actor-2"), { shoots: "bronze", peekStrafe: false, wait: 2, delay: 1.3, backAfter: 3 });
+      const entry = peeker(b.peek("actor-4"), { shoots: "bronze", peekStrafe: false, wait: 2, delay: 1.3, backAfter: 3 });
       return { start: b.start, round: { time: 75, die: false }, items: [flasher, entry],
         desc: L("One attacker flashes you and a second swings in about a second after the pop, straight into your blind. Look away on the flash, then clear the entry angle. Bots shoot slowly. The timing is exact in the first moments of a round and drifts as they come back.") };
     },
@@ -338,10 +349,9 @@ scene({
       const b = readBank(HAV_A);
       const f1 = peeker(b.peek("actor-1"), { shoots: "diamond", flash: { on: true, agent: "phoenix", curve: "left", wait: 0.5, height: 2.2 }, look: "phoenix", backAfter: 2 });
       const f2 = peeker(b.peek("actor-3"), { shoots: "diamond", flash: { on: true, agent: "phoenix", curve: "right", wait: 0.6, height: 2.2 }, look: "phoenix", delay: 2.5, backAfter: 2 });
-      const e1 = peeker(b.peek("actor-2"), { shoots: "diamond", peekStrafe: true, wait: 1.6, delay: 0.9, backAfter: 2 });
-      const e2 = peeker(b.peek("actor-4"), { shoots: "diamond", peekStrafe: true, wait: 1.6, delay: 3.4, backAfter: 2 });
-      return { start: b.start, round: { time: 75, die: true }, items: [f1, e1, f2, e2],
-        desc: L("Two flash-and-swing pairs from different angles, the second pair a few seconds after the first. Each swinger comes in a second or so after its pop. Fast, accurate bots; dying ends the round.") };
+      const e1 = peeker(b.peek("actor-4"), { shoots: "diamond", peekStrafe: true, wait: 1.6, delay: 0.9, backAfter: 2 });
+      return { start: b.start, round: { time: 75, die: true }, items: [f1, e1, f2],
+        desc: L("A flash-and-swing pair, then a second flasher from the close angle two and a half seconds later who swings in behind their own pop. Fast, accurate bots; dying ends the round.") };
     },
   },
 });
@@ -371,12 +381,12 @@ scene({
   stem: "bind-a-lamps-dry-peek", map: "duality", title: "Bind — A Lamps, dry peek",
   tiers: {
     easy: (kit) => {
-      const b = readBank(BIND_SHORT), start = bestStart(kit, b, { n: 3 }), spots = pickSpread(kit, start, b.spots, { n: 2, minD: 10, maxD: 34, angMax: 75, minSep: 12 });
+      const b = readBank(BIND_SHORT), start = bestStart(kit, b, { n: 3 }), spots = pickSpread(kit, start, b.spots, { n: 2, minD: 10, maxD: 34, angMax: 75, minSep: 12, floor: true });
       return { start, round: { time: 75, die: false }, items: spots.map((p) => holder(p, { shoots: "bronze", back: true, backAfter: 2.5 })),
         desc: L("You dry-peek out of Lamps into two defenders on A site who are already aiming at the corner. Show just enough of yourself to see them, shoot, and step back. They shoot slowly and return after a few seconds.") };
     },
     hard: (kit) => {
-      const b = readBank(BIND_SHORT), start = bestStart(kit, b, { n: 3 }), spots = pickSpread(kit, start, b.spots, { n: 3, minD: 10, maxD: 38, angMax: 80, minSep: 10 });
+      const b = readBank(BIND_SHORT), start = bestStart(kit, b, { n: 3 }), spots = pickSpread(kit, start, b.spots, { n: 3, minD: 10, maxD: 38, angMax: 80, minSep: 10, floor: true });
       const a = holder(spots[0], { shoots: "diamond", backAfter: 2 });
       const items = [a, ...spots.slice(1, 3).map((p, i) => holder(p, { shoots: "diamond", crouch: i === 0, backAfter: 2, ...(i === 1 ? { tradeOf: a.id, tradeMin: 0.3, tradeMax: 0.55 } : {}) }))];
       return { start, round: { time: 75, die: true }, items,
@@ -436,8 +446,8 @@ scene({
       const b = readBank(LOT_C);
       const a = holder(b.hold("actor-1-spot6"), { shoots: "diamond", backAfter: 1.5 });
       return { start: b.start, round: { time: 75, die: true },
-        items: [a, holder(b.hold("actor-1-spot7"), { shoots: "diamond", crouch: true, backAfter: 1.5 }), holder(b.hold("actor-1-spot12"), { shoots: "diamond", backAfter: 1.5, tradeOf: a.id, tradeMin: 0.3, tradeMax: 0.6 })],
-        desc: L("Three accurate defenders on C Long at 20 to 30 metres. When you kill the first, the one on the high ground swings in to trade within a second. Dying ends the round.") };
+        items: [a, holder(b.hold("actor-1-spot7"), { shoots: "diamond", crouch: true, backAfter: 1.5 }), holder(b.hold("actor-1-spot5"), { shoots: "diamond", backAfter: 1.5, tradeOf: a.id, tradeMin: 0.3, tradeMax: 0.6 })],
+        desc: L("Three accurate defenders on C Long at 20 to 30 metres. When you kill the first, the one on the far right swings in to trade within a second. Dying ends the round.") };
     },
   },
 });
@@ -465,12 +475,362 @@ scene({
   },
 });
 
+// =====================================================================================================================
+// Round 2 (sort 330 and up): more maps (Pearl, Icebox, Abyss, Haven, Split, Bind, Lotus, Corrode, Ascent, Sunset) and new situations.
+// These use stricter picking than round 1 (`pickStrict`): a spot must be on a real floor, visible from the start (with a small margin so a
+// hairline gap does not count), and next to some geometry (a bot that holds an angle stands at a corner or a box, not in the middle of a lane).
+// Hiding places for peekers are found with `findCover` (a floor point the start cannot see, 1.6 to 4 m from the peek spot).
+// =====================================================================================================================
+const rr = (p) => ({ x: r2(p.x), y: r2(p.y), z: r2(p.z) });
+// How many of 8 directions are blocked within 1.8 m at chest height: 0 is the middle of an open lane, 6 or more is a pit or a nook.
+const aroundBlocked = (kit, p, r = 1.8) => {
+  let n = 0;
+  for (let k = 0; k < 8; k++) { const a = (k * Math.PI) / 4; if (!kit.clear({ x: p.x, y: p.y + 1, z: p.z }, { x: p.x + Math.cos(a) * r, y: p.y + 1, z: p.z + Math.sin(a) * r })) n++; }
+  return n;
+};
+const visibleFrom = (kit, start, p) => kit.sees(start, p) && kit.sees({ ...start, y: start.y + 0.05 }, p);
+function selectSpread(start, ok, { n, minSep }) {
+  ok.sort((a, b) => dist2(start, a) - dist2(start, b) || a.x - b.x || a.z - b.z);
+  const out = [];
+  for (const p of ok) if (out.length < n && out.every((q) => Math.abs(bearing(start, p) - bearing(start, q)) >= minSep)) out.push(p);
+  return out.sort((a, b) => bearing(start, a) - bearing(start, b));
+}
+export function pickStrict(kit, start, spots, { n, minD = 8, maxD = 40, angMax = 70, minSep = 8, edge = true, away = [] }) {
+  const seen = new Set(), ok = [];
+  for (const s of spots) {
+    let p = { x: s.x, y: s.y, z: s.z };
+    if (!kit.dataless) {
+      const l = kit.levelsAt(p.x, p.z).find((y) => Math.abs(y - p.y) < 0.35);
+      if (l === undefined) continue;
+      p = { ...p, y: r2(l) };
+    }
+    p.edge = undefined;
+    const key = p.x + "," + p.z;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const d = dist2(start, p);
+    if (d < minD || d > maxD || Math.abs(bearing(start, p)) > angMax) continue;
+    if (away.some((q) => dist2(q, p) < 3)) continue;
+    if (!visibleFrom(kit, start, p)) continue;
+    if (edge && !kit.dataless) { const k = aroundBlocked(kit, p); if (k > 5) continue; p.edge = k >= 1; } // 6+ blocked sides is a pit or a nook
+    ok.push(p);
+  }
+  // Spots next to some geometry first; open-floor spots only when the map has too few of those.
+  const near = selectSpread(start, ok.filter((p) => p.edge !== false), { n, minSep });
+  const got = near.length >= n ? near : selectSpread(start, ok, { n, minSep });
+  return got.map(({ x, y, z }) => ({ x, y, z }));
+}
+// Floor points behind the player (a lurker's spot): same level as the start, in sight of it, near geometry, at least `minAbs` degrees off the facing.
+export function behindSpots(kit, start, { n, minD = 9, maxD = 26, minAbs = 130, minSep = 30 }) {
+  const ok = [];
+  for (let x = Math.floor(start.x - maxD); x <= start.x + maxD; x += 1.5) for (let z = Math.floor(start.z - maxD); z <= start.z + maxD; z += 1.5) {
+    const y = kit.floorAt(x, z, start.y);
+    if (y === null || Math.abs(y - start.y) > 0.4) continue;
+    const p = { x: r1(x), y: r2(y), z: r1(z) }, d = dist2(start, p);
+    if (d < minD || d > maxD || Math.abs(bearing(start, p)) < minAbs || !visibleFrom(kit, start, p)) continue;
+    const k = aroundBlocked(kit, p);
+    if (k > 5) continue;
+    ok.push({ ...p, edge: k >= 1 });
+  }
+  const near = selectSpread(start, ok.filter((p) => p.edge), { n, minSep });
+  return (near.length >= n ? near : selectSpread(start, ok, { n, minSep })).map(({ x, y, z }) => ({ x, y, z }));
+}
+// A peeker for a peek spot of our own choosing: hides at a floor point the start cannot see.
+function peekFrom(kit, start, spot, o = {}) {
+  let c = null;
+  for (const max of [o.max ?? 4, 6, 9, 14]) { c = findCover(kit, start, spot, { min: o.min ?? 1.6, max, side: o.side ?? 0 }); if (c) break; }
+  if (!c) throw new Error(`no hiding place near (${spot.x}, ${spot.y}, ${spot.z})`);
+  return { cover: rr(c.cover), spot: rr(spot) };
+}
+// The start of a bank, or a start picked on the bank's own floor spots, turned toward the spots `pick` finds.
+// faceN: how many spots decide where the player starts and faces. Easy and hard of one drill pass the same number, so both start the same way.
+function openingFor(kit, b, how, pick, faceN = pick.n) {
+  const start0 = how === "best" ? bestStart(kit, b, { n: Math.min(faceN, 3), minD: pick.minD ?? 10, maxD: pick.maxD ?? 40, angMax: pick.angMax ?? 60, minSep: pick.minSep ?? 8 }) : { ...b.start };
+  // If the first ask is too strict for this map, loosen the bearing spread, then the view angle, then the distance (in that order).
+  const find = (from, n) => {
+    const tries = [pick, { ...pick, minSep: 4 }, { ...pick, minSep: 4, angMax: (pick.angMax ?? 70) + 25 }, { ...pick, minSep: 3, angMax: (pick.angMax ?? 70) + 45, maxD: (pick.maxD ?? 40) + 15 }];
+    for (const t of tries) {
+      const spots = pickStrict(kit, from, b.spots, { ...t, n });
+      if (spots.length >= n) return spots;
+    }
+    throw new Error(`${b.file}: not enough usable spots for ${n} (${how})`);
+  };
+  const start = faceMean(start0, find(start0, faceN));
+  return { start, spots: pick.n === faceN ? find(start, faceN) : find(start, pick.n) };
+}
+// A peeker that swings when it hears the player: o as for peeker(), snd = { sources, delay: [min, max], chance }.
+function soundPeeker(p, box, o, snd) {
+  const x = peeker(p, o);
+  x.soundRule = { on: true, area: box, spot: { x: p.cover.x, y: p.cover.y, z: p.cover.z, route: [{ ...p.cover, wait: 0 }, { ...p.spot, wait: 1.2 }] }, sources: snd.sources, delayMin: snd.delay[0], delayMax: snd.delay[1], swingChance: snd.chance };
+  return x;
+}
+// Distinct peek spots of a bank (peekers that share a spot count once), nearest to the start first.
+function peekClusters(kit, b, start, sep = 3) {
+  const out = [];
+  for (const p of b.peeks()) {
+    if (!visibleFrom(kit, start, p.spot) || out.some((q) => dist2(q.spot, p.spot) < sep)) continue;
+    out.push({ cover: p.cover, spot: p.spot });
+  }
+  return out.sort((a, c) => dist2(start, a.spot) - dist2(start, c.spot));
+}
+
+// ---------- shoulder-peek reads ----------
+// One enemy shows only a shoulder for a third of a second, again and again; a partner swings when it hears you shoot (hard: or run).
+// Do not spend your shots on the bait: a clean read is to let the shoulder go and take the swing.
+function shoulderTiers(bankFile, shoulderId, partnerId, where) {
+  const mk = (tier) => () => {
+    const b = readBank(bankFile), pk = (id) => b.peek(id), hard = tier === "hard", box = area(b.start, hard ? 9 : 8);
+    const shoulder = peeker(pk(shoulderId), { shoots: hard ? "diamond" : "bronze", wait: hard ? 0.35 : 0.28, coverWait: hard ? 0.7 : 1, randomWait: hard ? 1.2 : 1.8, peekStrafe: false, peekWidth: 0.6 });
+    const partner = soundPeeker(pk(partnerId), box, { shoots: hard ? "diamond" : "bronze", wait: hard ? 1.6 : 2.2, coverWait: 1, peekStrafe: hard, backAfter: hard ? 3 : 4 },
+      hard ? { sources: ["shot", "footstep"], delay: [0.25, 0.5], chance: 100 } : { sources: ["shot"], delay: [0.7, 1.2], chance: 80 });
+    return {
+      start: b.start, round: { time: hard ? 75 : 60, die: hard }, items: [shoulder, partner],
+      desc: hard
+        ? L(`${where}: an accurate enemy shows a shoulder for a third of a second at a time. A partner swings within half a second when it hears you shoot or run. Let the shoulder go, hold your crosshair on the swing, and keep your feet still. Dying ends the round.`)
+        : L(`${where}: an enemy shows only a shoulder for a quarter of a second, again and again. When you shoot, a partner swings out about a second later. Do not chase the shoulder: hold your crosshair at the corner and wait for the swing. Bots shoot slowly.`),
+    };
+  };
+  return { easy: mk("easy"), hard: mk("hard") };
+}
+scene({ stem: "pearl-a-shoulder-peek-read", map: "pitt", title: "Pearl — A site, shoulder-peek read", tiers: shoulderTiers("creator-pearl-hold-a", "actor-3", "actor-1", "Pearl A") });
+scene({ stem: "icebox-site-shoulder-peek-read", map: "port", title: "Icebox — Site, shoulder-peek read", tiers: shoulderTiers("creator-icebox-hold-site", "actor-3", "actor-4-spot4", "Icebox site") });
+scene({ stem: "haven-a-long-shoulder-peek-read", map: "triad", title: "Haven — A Long, shoulder-peek read", tiers: shoulderTiers("creator-haven-a-long-hold", "actor-3", "actor-4", "Haven A Long") });
+
+// ---------- off-angle holds that change after every kill ----------
+// A chain of holders: the next one shows up at a different angle (alternating left and right) a moment after you kill the one before.
+const CHAIN_ORDER = { 3: [1, 0, 2], 4: [1, 3, 0, 2], 5: [2, 0, 4, 1, 3] };
+function chainTiers(bankFile, how, pick, where) {
+  const mk = (tier) => (kit) => {
+    const hard = tier === "hard", b = readBank(bankFile);
+    const { start, spots } = openingFor(kit, b, how, { ...pick, n: pick.n + (hard ? 1 : 0) }, pick.n);
+    const chain = CHAIN_ORDER[spots.length].map((i) => spots[i]);
+    let prev = null;
+    const items = chain.map((p, i) => {
+      const o = { shoots: hard ? "diamond" : "bronze", back: false, ...(prev ? { tradeOf: prev.id, tradeMin: hard ? 0.3 : 0.8, tradeMax: hard ? 0.6 : 1.4 } : {}) };
+      const x = i % 3 === 2 ? strafer(p, { ...o, width: hard ? 1.6 : 1.2 }) : holder(p, { ...o, crouch: i % 3 === 1 });
+      prev = x;
+      return x;
+    });
+    return {
+      start, round: { time: hard ? 60 : 75, die: hard }, items,
+      desc: hard
+        ? L(`${where}: ${items.length} accurate enemies, but only one at a time. Each shows up at a new angle (left, right, near, far) within half a second of the kill before. Clear your angle, then look for the next one at a place you did not check. Dying ends the round.`)
+        : L(`${where}: ${items.length} enemies, one at a time. Kill one and the next shows up at a different angle about a second later, so do not stay locked on the first spot. They shoot slowly and do not come back.`),
+    };
+  };
+  return { easy: mk("easy"), hard: mk("hard") };
+}
+scene({ stem: "pearl-a-off-angle-chain", map: "pitt", title: "Pearl — A site, off-angle chain", tiers: chainTiers("creator-pearl-drill-a", "bank", { n: 3, minD: 12, maxD: 44, angMax: 75, minSep: 7 }, "Pearl A") });
+scene({ stem: "icebox-mid-off-angle-chain", map: "port", title: "Icebox — Mid to A, off-angle chain", tiers: chainTiers("creator-icebox-mid-to-a", "bank", { n: 3, minD: 14, maxD: 50, angMax: 80, minSep: 7 }, "Icebox mid") });
+scene({ stem: "bind-b-off-angle-chain", map: "duality", title: "Bind — B site, off-angle chain", tiers: chainTiers("creator-bind-drill-b-pre-aim", "best", { n: 3, minD: 14, maxD: 40, angMax: 60, minSep: 7 }, "Bind B") });
+scene({ stem: "abyss-a-off-angle-chain", map: "infinity", title: "Abyss — A site, off-angle chain", tiers: chainTiers("abyss-a-main-pre-aim-hard", "bank", { n: 3, minD: 20, maxD: 60, angMax: 90, minSep: 6 }, "Abyss A") });
+
+// ---------- trade swing with two different delays ----------
+// You kill the first enemy; one partner swings back almost at once and a second one comes later, from another side.
+function tradeDelayTiers(bankFile, where) {
+  const mk = (tier) => (kit) => {
+    const hard = tier === "hard", b = readBank(bankFile), start = b.start, cl = peekClusters(kit, b, start);
+    if (cl.length < 3) throw new Error(`${bankFile}: ${cl.length} distinct peeks, need 3`);
+    const [pa, pq, pr] = cl;
+    const first = peeker(pa, { shoots: hard ? "diamond" : "bronze", wait: hard ? 1.6 : 2.2, coverWait: hard ? 0.7 : 1, peekStrafe: hard });
+    const fast = peeker(pq, { shoots: hard ? "diamond" : "bronze", wait: hard ? 1.4 : 2, coverWait: 1, peekStrafe: hard, tradeOf: first.id, tradeMin: hard ? 0.25 : 0.9, tradeMax: hard ? 0.4 : 1.3 });
+    const late = peeker(pr, { shoots: hard ? "diamond" : "bronze", wait: hard ? 1.4 : 2, coverWait: 1, peekStrafe: hard, tradeOf: first.id, tradeMin: hard ? 0.9 : 2.3, tradeMax: hard ? 1.2 : 2.9 });
+    return {
+      start: faceMean(start, [pa, pq, pr]), round: { time: 75, die: hard }, items: [first, fast, late],
+      desc: hard
+        ? L(`${where}: kill the first enemy and two partners trade you, the first in under half a second and the second about a second later, from another side. Plan the kill so the next angle is already in your crosshair. Dying ends the round.`)
+        : L(`${where}: kill the first enemy and two partners swing in: the first about a second later, the second after about two and a half. Learn the two timings and be ready for both. They shoot slowly.`),
+    };
+  };
+  return { easy: mk("easy"), hard: mk("hard") };
+}
+scene({ stem: "pearl-b-trade-swing-delays", map: "pitt", title: "Pearl — B site, trade swings", tiers: tradeDelayTiers("creator-pearl-hold-b", "Pearl B") });
+scene({ stem: "icebox-site-trade-swing-delays", map: "port", title: "Icebox — Site, trade swings", tiers: tradeDelayTiers("creator-icebox-hold-site", "Icebox site") });
+scene({ stem: "split-a-trade-swing-delays", map: "bonsai", title: "Split — A site, trade swings", tiers: tradeDelayTiers("split-a-site-hold-hard", "Split A") });
+
+// ---------- lurk and flank from behind (sound-triggered) ----------
+// You fight forward; a lurker waits out of sight behind you and swings when it hears a shot or a step.
+function lurkTiers(bankFile, how, pick, where) {
+  const mk = (tier) => (kit) => {
+    const hard = tier === "hard", b = readBank(bankFile);
+    const { start, spots } = openingFor(kit, b, how, { ...pick, n: hard ? 2 : 1 }, 1);
+    const need = hard ? 2 : 1, peeks = [];
+    for (const minAbs of [130, 115]) { // squarely behind first, then over the shoulder
+      for (const c of behindSpots(kit, start, { n: 60, minSep: 3, maxD: 30, minAbs })) {
+        let p; try { p = peekFrom(kit, start, c); } catch { continue; }
+        if (peeks.length < need && peeks.every((q) => Math.abs(bearing(start, q.spot) - bearing(start, p.spot)) >= 25)) peeks.push(p);
+      }
+      if (peeks.length >= need) break;
+    }
+    if (peeks.length < need) throw new Error(`${bankFile}: ${peeks.length} usable spots behind the start`);
+    const box = area(start, hard ? 9 : 8), rank = hard ? "diamond" : "bronze";
+    const front = spots.map((p) => holder(p, { shoots: rank, back: !hard, backAfter: 3 }));
+    const lurkers = peeks.map((p, i) => soundPeeker(p, box, { shoots: rank, wait: hard ? 1.6 : 2.2, peekStrafe: hard, backAfter: 3, peekWidth: 1.4 },
+      hard ? { sources: i ? ["footstep"] : ["shot", "footstep", "land"], delay: i ? [0.5, 1] : [0.3, 0.6], chance: i ? 85 : 100 } : { sources: ["shot"], delay: [1.4, 2.4], chance: 70 }));
+    return {
+      start, round: { time: 90, die: hard }, items: [...front, ...lurkers],
+      desc: hard
+        ? L(`${where}: you hold ${front.length > 1 ? "two angles" : "an angle"} in front while ${lurkers.length} lurkers wait behind you. One swings as soon as you shoot, run or land (the other when you walk), within a second. Know what is behind you, fight quietly, and turn on the sound. Dying ends the round.`)
+        : L(`${where}: you fight an enemy in front while a lurker waits out of sight behind you. When you shoot, it may swing in from behind about two seconds later (7 times in 10). Finish the front fight fast, then check your back. Bots shoot slowly.`),
+    };
+  };
+  return { easy: mk("easy"), hard: mk("hard") };
+}
+scene({ stem: "icebox-b-lurk-from-behind", map: "port", title: "Icebox — B site, lurker from behind", tiers: lurkTiers("creator-icebox-drill-b-pre-aim", "bank", { minD: 10, maxD: 50, angMax: 90, minSep: 8 }, "Icebox B") });
+scene({ stem: "split-b-lurk-from-behind", map: "bonsai", title: "Split — B main, lurker from behind", tiers: lurkTiers("split-b-main-attack-pre-aim-hard", "bank", { minD: 10, maxD: 45, angMax: 90, minSep: 8 }, "Split B main") });
+scene({ stem: "ascent-b-lurk-from-behind", map: "ascent", title: "Ascent — B site, lurker from behind", tiers: lurkTiers("ascent-b-retake-from-mid-pre-aim-hard", "bank", { minD: 10, maxD: 45, angMax: 90, minSep: 8 }, "Ascent B") });
+
+// ---------- entry through a smoke-less choke with a trading partner ----------
+// Two defenders cover a tight entry; when you kill the first, a partner swings out of cover to trade.
+function chokeTiers(bankFile, how, pick, where) {
+  const mk = (tier) => (kit) => {
+    const hard = tier === "hard", b = readBank(bankFile);
+    const { start: start0, spots: all } = openingFor(kit, b, how, { ...pick, n: (hard ? 4 : 3) + 2 }, 5);
+    // the partner needs a hiding place; the others are the most central spots
+    const hiding = all.map((p) => { try { return peekFrom(kit, start0, p); } catch { return null; } }).filter(Boolean)[0];
+    if (!hiding) throw new Error(`${bankFile}: no spot with a hiding place for the partner`);
+    const rest = all.filter((p) => p !== all.find((q) => q.x === hiding.spot.x && q.z === hiding.spot.z)).sort((p, q) => Math.abs(bearing(start0, p)) - Math.abs(bearing(start0, q))).slice(0, hard ? 3 : 2);
+    const [s0, s1, s3] = rest;
+    const start = start0, rank = hard ? "diamond" : "bronze";
+    const lead = strafer(s0, { shoots: rank, width: 1.4, back: false });
+    const side = holder(s1, { shoots: rank, crouch: true, back: false });
+    const partner = peeker(hiding, { shoots: rank, wait: hard ? 1.6 : 2.2, coverWait: 1, peekStrafe: hard, tradeOf: lead.id, tradeMin: hard ? 0.25 : 1, tradeMax: hard ? 0.45 : 1.6 });
+    const items = [lead, side, partner];
+    if (hard) items.push(holder(s3, { shoots: rank, back: false, tradeOf: side.id, tradeMin: 0.3, tradeMax: 0.5 }));
+    return {
+      start, round: { time: 75, die: hard }, items,
+      desc: hard
+        ? L(`${where}: you push through a choke with no smoke. One defender strafes at the entry and another holds crouched at the side. Kill the strafer and a partner swings out within half a second; kill the crouched one and a fourth appears. Dying ends the round.`)
+        : L(`${where}: you push through a choke with no smoke. One defender strafes at the entry and another holds crouched at the side. Kill the strafer and a partner swings out of cover about a second later to trade you. Bots shoot slowly.`),
+    };
+  };
+  return { easy: mk("easy"), hard: mk("hard") };
+}
+scene({ stem: "bind-b-choke-entry-trade", map: "duality", title: "Bind — B site, choke entry and trade", tiers: chokeTiers("creator-bind-drill-b-pre-aim", "best", { minD: 9, maxD: 28, angMax: 55, minSep: 7 }, "Bind B") });
+scene({ stem: "lotus-a-choke-entry-trade", map: "jam", title: "Lotus — A main, choke entry and trade", tiers: chokeTiers("lotus-a-main-attack-hard", "best", { minD: 9, maxD: 30, angMax: 55, minSep: 7 }, "Lotus A") });
+scene({ stem: "corrode-b-choke-entry-trade", map: "rook", title: "Corrode — B main, choke entry and trade", tiers: chokeTiers("corrode-b-main-attack-pre-aim-hard", "best", { minD: 9, maxD: 28, angMax: 55, minSep: 7 }, "Corrode B") });
+
+// ---------- long-range Operator / Marshal peeks with repeek timings ----------
+// You scope in on a long lane. Enemies peek, retreat and peek again on different timers; learn the gap between peeks.
+function repeekTiers(bankFile, where, weapon, spotPick) {
+  const mk = (tier) => (kit) => {
+    const hard = tier === "hard", b = readBank(bankFile), start = b.start;
+    const picks = spotPick(kit, b, start, hard ? 2 : 1).map((p) => (p.cover ? p : peekFrom(kit, start, p)));
+    const rank = hard ? "diamond" : "bronze";
+    const items = picks.map((p, i) => peeker(p, hard
+      ? { shoots: rank, wait: i ? 0.8 : 0.9, coverWait: i ? 1.4 : 0.9, randomWait: i ? 2.5 : 1.6, delay: i * 1.5, peekStrafe: "random", peekWidth: 2.2, backAfter: i ? 1.5 : 2 }
+      : { shoots: rank, wait: 1.1, coverWait: 2.8, randomWait: 2, peekStrafe: false, backAfter: 3 }));
+    return {
+      start: faceMean(start, picks.slice(0, 1)), round: { time: 90, die: hard, weapon }, items,
+      desc: hard
+        ? L(`${where}: you hold a long lane with ${weapon === "marshal" ? "a Marshal" : "an Operator"}. Two accurate enemies peek and retreat on different timers (a short peek, then 1 to 4 seconds hidden), strafing or standing. Learn each rhythm and shoot the first frame. Dying ends the round.`)
+        : L(`${where}: you hold a long lane with ${weapon === "marshal" ? "a Marshal" : "an Operator"}. One enemy peeks for about a second, hides for three to five seconds and peeks again. Count the gap, scope before it comes, and shoot as it appears. Bots shoot slowly.`),
+    };
+  };
+  return { easy: mk("easy"), hard: mk("hard") };
+}
+const farSpots = (min, max, angMax = 40, minSep = 6) => (kit, b, start, n) => {
+  const got = [];
+  for (const p of pickStrict(kit, start, b.spots, { n: 12, minD: min, maxD: max, angMax, minSep, edge: false })) {
+    let hide; try { hide = peekFrom(kit, start, p); } catch { continue; }
+    if (got.length < n && got.every((q) => dist2(q.spot, hide.spot) > 3)) got.push(hide);
+  }
+  if (got.length < n) throw new Error(`${b.file}: only ${got.length} long spots with a hiding place`);
+  return got;
+};
+// Sunset's lower-mid peeks are real hiding places; use their peek spots directly.
+scene({
+  stem: "sunset-mid-operator-repeek", map: "juliett", title: "Sunset — Mid, Operator repeek",
+  tiers: repeekTiers(SUNSET_LOWER_MID, "Sunset mid", "operator", (kit, b, start, n) => {
+    const out = peekClusters(kit, b, start).filter((p) => dist2(start, p.spot) > 30).slice(0, n);
+    if (out.length < n) throw new Error("sunset mid: not enough distinct peek spots");
+    return out;
+  }),
+});
+scene({
+  stem: "haven-a-long-operator-repeek", map: "triad", title: "Haven — A Long, Operator repeek",
+  tiers: repeekTiers("creator-haven-a-long-hold", "Haven A Long", "operator", (kit, b, start, n) => {
+    const out = peekClusters(kit, b, start, 2).slice(0, n);
+    if (out.length < n) throw new Error("haven a long: not enough distinct peek spots");
+    return out;
+  }),
+});
+scene({
+  stem: "haven-c-long-marshal-repeek", map: "triad", title: "Haven — C Long, Marshal repeek",
+  single: (kit) => {
+    const b = readBank(HAV_C), start = b.start, spot = b.hold("actor-1");
+    const p = peekFrom(kit, start, spot, { max: 5 });
+    const x = peeker(p, { shoots: "platinum", wait: 1, coverWait: 1.2, randomWait: 2.2, peekStrafe: "random", peekWidth: 2, backAfter: 2 });
+    return {
+      start, round: { time: 90, die: true, weapon: "marshal" }, items: [x],
+      desc: L("A long Marshal lane down C Long, about 43 metres. A rifleman peeks for about a second, hides for one to three seconds and repeeks, strafing or standing. One body shot is not a kill: quick-scope for the head, or shoot twice. Dying ends the round."),
+    };
+  },
+});
+
+// ---------- retake with staggered arrival ----------
+// Defenders reach their angles one after another; the later ones come out of cover (peekers) so you meet them as they swing.
+function retakeTiers(bankFile, how, pick, where, hardN = 4) {
+  const mk = (tier) => (kit) => {
+    const hard = tier === "hard", b = readBank(bankFile);
+    const { start, spots } = openingFor(kit, b, how, { ...pick, n: hard ? hardN : 3 }, 3);
+    const rank = hard ? "diamond" : "bronze";
+    const items = spots.map((p, i) => {
+      let hide = null;
+      if (hard && i > 0) { try { hide = peekFrom(kit, start, p); } catch { hide = null; } }
+      if (!hide) return holder(p, { shoots: rank, delay: i * (hard ? 1.5 : 2.5), crouch: hard && i === 2, back: false });
+      return peeker(hide, { shoots: rank, wait: 1.8, coverWait: 1, peekStrafe: true, delay: 1 + i * 1.2 });
+    });
+    return {
+      start, round: { time: 75, die: hard }, items,
+      desc: hard
+        ? L(`${where}: the first defender is already holding. ${['', 'One', 'Two', 'Three'][items.length - 1]} more reach their angles one after another, every second or so (some walk in, some swing out of cover), so you are in a fight while the next one arrives. Fast, accurate bots; dying ends the round.`)
+        : L(`${where}: three defenders show up one after another, two and a half seconds apart. Deal with each as it appears and do not wait for the others. They shoot slowly and do not come back.`),
+    };
+  };
+  return { easy: mk("easy"), hard: mk("hard") };
+}
+scene({ stem: "ascent-a-retake-staggered", map: "ascent", title: "Ascent — A retake, staggered defenders", tiers: retakeTiers("ascent-a-retake-pre-aim-easy", "bank", { minD: 10, maxD: 45, angMax: 130, minSep: 6 }, "Ascent A retake", 3) });
+scene({ stem: "split-a-retake-staggered", map: "bonsai", title: "Split — A retake, staggered defenders", tiers: retakeTiers("split-a-retake-from-ct-hard", "bank", { minD: 10, maxD: 45, angMax: 100, minSep: 8 }, "Split A retake") });
+
 // ---------- compile ----------
 function withSeed(seed, fn) {
   const real = Math.random;
   let h = seed >>> 0;
   Math.random = () => { h = (h + 0x6d2b79f5) | 0; let t = Math.imul(h ^ (h >>> 15), 1 | h); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
   try { return fn(); } finally { Math.random = real; }
+}
+
+// Where bots stand: on a real walkable floor of the map. The game drops a bot onto whatever is under it, so a position a little off the floor
+// is moved onto it (0.1 to 0.45 m), and one far from every floor (a box top the scenario does not have) is an error.
+function groundAll(kit, made, stem) {
+  if (kit.dataless) return;
+  const fix = (p) => {
+    const l = kit.levelsAt(p.x, p.z).sort((a, b) => Math.abs(a - p.y) - Math.abs(b - p.y))[0];
+    if (l === undefined || Math.abs(l - p.y) >= 0.45) throw new Error(`${stem}: (${p.x}, ${p.y}, ${p.z}) is not on a floor of the map (nearest ${l})`);
+    if (Math.abs(l - p.y) > 0.1) p.y = r2(l);
+  };
+  for (const it of made.items) {
+    for (const p of [...(it.route || []), ...(it.route ? [] : [it]), ...(it.spots || []).flatMap((q) => q.route || [q])]) fix(p);
+    if (it.route) Object.assign(it, { x: it.route[0].x, y: it.route[0].y, z: it.route[0].z });
+  }
+}
+
+// Points that existing (non-Valorant-Workshop) scenarios put things on, for the maps that have no floor data.
+export function pointsOnMap(map) {
+  const pts = [];
+  for (const f of fs.readdirSync(SCENARIOS)) {
+    if (!f.endsWith(".json") || f.startsWith(FILE_PREFIX)) continue;
+    const data = JSON.parse(fs.readFileSync(path.join(SCENARIOS, f), "utf8"));
+    const doc = typeof data.scene.doc === "string" ? JSON.parse(data.scene.doc) : data.scene.doc;
+    if (!doc.environment || doc.environment.map !== map) continue;
+    const add = (p, dy = 0) => pts.push({ x: r2(p.x), y: r2(p.y - dy), z: r2(p.z) });
+    add(doc.playerSpawn.position);
+    for (const sp of doc.spawners) add(sp.position, sp.kind === "area" && sp.groundSnap ? 0.3 : 0);
+    for (const d of doc.dispatchers || []) for (const r of d.routes) if (r.at) add(r.at);
+    for (const a of doc.actors) for (const b of a.behaviors) for (const w of b.waypoints || []) add(w);
+  }
+  return pts;
 }
 
 const SNIPERS = new Set(["operator", "tourdeforce", "marshal", "outlaw"]);
@@ -487,7 +847,10 @@ export function expandScenes() {
 export async function buildAll() {
   const gameCheck = await loadGameCheck();
   const kits = new Map();
-  const kitOf = async (map) => { if (!kits.has(map)) kits.set(map, await loadMapKit(map)); return kits.get(map); };
+  const kitOf = async (map) => {
+    if (!kits.has(map)) kits.set(map, MAPS_WITHOUT_DATA.includes(map) ? loadPointKit(map, pointsOnMap(map)) : await loadMapKit(map));
+    return kits.get(map);
+  };
   const results = [], seenNames = new Set(), seenCodes = new Set();
   let sort = SORT_BASE;
   for (const def of expandScenes()) {
@@ -495,18 +858,19 @@ export async function buildAll() {
     const kit = await kitOf(def.map);
     const made = def.make(kit);
     const warnings = [];
+    groundAll(kit, made, def.stem);
     const drill = D.newDrill(def.map);
     drill.name = def.title;
     const s = made.start;
     drill.start = { x: s.x, y: s.y, z: s.z, facing: s.facing };
     drill.round = { ...drill.round, goal: "score", time: made.round.time, weapon: made.round.weapon || "vandal", auto: true, move: true, die: !!made.round.die, ammo: false, order: "together", atOnce: 1, gap: 1 };
     drill.items = made.items;
-    // Every bot must stand on a floor of the map; a bot a long way from the player is worth a warning.
+    // Every bot must stand on a floor of the map, and the player must be able to see where it shows up (sound-gated lurkers excepted).
     for (const it of made.items) {
       const spots = it.route ? it.route : [it];
       for (const p of spots) if (!kit.standsOn(p)) throw new Error(`${def.stem}: (${p.x}, ${p.y}, ${p.z}) is not on the walkable floor of ${def.map}`);
       const seen = it.route ? it.route[1] : it;
-      if (!kit.sees(s, seen) && !(it.soundRule && it.soundRule.on)) warnings.push(`no clear sight line from the start to (${seen.x}, ${seen.y}, ${seen.z})`);
+      if (!(it.soundRule && it.soundRule.on) && !(kit.sees(s, seen) && kit.sees({ ...s, y: s.y + 0.05 }, seen))) throw new Error(`${def.stem}: no clear sight line from the start to (${seen.x}, ${seen.y}, ${seen.z})`);
     }
     const seed = parseInt(hex16(def.stem).slice(0, 7), 16);
     const compiled = withSeed(seed, () => D.compile(drill, (x, z, y) => kit.floorAt(x, z, y)));

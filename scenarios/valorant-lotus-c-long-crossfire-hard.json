@@ -1,8 +1,8 @@
 {
  "item": {
   "createTime": "2026-11-20 12:00:00",
-  "description": "Three accurate defenders on C Long at 20 to 30 metres. When you kill the first, the one on the high ground swings in to trade within a second. Dying ends the round.",
-  "docBytes": 3469,
+  "description": "Three accurate defenders on C Long at 20 to 30 metres. When you kill the first, the one on the far right swings in to trade within a second. Dying ends the round.",
+  "docBytes": 3468,
   "featured": false,
   "mapId": "jam",
   "name": "Lotus — C Long, two-angle crossfire (Hard)",
@@ -20,11 +20,11 @@
   "authorUid": "workshop",
   "blockCount": 0,
   "createTime": "2026-11-20 12:00:00",
-  "description": "Three accurate defenders on C Long at 20 to 30 metres. When you kill the first, the one on the high ground swings in to trade within a second. Dying ends the round.",
-  "docBytes": 3469,
+  "description": "Three accurate defenders on C Long at 20 to 30 metres. When you kill the first, the one on the far right swings in to trade within a second. Dying ends the round.",
+  "docBytes": 3468,
   "name": "Lotus — C Long, two-angle crossfire (Hard)",
   "playCount": 0,
-  "sceneHash": "7ef11fbd127b83e9",
+  "sceneHash": "e34df844343c609e",
   "sceneKey": "set-04b1d6019da50daf",
   "schemaVersion": 2,
   "shareCode": "04b1d6019da50daf",
@@ -129,16 +129,16 @@
      "kind": "area",
      "actorTemplateId": "actor-3",
      "position": {
-      "x": -20.9,
-      "y": 1.73,
-      "z": -29.9
+      "x": -20.7,
+      "y": 1.8,
+      "z": -24.1
      },
      "size": {
       "x": 0,
       "y": 0,
       "z": 0
      },
-     "rotationY": 3.766,
+     "rotationY": 3.666,
      "faceTarget": true,
      "groundSnap": true,
      "maxAlive": 1,

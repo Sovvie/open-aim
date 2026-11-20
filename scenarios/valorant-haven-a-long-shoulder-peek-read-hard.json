@@ -1,0 +1,322 @@
+{
+ "item": {
+  "createTime": "2026-11-20 12:00:00",
+  "description": "Haven A Long: an accurate enemy shows a shoulder for a third of a second at a time. A partner swings within half a second when it hears you shoot or run. Let the shoulder go, hold your crosshair on the swing, and keep your feet still. Dying ends the round.",
+  "docBytes": 2406,
+  "featured": false,
+  "mapId": "triad",
+  "name": "Haven — A Long, shoulder-peek read (Hard)",
+  "parSeconds": null,
+  "playCount": 0,
+  "sceneKey": "set-4912c2c33a6a9d71",
+  "shareCode": "4912c2c33a6a9d71",
+  "sort": 335,
+  "status": 1,
+  "type": "hold",
+  "updateTime": "2026-11-20 12:00:00"
+ },
+ "scene": {
+  "authorNickname": "openVaim",
+  "authorUid": "workshop",
+  "blockCount": 0,
+  "createTime": "2026-11-20 12:00:00",
+  "description": "Haven A Long: an accurate enemy shows a shoulder for a third of a second at a time. A partner swings within half a second when it hears you shoot or run. Let the shoulder go, hold your crosshair on the swing, and keep your feet still. Dying ends the round.",
+  "docBytes": 2406,
+  "name": "Haven — A Long, shoulder-peek read (Hard)",
+  "playCount": 0,
+  "sceneHash": "682d13934a24a5a6",
+  "sceneKey": "set-4912c2c33a6a9d71",
+  "schemaVersion": 2,
+  "shareCode": "4912c2c33a6a9d71",
+  "updateTime": "2026-11-20 12:00:00",
+  "aimShuffle": {
+   "groups": [
+    {
+     "actors": [
+      "actor-1"
+     ]
+    },
+    {
+     "actors": [
+      "actor-2"
+     ]
+    }
+   ]
+  },
+  "doc": {
+   "schemaVersion": 2,
+   "meta": {
+    "id": "studio-a65cb1d939ba8d27",
+    "name": "Haven — A Long, shoulder-peek read (Hard)",
+    "seed": 34095786,
+    "createdAt": 0
+   },
+   "environment": {
+    "skyColor": "#111820",
+    "fogNear": 14,
+    "fogFar": 33,
+    "ambientIntensity": 2,
+    "keyLightIntensity": 3,
+    "fogEnabled": false,
+    "map": "triad"
+   },
+   "blocks": [],
+   "playerSpawn": {
+    "position": {
+     "x": -73.8,
+     "y": 1.03,
+     "z": -67.9
+    },
+    "yaw": 3.7
+   },
+   "spawners": [],
+   "actors": [
+    {
+     "id": "actor-1",
+     "name": "Peeker 1",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "cross",
+       "waypoints": [
+        {
+         "x": -67.5,
+         "y": 3.03,
+         "z": -39.4
+        },
+        {
+         "x": -63.7,
+         "y": 3.03,
+         "z": -40.6
+        },
+        {
+         "x": -67.5,
+         "y": 3.03,
+         "z": -39.4
+        }
+       ],
+       "speed": 5.4,
+       "respawn": true,
+       "interval": [
+        0.7,
+        1.2
+       ],
+       "killImmediate": false,
+       "counterStrafe": true,
+       "killDelay": [
+        1.5,
+        1.8
+       ],
+       "pauses": [
+        {
+         "at": 1,
+         "wait": 0.35
+        }
+       ]
+      },
+      {
+       "kind": "shooter",
+       "difficulty": "hard",
+       "reaction": [
+        0.34,
+        0.44
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 2.8,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      }
+     ],
+     "health": 150
+    },
+    {
+     "id": "actor-2",
+     "name": "Peeker 2",
+     "body": {
+      "shape": "humanoid",
+      "headSize": 1,
+      "bodyWidth": 0.44,
+      "bodyHeight": 0,
+      "weapon": "vandal"
+     },
+     "color": "#ff4655",
+     "behaviors": [
+      {
+       "kind": "cross",
+       "waypoints": [
+        {
+         "x": -60.3,
+         "y": 3.03,
+         "z": -38.1
+        },
+        {
+         "x": -65.2,
+         "y": 3.06,
+         "z": -43.5
+        },
+        {
+         "x": -64.54,
+         "y": 3.06,
+         "z": -43.733
+        },
+        {
+         "x": -65.672,
+         "y": 3.06,
+         "z": -43.334
+        },
+        {
+         "x": -64.634,
+         "y": 3.06,
+         "z": -43.699
+        },
+        {
+         "x": -60.3,
+         "y": 3.03,
+         "z": -38.1
+        }
+       ],
+       "speed": 5.4,
+       "respawn": true,
+       "interval": [
+        1,
+        1.5
+       ],
+       "killImmediate": false,
+       "counterStrafe": true,
+       "killDelay": [
+        3,
+        3.3
+       ],
+       "pauses": [
+        {
+         "at": 1,
+         "wait": 0.1
+        },
+        {
+         "at": 2,
+         "wait": 0.15
+        },
+        {
+         "at": 3,
+         "wait": 0.25
+        },
+        {
+         "at": 4,
+         "wait": 0.2
+        }
+       ]
+      },
+      {
+       "kind": "shooter",
+       "difficulty": "hard",
+       "reaction": [
+        0.34,
+        0.44
+       ],
+       "cadence": "weapon",
+       "aimErrorDeg": 2.8,
+       "maxRangeM": 80,
+       "engage": "stop",
+       "resumeDelay": [
+        0.4,
+        0.8
+       ]
+      }
+     ],
+     "health": 150
+    }
+   ],
+   "rules": {
+    "duration": 75,
+    "scoring": "clicking",
+    "weapon": "vandal",
+    "playerMovable": true,
+    "fireMode": "hold",
+    "playerDeath": "endRound"
+   },
+   "dispatchers": [
+    {
+     "id": "dispatcher-1",
+     "name": "Peeker 1",
+     "routes": [
+      {
+       "templateId": "actor-1",
+       "streak": [
+        1,
+        1
+       ]
+      }
+     ],
+     "order": "sequence",
+     "maxAlive": 1,
+     "interval": [
+      0.7,
+      1.9
+     ],
+     "faceTarget": true,
+     "killDelay": [
+      1.5,
+      1.8
+     ]
+    },
+    {
+     "id": "dispatcher-2",
+     "name": "Peeker 2",
+     "routes": [
+      {
+       "templateId": "actor-2",
+       "streak": [
+        1,
+        1
+       ]
+      }
+     ],
+     "order": "sequence",
+     "maxAlive": 1,
+     "interval": [
+      1,
+      1
+     ],
+     "faceTarget": true,
+     "killDelay": [
+      3,
+      3.3
+     ],
+     "hear": {
+      "area": {
+       "x0": -82.8,
+       "z0": -76.9,
+       "x1": -64.8,
+       "z1": -58.9
+      },
+      "sources": [
+       "shot",
+       "footstep"
+      ],
+      "delay": [
+       0.25,
+       0.5
+      ],
+      "swingChance": 1
+     },
+     "spawnDelay": [
+      0.25,
+      0.5
+     ],
+     "swingChance": 1
+    }
+   ]
+  }
+ }
+}
