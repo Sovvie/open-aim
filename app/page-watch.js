@@ -8,8 +8,17 @@
   const watchers = [];
   const locked = () => !!document.pointerLockElement;
 
+  // ui-motion: a script that rewrites a label with the same text (el.textContent = sameText)
+  // still swaps the text node, which woke every watcher; each one re-ran its sync on the next
+  // frame and set the label again, so the Settings > General page re-laid out on every frame
+  // forever (about 7 ms of style work per frame). Batches made only of such no-op swaps are skipped.
+  const sameText = (r) => r.type === "childList" && r.addedNodes.length === 1 && r.removedNodes.length === 1 &&
+    r.addedNodes[0].nodeType === 3 && r.removedNodes[0].nodeType === 3 && r.addedNodes[0].data === r.removedNodes[0].data;
+  const onlyNoOps = (records) => !!records && records.length > 0 && records.every(sameText);
+  window.__aimWatchPageNoOp = onlyNoOps;
+
   window.__aimWatchPage = (callback, options) => {
-    const observer = new MutationObserver(callback);
+    const observer = new MutationObserver((records, obs) => { if (!onlyNoOps(records)) callback(records, obs); });
     watchers.push({ observer, callback, options });
     if (!locked()) observer.observe(document.documentElement, options);
     return observer;

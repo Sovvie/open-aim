@@ -225,3 +225,8 @@
 .al-pause-dirty {
   bottom: 24px !important;
 }
+
+/* ui-motion: contrast. The task description in the pause menus was 3.4:1 on the dark card; now about 5.5:1. */
+.al-pause-desc {
+  color: var(--aim-muted) !important;
+}

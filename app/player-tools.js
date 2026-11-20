@@ -21,6 +21,13 @@
     returnFocus = null;
   }
 
+  // ui-motion: Esc closed the panel only while focus was inside it, and focus stayed on the top-bar
+  // button, so Esc did nothing after opening. Esc now closes it from anywhere while it is open.
+  document.addEventListener("keydown", (event) => {
+    if (currentPanel && event.key === "Escape" && !currentPanel.contains(event.target)) { event.stopPropagation(); closePanel(); }
+  }, true);
+  const focusables = (root) => [...root.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex]:not([tabindex="-1"])')].filter((el) => el.getClientRects().length);
+
   function showPanel(title, subtitle) {
     const opener = currentPanel ? returnFocus : document.activeElement;
     closePanel();
