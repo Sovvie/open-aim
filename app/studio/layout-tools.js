@@ -312,7 +312,7 @@ export const SHORTCUTS = [
   ["Editing", [["Ctrl+Z", "Undo"], ["Ctrl+Y or Ctrl+Shift+Z", "Redo"], ["Ctrl+S", "Save"], ["Del or Backspace", "Delete the selection"], ["Esc", "Cancel placing, clear the selection"]]],
   ["Selecting", [["Click", "Select one thing"], ["Shift+click", "Add to or take out of the selection"], ["Shift+drag on empty map", "Box-select (2D)"], ["Ctrl+A", "Select everything"]]],
   ["Copying", [["Ctrl+C", "Copy the selection (also to the clipboard as text)"], ["Ctrl+X", "Cut"], ["Ctrl+V", "Paste at the pointer, also into another drill"], ["Ctrl+D", "Duplicate next to it"]]],
-  ["Moving", [["Arrow keys", "Nudge 0.5 m (2D view)"], ["Alt+arrows", "Nudge 0.1 m"], ["Shift+arrows", "Nudge 1 m"]]],
+  ["Moving", [["Arrow keys", "Nudge 0.5 m (in 3D: away from, toward, left and right of the camera)"], ["Alt+arrows", "Nudge 0.1 m"], ["Shift+arrows", "Nudge 1 m"], ["Hold Alt while dragging", "Move freely: no snap, no guide lines"]]],
   ["Looking around", [["Scroll", "Zoom"], ["Drag empty map", "Pan"], ["Right-drag", "Pan"], ["WASD, Space, Ctrl", "Fly the camera (3D view)"]]],
   ["Help", [["?", "This sheet"]]],
 ];
