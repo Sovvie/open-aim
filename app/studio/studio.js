@@ -13,6 +13,10 @@ import {
   canRandomSpot, usesOwnDispatcher, hasZone, zoneCorners, ZONE_MOVES, zoneCenter, zoneTurn, zoneTurnHandle, zoneTurnToward, tradeTarget, stuckTradeRings,
   botSpots, swingRadiusOn, soundRuleOn, newSoundRule, SWING_EVENTS, SOUND_SOURCES,
 } from "./drill.js";
+import {
+  nudgeDelta, alignDeltas, clipOf, parseClip, pasteItems, TEMPLATES, buildTemplate, defaultAnchor, lint, describeBot, SHORTCUTS,
+  exportDrillText, parseDrillText, fileName,
+} from "./layout-tools.js";
 import { arenaSize, arenaRect, setArenaRect, ARENA_REACH, ARENA_MIN, arenaWallHeight, surfaceFor, darkArena, targetColor, arenaSurface, setArenaSurface, SURFACES } from "./arena.js";
 import { resizePiece, wallDepth, createPieceSnap, MIN_SIZE, MAX_SIZE } from './transform.js';
 const FREE = { hardMin: MIN_SIZE, hardMax: MAX_SIZE }; // studio-free-size: what the number boxes accept
@@ -95,6 +99,17 @@ const ICON = {
   react: '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
   duel: '<circle cx="7" cy="6" r="2.2"/><circle cx="17" cy="6" r="2.2"/><path d="M7 9v6M17 9v6M4 12h6M14 12h6M9 19l6-4M9 15l6 4"/>',
   blank: '<rect x="4" y="4" width="16" height="16" rx="2" stroke-dasharray="3 3"/>',
+  help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 1-1 1.7M12 17v.5"/>',
+  templates: '<rect x="4" y="4" width="7" height="7"/><rect x="13" y="4" width="7" height="7"/><rect x="4" y="13" width="7" height="7"/><path d="M16.5 13v7M13 16.5h7"/>',
+  download: '<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>',
+  upload: '<path d="M12 16V5M7 9l5-5 5 5M5 20h14"/>',
+  hold: '<circle cx="12" cy="6" r="2.4"/><path d="M12 9v6M12 15l-2.5 5M12 15l2.5 5M7 12h10"/>',
+  jiggle: '<path d="M3 4v16h6V4z" fill="currentColor" fill-opacity=".25"/><path d="M12 12h3M18 12h3M13 8l-2 4 2 4M20 8l2 4-2 4"/>',
+  wide: '<path d="M3 4v16h6V4z" fill="currentColor" fill-opacity=".25"/><path d="M11 12h10M18 9l3 3-3 3"/>',
+  offangle: '<path d="M3 20L14 4M14 4h-5M14 4v5"/><circle cx="19" cy="17" r="2.4"/>',
+  trade: '<circle cx="7" cy="8" r="2.4"/><circle cx="17" cy="8" r="2.4"/><path d="M7 11v5M17 11v5M4 20h6M14 20h6"/>',
+  retake: '<path d="M4 20V8l8-4 8 4v12z"/><path d="M9 20v-6h6v6"/>',
+  crossfire: '<circle cx="12" cy="20" r="2"/><path d="M12 18L4 4M12 18L20 4"/>',
 };
 const ic = (name, cls) => svg(ICON[name], cls);
 
@@ -140,6 +155,8 @@ const S = {
 };
 window.__studio = S; // for checking the editor from DevTools
 const dirty = () => S.drill && JSON.stringify(S.drill) !== S.saved;
+// The checks box and saving use the compiler's checks plus the Studio's extra warnings (layout-tools.js lint).
+const allProblems = (d, floor) => [...problems(d, floor), ...lint(d)];
 const selItem = () => (S.drill && S.sel && S.sel !== "start" ? S.drill.items.find((i) => i.id === S.sel) || null : null);
 // ---------- selecting several things ----------
 const inGroup = (id) => S.group.length > 1 && S.group.includes(id);
@@ -442,6 +459,7 @@ async function showLibrary({ fromEditor = false } = {}) {
       h("button", { class: "btn ghost", onclick: () => { try { sessionStorage.setItem("aim-from-studio", "1"); } catch {} location.assign("/aim"); }, title: "Back to the lobby" }, ic("back"), "Lobby"),
       h("div", { class: "brand" }, h("b", {}, "Studio"), h("span", {}, "Make your own drills")),
       h("div", { class: "grow" }),
+      h("button", { class: "btn", title: "Open a drill file someone shared", onclick: importDrill }, ic("upload"), "Import"),
       h("button", { class: "btn primary", onclick: newDrillDialog }, ic("plus"), "New drill")),
     h("main", { class: "library" },
       h("div", { class: "steps" },
@@ -702,6 +720,8 @@ function buildEditor() {
   app.append(h("header", { class: "top" },
     h("button", { class: "btn ghost", onclick: leaveEditor, title: "Back to your drills" }, ic("back"), "Drills"),
     nameInput, undoBtn, redoBtn, h("div", { class: "grow" }), topState,
+    h("button", { class: "btn icon ghost", title: "Keyboard shortcuts (?)", "aria-label": "Keyboard shortcuts", onclick: helpDialog }, ic("help")),
+    h("button", { class: "btn icon ghost", title: "Export this drill as a file to share or back up", "aria-label": "Export drill file", onclick: exportCurrent }, ic("download")),
     h("button", { class: "btn", onclick: () => saveCurrent() }, "Save"),
     h("button", { class: "btn primary", "data-coach": "play", onclick: () => saveCurrent(true) }, ic("play"), "Play")));
 
@@ -714,6 +734,9 @@ function buildEditor() {
   const tray = h("aside", { class: "tray", "data-coach": "tray", "aria-label": "Add to the map" },
     h("h4", {}, "Bots"),
     Object.entries(MOVES).map(([move, m]) => tool("bot", move, move, "ic-bot", m.short, m.tip)),
+    h("h4", {}, "Situations"),
+    h("button", { class: "tool", "data-coach": "templates", title: "Drop a ready-made setup on the map", onclick: templatesDialog },
+      ic("templates", "ic-gear"), h("div", {}, h("b", {}, "Templates"), h("span", {}, "Hold an angle, jiggle peek, wide swing, retake..."))),
     h("h4", {}, "Saved bots"),
     (savedBotsEl = h("div", { class: "saved-bots" })),
     h("h4", {}, "Targets"),
@@ -780,7 +803,9 @@ async function leaveEditor() {
 // without the map loaded (copies from the library); with it, heights are re-checked.
 async function saveDrill(drill, { quietOk = false } = {}) {
   const current = S.drill === drill;
-  const hard = problems(drill, current ? floorCheck() : null).filter((p) => !p.soft);
+  const found = allProblems(drill, current ? floorCheck() : null);
+  const hard = found.filter((p) => !p.soft);
+  const warned = found.length - hard.length;
   if (hard.length) {
     toast(`Can't save yet: ${hard[0].text}`, true);
     return null;
@@ -798,7 +823,7 @@ async function saveDrill(drill, { quietOk = false } = {}) {
   }
   try {
     const res = await api.save({ drill, doc, type });
-    if (!quietOk) toast("Saved. It's also first in VALORANT Training.");
+    if (!quietOk) toast(`Saved. It's also first in VALORANT Training.${warned ? ` ${warned} warning${warned > 1 ? "s" : ""}: click an empty spot on the map to read ${warned > 1 ? "them" : "it"}.` : ""}`);
     return res;
   } catch (err) {
     toast(`Couldn't save: ${err && err.message}`, true);
@@ -809,6 +834,18 @@ async function saveDrill(drill, { quietOk = false } = {}) {
 async function saveCurrent(thenPlay = false) {
   const revision = screenRevision, drill = S.drill;
   if (!drill || S.screen !== 'editor') return false;
+  if (thenPlay) {
+    // Warnings never block playing, but you see them once before you go (again only if they change).
+    const soft = allProblems(drill, floorCheck()).filter((p) => p.soft);
+    const key = soft.map((p) => p.text).join("|");
+    if (soft.length && key !== S.ackWarn) {
+      const more = soft.length > 4 ? ` (and ${soft.length - 4} more in Drill settings)` : "";
+      const pick = await confirmBox("Play with warnings?", soft.slice(0, 4).map((p) => "• " + p.text).join("\n") + more, [["Keep editing", null], ["Play anyway", "go", "primary"]], { wide: true });
+      if (revision !== screenRevision || S.screen !== "editor" || S.drill !== drill) return false;
+      if (!pick) return false;
+      S.ackWarn = key;
+    }
+  }
   const pendingSave = saveDrill(drill, { quietOk: thenPlay });
   const savedSnapshot = JSON.stringify(drill);
   const res = await pendingSave;
@@ -2107,7 +2144,7 @@ function updateHint() {
     const name = S.tool.kind === "bot" ? MOVES[S.tool.move].short : S.tool.kind === "block" ? BLOCK_SHAPES[S.tool.move].label.toLowerCase() : { targets: "target zone", wall: "wall", barrier: "invisible wall", airfloor: "invisible floor", smoke: "smoke", start: "your start" }[S.tool.kind];
     html = `Click the map to place <b>${name}</b> · Shift-click to place more · <span class="kbd">Esc</span> cancel`;
   } else if (S.group.length > 1) {
-    html = `<b>${S.group.length} selected</b> · drag one to move them all · Shift-click to add/remove · <span class="kbd">Del</span> remove all · <span class="kbd">Esc</span> clear`;
+    html = `<b>${S.group.length} selected</b> · drag one to move them all · Shift-click to add/remove · arrows nudge · <span class="kbd">Ctrl</span>+<span class="kbd">C</span> copy · <span class="kbd">Del</span> remove all · <span class="kbd">Esc</span> clear`;
   } else if (S.addStart && S.sel === "start") {
     html = `Click the map to drop another start · Shift-click to drop more · <span class="kbd">Backspace</span> removes the last · <span class="kbd">Esc</span> stop`;
   } else if (S.addSpot && it) {
@@ -2119,7 +2156,7 @@ function updateHint() {
   } else if (it && S.mode3d && (it.kind === 'block' || it.kind === 'wall')) {
     html = 'Edges and heights snap together · arrows resize · drag the arrow to rotate · <span class="kbd">Alt</span> free adjustment';
   } else if (it) {
-    html = "Drag to move · <span class=\"kbd\">Del</span> remove · <span class=\"kbd\">Ctrl</span>+<span class=\"kbd\">D</span> copy";
+    html = "Drag to move · arrows nudge (Shift 1 m, Alt 0.1 m) · <span class=\"kbd\">Del</span> remove · <span class=\"kbd\">Ctrl</span>+<span class=\"kbd\">D</span> duplicate · <span class=\"kbd\">Ctrl</span>+<span class=\"kbd\">C</span> copy · <span class=\"kbd\">?</span> shortcuts";
   } else if (S.sel === "start") {
     html = "Drag to move · drag the green dot to turn where you look";
   } else {
@@ -2636,7 +2673,7 @@ addEventListener("keydown", (e) => {
   }
   if (mod) held.delete("control");
   // Ctrl+A would select all the text on the page; nothing in the editor uses it.
-  if (mod && k === "a" && !typing) { e.preventDefault(); return; }
+  if (mod && k === "a" && !typing) { e.preventDefault(); selectAll(); return; }
   if (!typing && !mod && !e.altKey && S.mode3d && view3d && (WALK[k] || k === "shift")) {
     if (WALK[k]) e.preventDefault();
     held.add(k);
@@ -2645,6 +2682,9 @@ addEventListener("keydown", (e) => {
   }
   if (mod && e.key.toLowerCase() === "s") { e.preventDefault(); saveCurrent(); return; }
   if (typing) return;
+  if (e.key === "?" && !mod) { e.preventDefault(); helpDialog(); return; }
+  if (e.key.startsWith("Arrow") && !mod && !S.tool && !S.mode3d && !S.preview) { if (nudgeKey(e)) e.preventDefault(); return; }
+  if (mod && !e.shiftKey && (k === "c" || k === "x")) { if (copySelection(k === "x")) e.preventDefault(); return; }
   if (mod && e.key.toLowerCase() === "z" && !e.shiftKey) { e.preventDefault(); undo(); }
   else if (mod && (e.key.toLowerCase() === "y" || (e.key.toLowerCase() === "z" && e.shiftKey))) { e.preventDefault(); redo(); }
   else if (mod && e.key.toLowerCase() === "d") { e.preventDefault(); duplicate(); }
@@ -2693,14 +2733,150 @@ function duplicate() {
   const copy = JSON.parse(JSON.stringify(it));
   copy.id = `${it.kind}-${Date.now().toString(36)}`;
   const a = it.kind === "wall" ? { x: 0, z: 1 } : across(it);
-  const shift = (o) => { o.x = Math.round((o.x + a.x * 1.5) * 10) / 10; o.z = Math.round((o.z + a.z * 1.5) * 10) / 10; o.y = floorAt(o.x, o.z, o.y) ?? o.y; };
-  shift(copy);
-  if (copy.route) copy.route.forEach(shift);
-  if (copy.flash && copy.flash.target) shift(copy.flash.target);
+  shiftItem(copy, Math.round(a.x * 15) / 10, Math.round(a.z * 15) / 10);
   edit((d) => d.items.push(copy));
   S.sel = copy.id;
   renderSide();
 }
+// ---------- nudge, select all, copy and paste, align ----------
+const selectedIds = () => (S.group.length > 1 ? S.group : selItem() ? [S.sel] : []);
+function nudgeKey(e) {
+  if (/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement && document.activeElement.tagName)) return false;
+  const dir = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
+  if (!dir) return false;
+  const ids = selectedIds();
+  if (!ids.length && S.sel !== "start") return false;
+  const [dx, dz] = nudgeDelta(dir[0], dir[1], e.shiftKey ? 1 : e.altKey ? 0.1 : 0.5, turns());
+  edit((d) => {
+    if (ids.length) { for (const it of d.items) if (ids.includes(it.id)) shiftItem(it, dx, dz); return; }
+    const r = (v) => Math.round(v * 100) / 100;
+    d.start.x = r(d.start.x + dx); d.start.z = r(d.start.z + dz);
+    d.start.y = floorAt(d.start.x, d.start.z, d.start.y) ?? d.start.y;
+  }, { key: "nudge" });
+  return true;
+}
+function selectAll() {
+  if (!S.drill || !S.drill.items.length) return;
+  setGroup(S.drill.items.map((i) => i.id));
+  renderSide(); draw();
+}
+const CLIP_KEY = "studio-clip";
+function copySelection(cut = false) {
+  const ids = selectedIds();
+  if (!ids.length) return false;
+  const items = S.drill.items.filter((i) => ids.includes(i.id));
+  const text = JSON.stringify(clipOf(items));
+  try { localStorage.setItem(CLIP_KEY, text); } catch {}
+  try { navigator.clipboard && navigator.clipboard.writeText(text).catch(() => {}); } catch {}
+  toast(`${items.length} ${cut ? "cut" : "copied"}. Ctrl+V pastes here or in another drill.`);
+  if (cut) removeSelected();
+  return true;
+}
+function pasteClip(clip) {
+  const at = pointer.inside && !S.mode3d ? toWorld(pointer.x, pointer.y) : null;
+  const items = pasteItems(clip, { at: at ? { x: Math.round(at.x * 10) / 10, z: Math.round(at.z * 10) / 10 } : null, existing: S.drill.items, ground: (x, z, y) => floorAt(x, z, y) });
+  edit((d) => d.items.push(...items));
+  setGroup(items.map((i) => i.id));
+  renderSide(); draw();
+  toast(`Pasted ${items.length}.`);
+}
+// Ctrl+V: text on the system clipboard first (also from another window), else what Ctrl+C kept.
+addEventListener("paste", (e) => {
+  if (S.screen !== "editor" || !S.drill || document.querySelector(".scrim, .coach")) return;
+  if (/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement && document.activeElement.tagName)) return;
+  let clip = null;
+  try { clip = parseClip((e.clipboardData && e.clipboardData.getData("text")) || ""); } catch {}
+  if (!clip) try { clip = parseClip(localStorage.getItem(CLIP_KEY) || ""); } catch {}
+  if (!clip) return;
+  e.preventDefault();
+  pasteClip(clip);
+});
+function alignGroup(mode) {
+  const deltas = alignDeltas(groupItems(), mode, turns());
+  edit((d) => { for (const it of d.items) { const v = deltas.get(it.id); if (v && (v[0] || v[1])) shiftItem(it, v[0], v[1]); } });
+}
+
+// ---------- templates ----------
+function addTemplate(id) {
+  const d = S.drill;
+  let at = defaultAnchor(d.start);
+  if (onMap() && S.map && floorAt(at.x, at.z, at.y) === null) at = { x: S.view.cx, y: d.start.y || 0, z: S.view.cz };
+  const out = buildTemplate(id, at, d.start);
+  if (!out) return;
+  const ground = (x, z, y) => floorAt(x, z, y);
+  for (const it of out.items) shiftItem(it, 0, 0, ground);
+  const turnedOn = out.round ? Object.entries(out.round).filter(([k, v]) => d.round[k] !== v) : [];
+  edit((dd) => { dd.items.push(...out.items); for (const [k, v] of turnedOn) dd.round[k] = v; });
+  setGroup(out.items.map((i) => i.id));
+  S.tool = null;
+  focusOn(out.items[0].id);
+  renderSide(); draw();
+  toast(`Added ${out.name}. Drag it where you want it.${turnedOn.length ? ' "I can walk around" is now on.' : ""}`);
+}
+function templatesDialog() {
+  if (!S.drill) return;
+  const close = () => scrim.remove();
+  const scrim = h("div", { class: "scrim", onclick: (e) => e.target === scrim && close() },
+    h("div", { class: "dialog", role: "dialog", "aria-modal": "true", "aria-label": "Templates" },
+      h("h2", {}, "Templates"),
+      h("p", { class: "sub" }, "Ready-made setups for common situations. They land in front of you, selected, so you can drag them into place and tune every bot."),
+      h("div", { class: "starters" }, TEMPLATES.map((t) => h("button", { class: "starter", onclick: () => { close(); addTemplate(t.id); } },
+        ic(ICON[t.id] ? t.id : "blank"), h("div", {}, h("b", {}, t.name), h("span", {}, t.text))))),
+      h("div", { class: "foot" }, h("button", { class: "btn", onclick: close }, "Close"))));
+  document.body.append(scrim);
+  scrim.querySelector(".starter")?.focus();
+}
+
+// ---------- keyboard help ----------
+function helpDialog() {
+  if (document.querySelector(".help-dialog")) return;
+  const close = () => { scrim.remove(); removeEventListener("keydown", onKey, true); };
+  const onKey = (e) => { if (e.key === "Escape" || e.key === "?") { e.preventDefault(); e.stopPropagation(); close(); } };
+  const scrim = h("div", { class: "scrim help-dialog", onclick: (e) => e.target === scrim && close() },
+    h("div", { class: "dialog medium", role: "dialog", "aria-modal": "true", "aria-label": "Keyboard shortcuts" },
+      h("h2", {}, "Keyboard shortcuts"),
+      h("div", { class: "shortcuts" }, SHORTCUTS.map(([title, rows]) => h("section", {},
+        h("h3", {}, title),
+        h("dl", {}, ...rows.flatMap(([keys, what]) => [h("dt", {}, ...keys.split(" or ").flatMap((k, i) => (i ? [" or ", h("span", { class: "kbd" }, k)] : [h("span", { class: "kbd" }, k)]))), h("dd", {}, what)]))))),
+      h("div", { class: "foot" }, h("button", { class: "btn primary", onclick: close }, "Close"))));
+  addEventListener("keydown", onKey, true);
+  document.body.append(scrim);
+  scrim.querySelector(".foot .btn")?.focus();
+}
+
+// ---------- drill files ----------
+function exportCurrent() {
+  if (!S.drill) return;
+  const blob = new Blob([exportDrillText(S.drill)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = h("a", { href: url, download: fileName(S.drill) });
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+  toast("Exported. Share the file; anyone can open it with Import in the Studio.");
+}
+function importDrill() {
+  const input = h("input", { type: "file", accept: ".json,application/json", style: "display:none" });
+  input.addEventListener("change", async () => {
+    const file = input.files && input.files[0];
+    input.remove();
+    if (!file) return;
+    if (file.size > 8 * 1024 * 1024) { toast("That file is too big to be a drill.", true); return; }
+    const res = parseDrillText(await file.text());
+    if (res.error) { toast(res.error, true); return; }
+    if (res.drill.place !== "range" && !MAPS.some(([id]) => id === res.drill.place)) { toast("That drill is for a map this version doesn't have.", true); return; }
+    openDrill(res.drill, true);
+    toast("Imported. It's a new drill; Save keeps it.");
+  });
+  document.body.append(input);
+  input.click();
+}
+
+// ---------- what a bot will do ----------
+function botSummaryBox(b, d) {
+  const lines = describeBot(b, d);
+  return h("div", { class: "group bot-summary" }, h("label", {}, "What it will do"), h("ul", {}, lines.map((l) => h("li", {}, l))));
+}
+
 function removeSelected() {
   if (S.group.length > 1) {
     const gone = new Set(S.group);
@@ -2908,7 +3084,7 @@ function head(iconName, cls, title, sub) {
 }
 
 function checksBox() {
-  const list = problems(S.drill, floorCheck());
+  const list = allProblems(S.drill, floorCheck());
   if (!list.length) return h("div", { class: "checks ok" }, "Ready to play.");
   const hard = list.filter((p) => !p.soft).length;
   return h("div", { class: "checks" + (hard ? " bad" : "") },
@@ -3049,6 +3225,7 @@ function botPanel(b) {
     ...head(b.move, "ic-bot", itemName(d, b), m.tip),
     h("div", { class: "stat" }, h("span", {}, h("b", {}, `${fromYou.toFixed(0)} m`), " from you"),
       b.shoots !== "off" ? h("span", {}, "Shoots ", rankIcon(b.shoots)) : null),
+    botSummaryBox(b, d),
     h("div", { class: "btn-row bot-lib-row" },
       h("button", { class: "btn small", title: "Save this bot's settings to reuse in any drill", onclick: () => saveBotToLibrary(b) }, ic("plus"), "Save to library"),
       h("button", { class: "btn small", title: "Give this bot the settings of a saved bot", onclick: () => useSavedBot(b) }, ic("copy"), "Load saved")),
@@ -3741,13 +3918,17 @@ function groupPanel() {
       field("Selected", h("div", {}, ...items.map((i) => h("div", { class: "btn-row" },
         h("button", { class: "btn small", title: "Select just this one", onclick: () => { setGroup([i.id]); renderSide(); draw(); } }, itemName(S.drill, i)),
         h("button", { class: "btn small", title: "Take it out of the selection", "aria-label": `Take ${itemName(S.drill, i)} out of the selection`, onclick: () => toggleInGroup(i.id) }, ic("minus")))))),
-      h("p", { class: "help" }, "Shift-click a thing to add it or take it out · Shift-drag on empty map to box-select (2D) · Esc to clear · Backspace/Del deletes them all · Ctrl+D copies them.")),
+      h("p", { class: "help" }, "Shift-click a thing to add it or take it out · Shift-drag on empty map to box-select (2D) · Esc to clear · Backspace/Del deletes them all · Ctrl+D duplicates, Ctrl+C / Ctrl+V copy and paste (also into another drill) · arrow keys nudge.")),
+    h("div", { class: "group" }, h("label", {}, "Line up"),
+      h("div", { class: "btn-row" }, [["left", "Left"], ["hcenter", "Centre"], ["right", "Right"], ["top", "Top"], ["vcenter", "Middle"], ["bottom", "Bottom"], ["spreadH", "Even across"], ["spreadV", "Even down"]]
+        .map(([m, t]) => h("button", { class: "btn small", title: { left: "Line up on the left", hcenter: "Line up across their middle", right: "Line up on the right", top: "Line up at the top", vcenter: "Line up down their middle", bottom: "Line up at the bottom", spreadH: "Same gap between them, left to right", spreadV: "Same gap between them, top to bottom" }[m], onclick: () => alignGroup(m) }, t)))),
     actions(),
   ];
 }
 function actions() {
   return h("div", { class: "group" }, h("div", { class: "danger-zone" },
-    h("button", { class: "btn small", onclick: duplicate, title: "Ctrl+D" }, ic("copy"), "Copy"),
+    h("button", { class: "btn small", onclick: duplicate, title: "Ctrl+D" }, ic("copy"), "Duplicate"),
+    h("button", { class: "btn small", onclick: () => copySelection(false), title: "Ctrl+C. Paste with Ctrl+V, also in another drill" }, ic("copy"), "Copy"),
     h("button", { class: "btn small danger", onclick: removeSelected, title: "Delete" }, ic("trash"), "Delete")));
 }
 
