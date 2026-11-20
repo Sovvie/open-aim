@@ -137,11 +137,11 @@
      the map screens get theirs, instead of inside the card under the stats. The panel is then a direct child of the
      overlay (class aim-an-hit-side, set by placePanel only in this media range); each :has() ends in a class. */
   /* ui-result (20 Nov 2026): the two outer columns have a floor (--aim-an-side: the report's narrowest width, or the game's
-     300px bots card when there is one) and stay equal, and the card column (up to 880px, about its natural width) shrinks first, so the
+     300px bots card when there is one) and stay equal, and the card column (up to 960px, the game's own card width, so the card does not reflow when the report arrives) shrinks first, so the
      card stays centred and nothing is pushed off screen. placePanel only uses this layout when the card keeps >= ~680px. */
   html[data-aim-local]:not(#es) body .al-result-overlay:has(> .aim-an-hit-side) {
     --aim-an-side: 260px;
-    grid-template-columns: minmax(var(--aim-an-side), 1fr) minmax(0, 880px) minmax(var(--aim-an-side), 1fr) !important;
+    grid-template-columns: minmax(var(--aim-an-side), 1fr) minmax(0, 960px) minmax(var(--aim-an-side), 1fr) !important;
     gap: 18px !important; justify-content: stretch !important; align-items: center !important; }
   html[data-aim-local]:not(#es) body .al-result-overlay:has(> .aim-an-hit-side):has(> .al-bots-card) { --aim-an-side: 300px; }
   html[data-aim-local]:not(#es) body .al-result-overlay:has(> .aim-an-hit-side) > .al-result-modal { width: 100% !important; min-width: 0; }
