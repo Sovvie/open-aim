@@ -365,7 +365,7 @@ test("coach: findings in the order returned, severity class, sample, why with ev
   const modal = list.map(ui.render.coachModalHtml).join("");
   assert.ok(modal.includes("sample 20") && modal.includes("sample 44") && !html.includes("sample "), "sample in the modal only");
   assert.strictEqual(count(html, "<summary>"), 0, "no collapsible parts");
-  assert.ok(!html.includes("<dt>") && modal.includes("<dt title="lost">Lost</dt><dd>12</dd>") && modal.includes("<dt title="above">Above</dt><dd>30</dd>"), "evidence in the modal only");
+  assert.ok(!html.includes("<dt>") && modal.includes('<dt title="lost">Lost</dt><dd>12</dd>') && modal.includes('<dt title="above">Above</dt><dd>30</dd>'), "evidence in the modal only");
   assert.ok(html.includes("You miss &lt;high&gt;"), "escaped");
   // switch away and back: no second read
   document.body.querySelector(".aim-an-tabs").children[1].listeners.click[0]();
@@ -735,7 +735,7 @@ test("coach gallery: equal larger cards in order (icon, title, summary, small vi
   assert.ok(box && box.getAttribute("role") === "dialog" && box.getAttribute("aria-modal") === "true" && box.getAttribute("aria-labelledby") === "aim-an-tipm-title", "a modal dialog");
   assert.ok(box.className.includes("aim-an-tipm") && box.className.includes("is-tip"));
   assert.ok(box.innerHTML.includes('<h3 id="aim-an-tipm-title">You miss high</h3>') && box.innerHTML.includes("sample 44"));
-  assert.ok(box.innerHTML.includes('<div class="aim-an-why"><h5>Numbers</h5><dl>') && box.innerHTML.includes("<dt title="averageOffsetCm">Average offset (cm)</dt><dd>9</dd>"), "the Numbers list");
+  assert.ok(box.innerHTML.includes('<div class="aim-an-why"><h5>Numbers</h5><dl>') && box.innerHTML.includes('<dt title="averageOffsetCm">Average offset (cm)</dt><dd>9</dd>'), "the Numbers list");
   assert.ok(box.innerHTML.includes('<p class="aim-an-lead">Most misses pass above.</p>') && box.innerHTML.includes('<div class="aim-an-vis">'), "the full detail and the visual at full size");
   assert.strictEqual(El.focused, box, "focus moves into the dialog");
   // Esc closes it, is kept from the game, and gives focus back to the card

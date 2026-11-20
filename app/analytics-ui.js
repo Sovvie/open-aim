@@ -2800,10 +2800,10 @@ html[data-aim-local]:not(#es) body .es-tool.aim-an-tipm h3 { text-transform: non
       if (t) showTip(p, t, event); else hideTip(p);
     });
     content.addEventListener("mouseleave", () => hideTip(p));
+    wireRefs(content);
     // focus by keyboard on a chart shows its newest point at once; leaving it hides the card
     content.addEventListener("focusin", (event) => { const nav = event.target; if (nav && nav.matches && nav.matches("[data-tipnav]:focus-visible")) stepTip(p, nav, Infinity); });
     content.addEventListener("focusout", (event) => { const nav = event.target; if (nav && nav.dataset && "tipnav" in nav.dataset) tipOff(p, nav); });
-    wireRefs(content);
     // map zoom: wheel around the cursor, drag to pan, double-click resets
     content.addEventListener("wheel", (event) => {
       const svg = mapSvg(event.target);
